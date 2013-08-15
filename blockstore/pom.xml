@@ -1,0 +1,68 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>brooklyn-blockstore</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <parent>
+        <groupId>io.cloudsoft.blockstore</groupId>
+        <artifactId>brooklyn-blockstore-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <name>Brooklyn Blockstore</name>
+
+     <dependencies>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${brooklyn.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.api</groupId>
+            <artifactId>openstack-cinder</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.provider</groupId>
+            <artifactId>rackspace-cloudservers-uk</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.jclouds.provider</groupId>
+            <artifactId>rackspace-cloudblockstorage-uk</artifactId>
+            <version>${jclouds.version}</version>
+        </dependency>
+         <dependency>
+             <groupId>org.jclouds.labs</groupId>
+             <artifactId>google-compute-engine</artifactId>
+             <version>1.6.0-cloudsoft.1</version>
+            <exclusions>
+              <!-- exclude the jclouds 1.6.0 version, in favour of our versions -->
+              <exclusion>
+                <groupId>org.jclouds</groupId>
+                <artifactId>jclouds-core</artifactId>
+              </exclusion>
+              <exclusion>
+                <groupId>org.jclouds</groupId>
+                <artifactId>jclouds-compute</artifactId>
+              </exclusion>
+            </exclusions>
+         </dependency>
+         <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <version>${testng.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.brooklyn</groupId>
+            <artifactId>brooklyn-test-support</artifactId>
+            <version>${brooklyn.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>
