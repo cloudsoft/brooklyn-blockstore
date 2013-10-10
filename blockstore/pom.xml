@@ -36,11 +36,11 @@
             <version>${jclouds.version}</version>
         </dependency>
          <dependency>
-             <groupId>org.jclouds.labs</groupId>
+             <groupId>org.apache.jclouds.labs</groupId>
              <artifactId>google-compute-engine</artifactId>
-             <version>1.6.0-cloudsoft.1</version>
+             <version>1.6.1-cloudsoft.1</version>
             <exclusions>
-              <!-- exclude the jclouds 1.6.0 version, in favour of our versions -->
+              <!-- exclude the jclouds 1.6.1 version, in favour of our versions -->
               <exclusion>
                 <groupId>org.jclouds</groupId>
                 <artifactId>jclouds-core</artifactId>
