@@ -11,9 +11,16 @@
         Contains an abstract for blockstores (i.e. volumes) in various clouds.
     </description>
 
+    <modules>
+        <module>blockstore</module>
+    </modules>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <includedTestGroups/>
+        <excludedTestGroups>live,Live</excludedTestGroups>
 
         <brooklyn.version>0.6.0-SNAPSHOT</brooklyn.version>
         <jclouds.version>1.6.1-incubating</jclouds.version>
@@ -93,6 +100,14 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>live</id>
+            <properties>
+                <includedTestGroups>live,Live</includedTestGroups>
+                <excludedTestGroups/>
+            </properties>
+        </profile>
+
         <!-- sign and make javadoc when deploying; note, this means you'll need gpg set up to deploy -->
         <profile>
             <id>make-more-things-when-deploying</id>
@@ -160,7 +175,4 @@
         </profile>
     </profiles>
 
-    <modules>
-        <module>blockstore</module>
-    </modules>
 </project>

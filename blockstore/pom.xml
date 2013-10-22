@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>brooklyn-blockstore</artifactId>
@@ -14,7 +15,7 @@
 
     <name>Brooklyn Blockstore</name>
 
-     <dependencies>
+    <dependencies>
         <dependency>
             <groupId>io.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
@@ -35,23 +36,23 @@
             <artifactId>rackspace-cloudblockstorage-uk</artifactId>
             <version>${jclouds.version}</version>
         </dependency>
-         <dependency>
-             <groupId>org.apache.jclouds.labs</groupId>
-             <artifactId>google-compute-engine</artifactId>
-             <version>1.6.1-cloudsoft.1</version>
+        <dependency>
+            <groupId>org.apache.jclouds.labs</groupId>
+            <artifactId>google-compute-engine</artifactId>
+            <version>1.6.1-cloudsoft.1</version>
             <exclusions>
-              <!-- exclude the jclouds 1.6.1 version, in favour of our versions -->
-              <exclusion>
-                <groupId>org.jclouds</groupId>
-                <artifactId>jclouds-core</artifactId>
-              </exclusion>
-              <exclusion>
-                <groupId>org.jclouds</groupId>
-                <artifactId>jclouds-compute</artifactId>
-              </exclusion>
+                <!-- exclude the jclouds 1.6.1 version, in favour of our versions -->
+                <exclusion>
+                    <groupId>org.jclouds</groupId>
+                    <artifactId>jclouds-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jclouds</groupId>
+                    <artifactId>jclouds-compute</artifactId>
+                </exclusion>
             </exclusions>
-         </dependency>
-         <dependency>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
@@ -65,4 +66,29 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.13</version>
+                <configuration>
+                    <properties>
+                        <property>
+                            <name>listener</name>
+                            <value>brooklyn.test.LoggingVerboseReporter</value>
+                        </property>
+                    </properties>
+                    <enableAssertions>true</enableAssertions>
+                    <groups>${includedTestGroups}</groups>
+                    <excludedGroups>${excludedTestGroups}</excludedGroups>
+                    <testFailureIgnore>false</testFailureIgnore>
+                    <systemPropertyVariables>
+                        <verbose>-1</verbose>
+                    </systemPropertyVariables>
+                    <printSummary>true</printSummary>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
