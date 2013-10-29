@@ -83,8 +83,14 @@ public abstract class AbstractVolumeManagerLiveTest {
         }
         machines.clear();
         
-        if (volume != null) volumeManager.deleteBlockDevice(volume);
-        if (ctx != null) Entities.destroyAll(ctx);
+        if (volume != null) {
+            volumeManager.deleteBlockDevice(volume);
+            volume = null;
+        }
+        if (ctx != null) {
+            Entities.destroyAll(ctx);
+            ctx = null;
+        }
     }
 
     @Test(groups="Live")
@@ -193,7 +199,6 @@ public abstract class AbstractVolumeManagerLiveTest {
 
         LOG.info("Creating and mounting device on machine1: {}", machine1);
         MountedBlockDevice mountedOnM1 = volumeManager.createAttachAndMountVolume(machine1, deviceOptions, filesystemOptions);
-        volume = mountedOnM1;
 
         String tmpDestFile = "/tmp/myfile.txt";
         String destFile = mountPoint+"/myfile.txt";
@@ -214,7 +219,6 @@ public abstract class AbstractVolumeManagerLiveTest {
         LOG.info("Unmounting {} and deleting device", mountedOnM2);
         volumeManager.unmountFilesystemAndDetachVolume(mountedOnM2);
         volumeManager.deleteBlockDevice(unmounted);
-
     }
 
     protected void assertExecSucceeds(SshMachineLocation machine, String description, List<String> cmds) {

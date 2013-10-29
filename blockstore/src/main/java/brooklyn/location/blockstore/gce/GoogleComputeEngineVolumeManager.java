@@ -3,6 +3,7 @@ package brooklyn.location.blockstore.gce;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,12 +49,16 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         .maximumSize(1000)
         .build(new CacheLoader<JcloudsLocation, String>() {
             @Override
-            public String load(JcloudsLocation location) throws Exception {
+            public String load(JcloudsLocation location) {
                 String identity = location.getIdentity();
                 identity = identity.substring(0, identity.indexOf('@'));
                 GoogleComputeEngineApi api = getGoogleComputeEngineApi(location);
                 String project = api.getProjectApi().get(identity).getName();
-                api.close();
+                try {
+                    api.close();
+                } catch (IOException e) {
+                    LOG.debug("Exception closing GCE api", e);
+                }
                 return project;
             }});
 
