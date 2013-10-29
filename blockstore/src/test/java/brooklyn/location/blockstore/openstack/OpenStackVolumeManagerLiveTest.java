@@ -18,6 +18,7 @@ import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 @Test
@@ -63,13 +64,8 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     }
 
     @Override
-    protected JcloudsSshMachineLocation rebindJcloudsMachine() throws NoMachinesAvailableException {
-        Map<String, ?> machineFlags = MutableMap.of("id", "LON/dab52345-9b6f-4b60-94de-64881a3f91d9", 
-                "hostname", "162.13.8.61", 
-                "user", "root", 
-                "password", "Bko8gLpZs6CJ",
-                JcloudsLocation.PUBLIC_KEY_FILE.getName(), "/Users/aled/.ssh/id_rsa");
-        return jcloudsLocation.rebindMachine(ConfigBag.newInstanceCopying(jcloudsLocation.getRawLocalConfigBag()).putAll(machineFlags));
+    protected Optional<JcloudsSshMachineLocation> rebindJcloudsMachine() {
+        return Optional.absent();
     }
     
     @Override

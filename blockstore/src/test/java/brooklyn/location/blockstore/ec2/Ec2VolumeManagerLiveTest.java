@@ -15,6 +15,7 @@ import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 import brooklyn.util.config.ConfigBag;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 @Test
@@ -67,12 +68,8 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     @Override
-    protected JcloudsSshMachineLocation rebindJcloudsMachine() throws Exception {
-        Map<String, ?> machineFlags = MutableMap.of("id", "i-4e904625",
-                "hostname", "ec2-54-224-215-144.compute-1.amazonaws.com",
-                "user", "aled",
-                JcloudsLocation.PUBLIC_KEY_FILE.getName(), "/Users/aled/.ssh/id_rsa");
-        return jcloudsLocation.rebindMachine(ConfigBag.newInstanceCopying(jcloudsLocation.getRawLocalConfigBag()).putAll(machineFlags));
+    protected Optional<JcloudsSshMachineLocation> rebindJcloudsMachine() {
+        return Optional.absent();
     }
     
     @Override

@@ -50,7 +50,11 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     protected abstract void assertVolumeAvailable(String volumeId);
 
-    protected abstract JcloudsSshMachineLocation rebindJcloudsMachine() throws Exception;
+    /**
+     * Speed tests up by rebinding and returning an existing virtual machine.
+     * See {@link JcloudsLocation#rebindMachine(brooklyn.util.config.ConfigBag)}.
+     */
+    protected abstract Optional<JcloudsSshMachineLocation> rebindJcloudsMachine();
     
     protected abstract JcloudsSshMachineLocation createJcloudsMachine() throws Exception;
 
@@ -102,13 +106,11 @@ public abstract class AbstractVolumeManagerLiveTest {
         String filesystemType = "ext3";
 
         // For speed, try to use an existing VM; but if that doesn't exist then fallback to creating a temporary one
-        JcloudsSshMachineLocation machine;
-        try {
-            machine = rebindJcloudsMachine();
-        } catch (IllegalArgumentException e) {
-            // Existing VM does not exist; will create a temporary VM for this run
-            LOG.info("Rebind failed; falling back to creating temporary VM in "+jcloudsLocation);
-            machine = createJcloudsMachine();
+        Optional<JcloudsSshMachineLocation> existingMachine = rebindJcloudsMachine();
+        JcloudsSshMachineLocation machine = existingMachine.or(createJcloudsMachine());
+        if (!existingMachine.isPresent()) {
+            // make sure newly created machines are tidied
+            LOG.info("No machine to rebind. Falling back to creating temporary VM in " + jcloudsLocation);
             machines.add(machine);
         }
         
