@@ -2,9 +2,7 @@ package brooklyn.location.blockstore.gce;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.lang.String.format;
 
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
@@ -43,8 +44,18 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
     private static final String PROVIDER = "google-compute-engine";
     private static final String DEVICE_PREFIX = "/dev/disk/by-id/google-";
 
-    // FIXME!
-    private static final String PROJECT_ID = "jclouds-gce";
+    private final LoadingCache<JcloudsLocation, String> locationProjectName = CacheBuilder.newBuilder()
+        .maximumSize(1000)
+        .build(new CacheLoader<JcloudsLocation, String>() {
+            @Override
+            public String load(JcloudsLocation location) throws Exception {
+                String identity = location.getIdentity();
+                identity = identity.substring(0, identity.indexOf('@'));
+                GoogleComputeEngineApi api = getGoogleComputeEngineApi(location);
+                String project = api.getProjectApi().get(identity).getName();
+                api.close();
+                return project;
+            }});
 
     @Override
     protected String getVolumeDeviceName(char deviceSuffix) {
@@ -61,7 +72,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         LOG.info("Creating device: location={}; options={}", location, options);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(location);
-        String project = getProjectFromLocation(location);
+        String project = locationProjectName.getUnchecked(location);
         DiskApi diskApi = computeApi.getDiskApiForProject(project);
         String name = "volume-test-create-volume-"+UUID.randomUUID().toString();
 
@@ -81,7 +92,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
         JcloudsLocation location = machine.getParent();
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(location);
-        String project = getProjectFromLocation(location);
+        String project = locationProjectName.getUnchecked(location);
         InstanceApi instanceApi = computeApi.getInstanceApiForProject(project);
         String zone = getZoneFromDisk(disk);
 
@@ -103,7 +114,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         LOG.info("Detaching device: {}", device);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
-        String project = getProjectFromLocation(device.getLocation());
+        String project = locationProjectName.getUnchecked(device.getLocation());
         InstanceApi instanceApi = computeApi.getInstanceApiForProject(project);
 
         Operation operation = instanceApi.detachDiskInZone(
@@ -120,7 +131,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         LOG.info("Deleting device: {}", device);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
-        String project = getProjectFromLocation(device.getLocation());
+        String project = locationProjectName.getUnchecked(device.getLocation());
         DiskApi diskApi = computeApi.getDiskApiForProject(project);
 
         Operation operation = diskApi.deleteInZone(getZoneFromDisk(disk), device.getId());
@@ -136,7 +147,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         if (LOG.isDebugEnabled())
             LOG.debug("Describing device: {}", device);
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
-        String project = getProjectFromLocation(device.getLocation());
+        String project = locationProjectName.getUnchecked(device.getLocation());
         DiskApi diskApi = computeApi.getDiskApiForProject(project);
         return diskApi.getInZone(getZoneFromDisk(disk), device.getId());
     }
@@ -153,10 +164,6 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
               .credentials(identity, credential)
               .modules(modules)
               .buildApi(GoogleComputeEngineApi.class);
-    }
-
-    private String getProjectFromLocation(JcloudsLocation location) {
-        return PROJECT_ID;
     }
 
     private String getZoneFromDisk(Disk disk) {
