@@ -9,12 +9,15 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.cloud.CloudMachineNamer;
+import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
@@ -116,6 +119,14 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     public BlockDevice unmountFilesystemAndDetachVolume(MountedBlockDevice mountedDevice) {
         unmountFilesystem(mountedDevice);
         return detachBlockDevice(mountedDevice);
+    }
+
+    protected String getOrMakeName(JcloudsLocation location, BlockDeviceOptions options) {
+        if (!Strings.isNullOrEmpty(options.getName())) {
+            return options.getName();
+        } else {
+            return "volume-" + new CloudMachineNamer(location.getRawLocalConfigBag()).generateNewMachineUniqueName();
+        }
     }
 
     // TODO Move to CommonCommands

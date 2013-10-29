@@ -74,7 +74,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(location);
         String project = locationProjectName.getUnchecked(location);
         DiskApi diskApi = computeApi.getDiskApiForProject(project);
-        String name = "volume-test-create-volume-"+UUID.randomUUID().toString();
+        String name = getOrMakeName(location, options);
 
         Operation operation = diskApi.createInZone(name, options.getSizeInGb(), options.getZone());
         waitForOperationToBeDone(computeApi, project, options.getZone(), operation);

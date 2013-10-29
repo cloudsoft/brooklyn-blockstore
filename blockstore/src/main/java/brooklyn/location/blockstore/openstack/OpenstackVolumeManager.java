@@ -23,6 +23,7 @@ import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.Devices;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.cloud.CloudMachineNamer;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
@@ -58,7 +59,7 @@ public class OpenstackVolumeManager extends AbstractVolumeManager {
         CinderApi cinderApi = getCinderApi(location);
         VolumeApi volumeApi = cinderApi.getVolumeApiForZone(zone);
         CreateVolumeOptions options = CreateVolumeOptions.Builder
-                .name("brooklyn-something") // FIXME
+                .name(getOrMakeName(location, config))
                 .metadata(config.getTags());
 
         Volume volume = volumeApi.create(config.getSizeInGb(), options);

@@ -7,11 +7,21 @@ import com.google.common.collect.Maps;
 
 public class BlockDeviceOptions {
 
+    private String name;
     private String zone;
     private Map<String, String> tags = Maps.newHashMap();
     private int sizeInGb;
     private char deviceSuffix = 'h';
     private boolean deleteOnTermination;
+
+    public String getName() {
+        return name;
+    }
+
+    public BlockDeviceOptions name(String name) {
+        this.name = name;
+        return this;
+    }
 
     public String getZone() {
         return zone;

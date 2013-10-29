@@ -173,7 +173,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         }
     }
 
-    @Test(groups="Live")//, dependsOnMethods = {"testCreateAndAttachVolume"})
+    @Test(groups="Live", dependsOnMethods = {"testCreateAndAttachVolume"})
     public void testMoveMountedVolumeToAnotherMachine() throws Throwable {
         JcloudsSshMachineLocation machine1 = createJcloudsMachine();
         JcloudsSshMachineLocation machine2 = createJcloudsMachine();
