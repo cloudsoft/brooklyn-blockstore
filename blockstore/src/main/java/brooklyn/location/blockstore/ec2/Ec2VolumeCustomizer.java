@@ -7,6 +7,10 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import brooklyn.location.blockstore.BlockDeviceOptions;
+import brooklyn.location.blockstore.FilesystemOptions;
+import brooklyn.location.blockstore.api.AttachedBlockDevice;
+import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationCustomizer;
@@ -22,11 +26,11 @@ public class Ec2VolumeCustomizer {
     private static final Logger LOG = LoggerFactory.getLogger(Ec2VolumeCustomizer.class);
 
     private static final Ec2VolumeManager ebsVolumeManager = new Ec2VolumeManager();
-    
+
     // Prevent construction: helper class.
     private Ec2VolumeCustomizer() {
     }
-    
+
     /**
      * Returns a location customizer that:
      * <ul>
@@ -37,25 +41,25 @@ public class Ec2VolumeCustomizer {
      * <li>mounts the filesystem under the requested path</li>
      * </ul>
      */
-    public static JcloudsLocationCustomizer withNewVolume(final String volumeDeviceName, final String osDeviceName, final String mountPoint, final String filesystemType,
-            final String availabilityZone, final int sizeInGib, final boolean deleteOnTermination) {
+    public static JcloudsLocationCustomizer withNewVolume(final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions) {
 
         return new BasicJcloudsLocationCustomizer() {
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
-                templateBuilder.locationId(availabilityZone);
+                templateBuilder.locationId(blockOptions.getZone());
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
-                ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(volumeDeviceName, sizeInGib, deleteOnTermination);
+                ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(
+                        ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()), blockOptions.getSizeInGb(), blockOptions.deleteOnTermination());
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
-                ebsVolumeManager.createFilesystem(machine, osDeviceName, filesystemType);
-                ebsVolumeManager.mountFilesystem(machine, osDeviceName, mountPoint, filesystemType);
+                ebsVolumeManager.createAttachAndMountVolume(machine, blockOptions, filesystemOptions);
             }
         };
     }
 
+    // TODO: Either the JavaDoc or the implementation is incorrect. The implementation makes no attempt to attach volumes.
     /**
      * Returns a location customizer that:
      * <ul>
@@ -65,20 +69,24 @@ public class Ec2VolumeCustomizer {
      * <li>mounts the filesystem under the requested path</li>
      * </ul>
      */
-    public static JcloudsLocationCustomizer withExistingSnapshot(final String volumeDeviceName, final String osDeviceName, final String mountPoint,
-            final String availabilityZone, final String snapshotId, final int sizeInGib, final boolean deleteOnTermination) {
+    public static JcloudsLocationCustomizer withExistingSnapshot(final AttachedBlockDevice attachedDevice,
+            final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions) {
 
         return new BasicJcloudsLocationCustomizer() {
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
-                templateBuilder.locationId(availabilityZone);
+                templateBuilder.locationId(blockOptions.getZone());
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
-                ((EC2TemplateOptions) templateOptions).mapEBSSnapshotToDeviceName(volumeDeviceName, snapshotId, sizeInGib, deleteOnTermination);
+                ((EC2TemplateOptions) templateOptions).mapEBSSnapshotToDeviceName(
+                        ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()),
+                        attachedDevice.getId(),
+                        blockOptions.getSizeInGb(),
+                        blockOptions.deleteOnTermination());
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
-                ebsVolumeManager.mountFilesystem(machine, osDeviceName, mountPoint);
+                ebsVolumeManager.mountFilesystem(attachedDevice, filesystemOptions);
             }
         };
     }
@@ -91,17 +99,19 @@ public class Ec2VolumeCustomizer {
      * <li>mounts the filesystem under the requested path</li>
      * </ul>
      */
-    public static JcloudsLocationCustomizer withExistingVolume(final String volumeDeviceName, final String osDeviceName, final String mountPoint,
+    public static JcloudsLocationCustomizer withExistingVolume(final BlockDevice device,
+            final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions
+            ,
+            final String volumeDeviceName, final String osDeviceName, final String mountPoint,
             final String region, final String availabilityZone, final String volumeId) {
 
         return new BasicJcloudsLocationCustomizer() {
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
-                templateBuilder.locationId(availabilityZone);
+                templateBuilder.locationId(blockOptions.getZone());
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
-                ebsVolumeManager.attachVolume(machine, volumeId, volumeDeviceName);
-                ebsVolumeManager.mountFilesystem(machine, osDeviceName, mountPoint);
+                ebsVolumeManager.attachAndMountVolume(machine, device, blockOptions, filesystemOptions);
             }
         };
     }

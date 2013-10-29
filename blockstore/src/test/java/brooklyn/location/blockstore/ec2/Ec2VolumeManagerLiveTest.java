@@ -8,8 +8,10 @@ import java.util.Map;
 import org.jclouds.ec2.domain.Volume;
 import org.testng.annotations.Test;
 
+import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.VolumeManager;
+import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.collections.MutableMap;
@@ -31,7 +33,7 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     public static final String LOCATION_SPEC = PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME);
     public static final String TINY_HARDWARE_ID = "t1.micro";
     public static final String SMALL_HARDWARE_ID = "m1.small";
-    
+
     // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
     public static final String CENTOS_IMAGE_ID = "us-east-1/ami-7d7bfc14";
     
@@ -61,14 +63,25 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     @Override
-    protected void assertVolumeAvailable(String volumeId) {
-        Volume volume = ((Ec2VolumeManager)volumeManager).describeVolume(jcloudsLocation, volumeId);
+    protected void assertVolumeAvailable(BlockDevice device) {
+        Volume volume = ((Ec2VolumeManager)volumeManager).describeVolume(device);
         assertNotNull(volume);
         assertEquals(volume.getStatus(), Volume.Status.AVAILABLE);
     }
 
     @Override
     protected Optional<JcloudsSshMachineLocation> rebindJcloudsMachine() {
+        Map<String, ?> machineFlags = MutableMap.of(
+                "id", "i-507fa036",
+                "hostname", "ec2-54-204-252-220.compute-1.amazonaws.com",
+                "user", "sam",
+                JcloudsLocation.PUBLIC_KEY_FILE.getName(), "/Users/sam/.ssh/id_rsa");
+//        try {
+//            return Optional.of(
+//                    jcloudsLocation.rebindMachine(ConfigBag.newInstanceCopying(jcloudsLocation.getRawLocalConfigBag()).putAll(machineFlags)));
+//        } catch (NoMachinesAvailableException e) {
+//            return Optional.absent();
+//        }
         return Optional.absent();
     }
     
