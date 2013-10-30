@@ -71,17 +71,6 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     @Override
     protected Optional<JcloudsSshMachineLocation> rebindJcloudsMachine() {
-        Map<String, ?> machineFlags = MutableMap.of(
-                "id", "i-507fa036",
-                "hostname", "ec2-54-204-252-220.compute-1.amazonaws.com",
-                "user", "sam",
-                JcloudsLocation.PUBLIC_KEY_FILE.getName(), "/Users/sam/.ssh/id_rsa");
-//        try {
-//            return Optional.of(
-//                    jcloudsLocation.rebindMachine(ConfigBag.newInstanceCopying(jcloudsLocation.getRawLocalConfigBag()).putAll(machineFlags)));
-//        } catch (NoMachinesAvailableException e) {
-//            return Optional.absent();
-//        }
         return Optional.absent();
     }
     
