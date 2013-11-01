@@ -42,7 +42,7 @@ public class VolumeManagersTest {
     }
 
     @Test
-    public void testGCeVolumeManager() {
+    public void testGCEVolumeManager() {
         JcloudsLocation gceLocation = locationFor("google-compute-engine");
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(gceLocation));
         assertEquals(VolumeManagers.newVolumeManager(gceLocation).getClass(), GoogleComputeEngineVolumeManager.class);

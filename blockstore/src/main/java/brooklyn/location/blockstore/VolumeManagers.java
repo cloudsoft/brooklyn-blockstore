@@ -1,13 +1,19 @@
 package brooklyn.location.blockstore;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import brooklyn.location.Location;
 import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeManager;
 import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
 import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 public class VolumeManagers {
+
+    private static final Logger LOG = LoggerFactory.getLogger(GoogleComputeEngineVolumeManager.class);
 
     private VolumeManagers() {}
 
@@ -16,9 +22,14 @@ public class VolumeManagers {
      *         for the given location.
      */
     public static boolean isVolumeManagerSupportedForLocation(Location location) {
-        if (location == null || !(location instanceof JcloudsLocation))
+        if (location == null || !(location instanceof JcloudsLocation || location instanceof JcloudsSshMachineLocation))
             return false;
-        String provider = ((JcloudsLocation) location).getProvider();
+        String provider;
+        if (location instanceof JcloudsLocation) {
+            provider = JcloudsLocation.class.cast(location).getProvider();
+        } else {
+            provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
+        }
         return provider.equals("aws-ec2") ||
                 provider.startsWith("rackspace-") ||
                 provider.startsWith("cloudservers-") ||
@@ -42,10 +53,15 @@ public class VolumeManagers {
         if (location == null || !isVolumeManagerSupportedForLocation(location)) {
             throw new IllegalArgumentException("Cannot handle volumes in location: " + location);
         }
-        JcloudsLocation jcloudsLocation = JcloudsLocation.class.cast(location);
-        String provider = jcloudsLocation.getProvider();
 
-        if (provider.startsWith("aws-ec2")) {
+        String provider;
+        if (location instanceof JcloudsLocation) {
+            provider = JcloudsLocation.class.cast(location).getProvider();
+        } else {
+            provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
+        }
+
+        if (provider.equals("aws-ec2")) {
             return new Ec2VolumeManager();
         } else if (provider.startsWith("rackspace-") || provider.startsWith("cloudservers-")) {
             return new OpenstackVolumeManager();
@@ -56,4 +72,6 @@ public class VolumeManagers {
                     " (mismatch between isVolumeManagerSupportedForLocation and newVolumeManager)");
         }
     }
+
+
 }
