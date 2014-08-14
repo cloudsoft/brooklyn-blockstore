@@ -3,13 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>brooklyn-blockstore</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <parent>
-        <groupId>io.cloudsoft.blockstore</groupId>
+        <groupId>io.brooklyn.blockstore</groupId>
         <artifactId>brooklyn-blockstore-parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.2.0-SNAPSHOT</version>  <!-- LOCAL_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -17,7 +16,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${brooklyn.version}</version>
         </dependency>
@@ -48,36 +47,18 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.brooklyn</groupId>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.13</version>
-                <configuration>
-                    <properties>
-                        <property>
-                            <name>listener</name>
-                            <value>brooklyn.test.LoggingVerboseReporter</value>
-                        </property>
-                    </properties>
-                    <enableAssertions>true</enableAssertions>
-                    <groups>${includedTestGroups}</groups>
-                    <excludedGroups>${excludedTestGroups}</excludedGroups>
-                    <testFailureIgnore>false</testFailureIgnore>
-                    <systemPropertyVariables>
-                        <verbose>-1</verbose>
-                    </systemPropertyVariables>
-                    <printSummary>true</printSummary>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

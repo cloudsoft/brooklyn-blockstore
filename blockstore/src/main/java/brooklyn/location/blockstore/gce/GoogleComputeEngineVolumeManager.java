@@ -23,13 +23,6 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
-
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
@@ -37,7 +30,14 @@ import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
+
+import com.google.common.base.Objects;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
 
 public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
@@ -190,14 +190,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
                     public Boolean call() throws Exception {
                         Operation current = api.getZoneOperationApiForProject(project).getInZone(zone, operation.getName());
                         latest.set(current);
-                        switch (current.getStatus()) {
-                            case DONE:
-                                return true;
-                            case PENDING:
-                            case RUNNING:
-                            default:
-                                return false;
-                        }
+                        return current.getStatus() == Operation.Status.DONE;
                     }
                 })
                 .run();

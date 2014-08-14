@@ -3,19 +3,14 @@ package brooklyn.location.blockstore.ec2;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import java.util.Map;
-
 import org.jclouds.ec2.domain.Volume;
 import org.testng.annotations.Test;
 
-import brooklyn.location.NoMachinesAvailableException;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.config.ConfigBag;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;

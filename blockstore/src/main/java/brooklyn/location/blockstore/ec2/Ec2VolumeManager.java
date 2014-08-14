@@ -5,18 +5,14 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.jclouds.ec2.EC2ApiMetadata;
-import org.jclouds.ec2.EC2Client;
+import org.jclouds.ec2.EC2Api;
 import org.jclouds.ec2.domain.Attachment;
 import org.jclouds.ec2.domain.Volume;
+import org.jclouds.ec2.features.ElasticBlockStoreApi;
 import org.jclouds.ec2.features.TagApi;
 import org.jclouds.ec2.options.DetachVolumeOptions;
-import org.jclouds.ec2.services.ElasticBlockStoreClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
@@ -25,7 +21,10 @@ import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.internal.Repeater;
+import brooklyn.util.repeat.Repeater;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * For managing EBS volumes via EC2-compatible APIs.
@@ -51,13 +50,12 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
     public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options) {
         LOG.debug("Creating block device: location={}; options={}", location, options);
 
-        EC2Client ec2Client = location.getComputeService().getContext().unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        ElasticBlockStoreClient ebsClient = ec2Client.getElasticBlockStoreServices();
-        TagApi tagClient = ec2Client.getTagApi().get();
+        ElasticBlockStoreApi ebsApi = getEbsApi(location);
+        TagApi tagApi = getTagApi(location);
 
-        Volume volume = ebsClient.createVolumeInAvailabilityZone(options.getZone(), options.getSizeInGb());
+        Volume volume = ebsApi.createVolumeInAvailabilityZone(options.getZone(), options.getSizeInGb());
         if (options.hasTags()) {
-            tagClient.applyToResources(options.getTags(), ImmutableList.of(volume.getId()));
+            tagApi.applyToResources(options.getTags(), ImmutableList.of(volume.getId()));
         }
 
         BlockDevice device = Devices.newBlockDevice(location, volume.getId());
@@ -72,9 +70,9 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
 
         JcloudsLocation location = machine.getParent();
         String region = getRegionName(location);
-        EC2Client ec2Client = location.getComputeService().getContext().unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        ElasticBlockStoreClient ebsClient = ec2Client.getElasticBlockStoreServices();
-        Attachment attachment = ebsClient.attachVolumeInRegion(region, blockDevice.getId(),
+        ElasticBlockStoreApi ebsApi = getEbsApi(location);
+        
+        Attachment attachment = ebsApi.attachVolumeInRegion(region, blockDevice.getId(),
                 machine.getNode().getProviderId(), getVolumeDeviceName(options.getDeviceSuffix()));
 
         LOG.debug("Finished attaching block device: machine={}; device={}; options={}", new Object[]{machine, blockDevice, options});
@@ -87,9 +85,9 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
 
         String region = getRegionName(attachedBlockDevice.getLocation());
         String instanceId = attachedBlockDevice.getMachine().getNode().getProviderId();
-        EC2Client ec2Client = attachedBlockDevice.getLocation().getComputeService().getContext().unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        ElasticBlockStoreClient ebsClient = ec2Client.getElasticBlockStoreServices();
-        ebsClient.detachVolumeInRegion(region, attachedBlockDevice.getId(), true,
+        ElasticBlockStoreApi ebsApi = getEbsApi(attachedBlockDevice.getLocation());
+
+        ebsApi.detachVolumeInRegion(region, attachedBlockDevice.getId(), true,
                 DetachVolumeOptions.Builder
                         .fromDevice(attachedBlockDevice.getDeviceName())
                         .fromInstance(instanceId));
@@ -104,9 +102,8 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         LOG.debug("Deleting device: {}", blockDevice);
 
         String region = getRegionName(blockDevice.getLocation());
-        EC2Client ec2Client = blockDevice.getLocation().getComputeService().getContext().unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        ElasticBlockStoreClient ebsClient = ec2Client.getElasticBlockStoreServices();
-        ebsClient.deleteVolumeInRegion(region, blockDevice.getId());
+        ElasticBlockStoreApi ebsApi = getEbsApi(blockDevice.getLocation());
+        ebsApi.deleteVolumeInRegion(region, blockDevice.getId());
     }
 
     /**
@@ -117,9 +114,8 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
             LOG.debug("Describing device: {}", blockDevice);
 
         String region = getRegionName(blockDevice.getLocation());
-        EC2Client ec2Client = blockDevice.getLocation().getComputeService().getContext().unwrap(EC2ApiMetadata.CONTEXT_TOKEN).getApi();
-        ElasticBlockStoreClient ebsClient = ec2Client.getElasticBlockStoreServices();
-        Set<Volume> volumes = ebsClient.describeVolumesInRegion(region, blockDevice.getId());
+        ElasticBlockStoreApi ebsApi = getEbsApi(blockDevice.getLocation());
+        Set<Volume> volumes = ebsApi.describeVolumesInRegion(region, blockDevice.getId());
         return Iterables.getFirst(volumes, null);
     }
     
@@ -135,6 +131,30 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         }
     }
 
+    protected EC2Api getApi(JcloudsLocation location) {
+        return location.getComputeService().getContext().unwrapApi(EC2Api.class);
+    }
+    
+    protected ElasticBlockStoreApi getEbsApi(JcloudsLocation location) {
+        String region = getRegionName(location);
+        EC2Api api = location.getComputeService().getContext().unwrapApi(EC2Api.class);
+        if (region != null) {
+            return api.getElasticBlockStoreApiForRegion(region).get();
+        } else {
+            return api.getElasticBlockStoreApi().get();
+        }
+    }
+
+    protected TagApi getTagApi(JcloudsLocation location) {
+        String region = getRegionName(location);
+        EC2Api api = location.getComputeService().getContext().unwrapApi(EC2Api.class);
+        if (region != null) {
+            return api.getTagApiForRegion(region).get();
+        } else {
+            return api.getTagApi().get();
+        }
+    }
+
     /**
      * Waits for the status of the volume to be {@link Volume.Status#AVAILABLE available}.
      * If the status does not reach available after a delay, logs an error.
@@ -142,6 +162,7 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
      */
     private Volume waitForVolumeToBeAvailable(final BlockDevice device) {
         final AtomicReference<Volume> lastVolume = new AtomicReference<Volume>();
+        
         boolean available = Repeater.create("waiting for volume available:" + device)
                 .every(1, TimeUnit.SECONDS)
                 .limitTimeTo(60, TimeUnit.SECONDS)
@@ -151,12 +172,11 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
                         Volume volume = describeVolume(device);
                         lastVolume.set(volume);
                         return volume.getStatus() == Volume.Status.AVAILABLE;
-                    }
-                })
+                    }})
                 .run();
 
         if (!available) {
-            LOG.error("Volume {} still not available. Last known was: {}; continuing...", device, lastVolume.get());
+            LOG.error("Volume {} still not available. Last known was: {}; continuing", device, lastVolume.get());
         }
 
         return lastVolume.get();

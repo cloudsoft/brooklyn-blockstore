@@ -1,8 +1,5 @@
 package brooklyn.location.blockstore;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import brooklyn.location.Location;
 import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
@@ -12,8 +9,6 @@ import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 public class VolumeManagers {
-
-    private static final Logger LOG = LoggerFactory.getLogger(GoogleComputeEngineVolumeManager.class);
 
     private VolumeManagers() {}
 

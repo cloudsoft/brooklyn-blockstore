@@ -4,13 +4,11 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
 import org.jclouds.openstack.cinder.v1.domain.Volume;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
@@ -19,8 +17,6 @@ import com.google.common.collect.ImmutableMap;
 
 @Test
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
-
-    private static final Logger LOG = LoggerFactory.getLogger(OpenStackVolumeManagerLiveTest.class);
 
     public static final String PROVIDER = "rackspace-uk";
     public static final String LOCATION_SPEC = PROVIDER;

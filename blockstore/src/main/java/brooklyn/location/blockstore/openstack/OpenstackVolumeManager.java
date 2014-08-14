@@ -15,23 +15,24 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
-
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.Devices;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.cloud.CloudMachineNamer;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
 
 /**
  * For managing volumes in OpenStack Cinder (e.g. Rackspace).
  */
 public class OpenstackVolumeManager extends AbstractVolumeManager {
 
+    // TODO Hardcodes Rackspace; need to generalise
+    
     private static final Logger LOG = LoggerFactory.getLogger(OpenstackVolumeManager.class);
     private static final String DEVICE_PREFIX = "/dev/sd";
     private static final String OS_DEVICE_PREFIX = "/dev/xvd";
