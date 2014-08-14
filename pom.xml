@@ -22,7 +22,7 @@
         <includedTestGroups/>
         <excludedTestGroups>live,Live</excludedTestGroups>
 
-        <brooklyn.version>0.6.0-SNAPSHOT</brooklyn.version>
+        <brooklyn.version>0.6.0</brooklyn.version>
         <jclouds.version>1.6.2-incubating</jclouds.version>
         <testng.version>6.8</testng.version>
     </properties>
