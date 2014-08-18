@@ -1,5 +1,10 @@
 package brooklyn.location.blockstore.ec2;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.util.List;
+import java.util.Map;
+
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
@@ -15,6 +20,10 @@ import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import brooklyn.util.collections.MutableMap;
+
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 /**
  * Customization hooks to ensure that any EC2 instances provisioned via a corresponding jclouds location become associated
@@ -42,19 +51,49 @@ public class Ec2VolumeCustomizer {
      * </ul>
      */
     public static JcloudsLocationCustomizer withNewVolume(final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions) {
+        return withNewVolumes(MutableMap.of(checkNotNull(blockOptions, "blockOptions"), filesystemOptions));
+    }
 
+    // TODO what mount point etc?
+    public static JcloudsLocationCustomizer withNewVolumes(List<Integer> capacities) {
+        Map<BlockDeviceOptions, FilesystemOptions> volumes = Maps.newLinkedHashMap();
+        for (int i = 0; i < capacities.size(); i++) {
+            Integer capacity = capacities.get(i);
+            char deviceSuffix = (char)('h'+i);
+            BlockDeviceOptions blockOptions = new BlockDeviceOptions()
+                    .deviceSuffix(deviceSuffix)
+                    .sizeInGb(capacity)
+                    .deleteOnTermination(true);
+            FilesystemOptions filesystemOptions = new FilesystemOptions("/mnt/brooklyn/"+deviceSuffix);
+            volumes.put(blockOptions, filesystemOptions);
+        }
+        return withNewVolumes(volumes);
+    }
+    
+    public static JcloudsLocationCustomizer withNewVolumes(final Map<BlockDeviceOptions, FilesystemOptions> volumes) {
         return new BasicJcloudsLocationCustomizer() {
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
-                templateBuilder.locationId(blockOptions.getZone());
+                BlockDeviceOptions blockOptions = Iterables.getFirst(volumes.keySet(), null);
+                if (blockOptions != null && blockOptions.getZone() != null) {
+                    templateBuilder.locationId(blockOptions.getZone());
+                }
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
-                ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(
-                        ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()), blockOptions.getSizeInGb(), blockOptions.deleteOnTermination());
+                for (BlockDeviceOptions blockOptions : volumes.keySet()) {
+                    ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(
+                            ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()), blockOptions.getSizeInGb(), blockOptions.deleteOnTermination());
+                }
             }
 
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
-                ebsVolumeManager.createAttachAndMountVolume(machine, blockOptions, filesystemOptions);
+                for (Map.Entry<BlockDeviceOptions, FilesystemOptions> entry : volumes.entrySet()) {
+                    BlockDeviceOptions blockOptions = entry.getKey();
+                    FilesystemOptions filesystemOptions = entry.getValue();
+                    if (filesystemOptions != null) {
+                        ebsVolumeManager.createAttachAndMountVolume(machine, blockOptions, filesystemOptions);
+                    }
+                }
             }
         };
     }

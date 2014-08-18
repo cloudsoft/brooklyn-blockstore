@@ -8,7 +8,6 @@ import org.testng.annotations.Test;
 
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
@@ -29,8 +28,9 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     public static final String TINY_HARDWARE_ID = "t1.micro";
     public static final String SMALL_HARDWARE_ID = "m1.small";
 
-    // Image: {id=us-east-1/ami-7d7bfc14, providerId=ami-7d7bfc14, name=RightImage_CentOS_6.3_x64_v5.8.8.5, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=6.0, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, is64Bit=true}, description=rightscale-us-east/RightImage_CentOS_6.3_x64_v5.8.8.5.manifest.xml, version=5.8.8.5, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=instance-store, virtualizationType=paravirtual, hypervisor=xen}}
-    public static final String CENTOS_IMAGE_ID = "us-east-1/ami-7d7bfc14";
+    // Must be an image that supports EBS
+    // {id=us-east-1/ami-4e32c626, providerId=ami-4e32c626, name=RightImage_CentOS_6.5_x64_v14.0_EBS, location={scope=REGION, id=us-east-1, description=us-east-1, parent=aws-ec2, iso3166Codes=[US-VA]}, os={family=centos, arch=paravirtual, version=5.0, description=411009282317/RightImage_CentOS_6.5_x64_v14.0_EBS, is64Bit=true}, description=RightImage_CentOS_6.5_x64_v14.0_EBS, version=14.0_EBS, status=AVAILABLE[available], loginUser=root, userMetadata={owner=411009282317, rootDeviceType=ebs, virtualizationType=paravirtual, hypervisor=xen}}
+    public static final String CENTOS_IMAGE_ID = "us-east-1/ami-4e32c626";
     
     @Override
     protected String getProvider() {
@@ -42,11 +42,6 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
         return (JcloudsLocation) ctx.getLocationRegistry().resolve(LOCATION_SPEC);
     }
     
-    @Override
-    protected VolumeManager createVolumeManager() {
-        return new Ec2VolumeManager();
-    }
-
     @Override
     protected int getVolumeSize() {
         return 1;

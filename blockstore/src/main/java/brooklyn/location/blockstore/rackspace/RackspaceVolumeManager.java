@@ -1,4 +1,4 @@
-package brooklyn.location.blockstore.openstack;
+package brooklyn.location.blockstore.rackspace;
 
 import org.jclouds.ContextBuilder;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
@@ -7,6 +7,7 @@ import org.jclouds.openstack.cinder.v1.CinderApi;
 import org.jclouds.openstack.nova.v2_0.NovaApi;
 import org.jclouds.sshj.config.SshjSshClientModule;
 
+import brooklyn.location.blockstore.openstack.AbstractOpenstackVolumeManager;
 import brooklyn.location.jclouds.JcloudsLocation;
 
 import com.google.common.collect.ImmutableSet;
@@ -15,14 +16,13 @@ import com.google.inject.Module;
 /**
  * For managing volumes in OpenStack Cinder (e.g. Rackspace).
  */
-public class OpenstackVolumeManager extends AbstractOpenstackVolumeManager {
+public class RackspaceVolumeManager extends AbstractOpenstackVolumeManager {
 
     // FIXME Will this create a new jclouds context every time, which will never be closed?
     // Should we be getting the CinderApi from location.getComputeService().getContext() somehow?
     @Override
     protected CinderApi getCinderApi(JcloudsLocation location) {
-        String provider = "openstack-cinder";
-        String endpoint = location.getEndpoint();
+        String provider = "rackspace-cloudblockstorage-uk";
         String identity = location.getIdentity();
         String credential = location.getCredential();
         Iterable<Module> modules = ImmutableSet.<Module> of(
@@ -31,17 +31,15 @@ public class OpenstackVolumeManager extends AbstractOpenstackVolumeManager {
                 new BouncyCastleCryptoModule());
 
         return ContextBuilder.newBuilder(provider)
-                .endpoint(endpoint)
-                .credentials(identity, credential)
-                .modules(modules)
-                .buildApi(CinderApi.class);
+              .credentials(identity, credential)
+              .modules(modules)
+              .buildApi(CinderApi.class);
     }
 
     // FIXME reusing jclouds context? See comment on getCinderApi.
     @Override
     protected NovaApi getNovaApi(JcloudsLocation location) {
-        String provider = "openstack-nova";
-        String endpoint = location.getEndpoint();
+        String provider = "rackspace-cloudservers-uk";
         String identity = location.getIdentity();
         String credential = location.getCredential();
         Iterable<Module> modules = ImmutableSet.<Module> of(
@@ -50,7 +48,6 @@ public class OpenstackVolumeManager extends AbstractOpenstackVolumeManager {
                 new BouncyCastleCryptoModule());
 
         return ContextBuilder.newBuilder(provider)
-                .endpoint(endpoint)
                 .credentials(identity, credential)
                 .modules(modules)
                 .buildApi(NovaApi.class);
@@ -58,7 +55,14 @@ public class OpenstackVolumeManager extends AbstractOpenstackVolumeManager {
 
     @Override
     protected String getZone(JcloudsLocation location) {
-        // FIXME Untested code; what should this be?
-        return null;
+        String provider = location.getProvider();
+        if (provider.matches("rackspace-.*-uk") || provider.matches("cloudservers-uk")) {
+            return "LON";
+        } else if (provider.matches("rackspace-.*-us") || provider.matches("cloudservers-us")) {
+            return "DFW";
+        } else {
+            throw new IllegalStateException("Cannot determine zone for provider "+provider);
+        }
     }
+
 }

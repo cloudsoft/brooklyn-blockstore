@@ -1,9 +1,9 @@
-package brooklyn.location.blockstore.gce;
+package brooklyn.location.blockstore.openstack;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import org.jclouds.googlecomputeengine.domain.Disk;
+import org.jclouds.openstack.cinder.v1.domain.Volume;
 import org.testng.annotations.Test;
 
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
@@ -14,18 +14,14 @@ import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
+@Test
+public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    // FIXME NO-CHECK IN
-    @Test(groups="Live")
-    public void testCreateAndAttachVolume() throws Throwable {
-        super.testCreateAndAttachVolume();
-    }
-    
-    public static final String PROVIDER = "google-compute-engine";
-    public static final String REGION = "europe-west1-a";
-    public static final String LOCATION_SPEC = "jclouds:" + PROVIDER+":europe-west1-a";// + (REGION == null ? "" : ":" + REGION);
-    public static final String IMAGE_NAME_REGEX = ".*centos-6-.*";
+    public static final String PROVIDER = "rackspace-cloudservers-uk";
+    public static final String LOCATION_SPEC = PROVIDER;
+    public static final String TINY_HARDWARE_ID = "1";
+    public static final String SMALL_HARDWARE_ID = "2";
+    public static final String IMAGE_NAME_REGEX = ".*CentOS 6.*";
 
     @Override
     protected String getProvider() {
@@ -36,31 +32,32 @@ public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeMana
     protected JcloudsLocation createJcloudsLocation() {
         return (JcloudsLocation) ctx.getLocationRegistry().resolve(LOCATION_SPEC);
     }
-
+    
     @Override
     protected int getVolumeSize() {
-        return 1;
+        return 100; // min on rackspace is 100
     }
 
     @Override
     protected String getDefaultAvailabilityZone() {
-        return REGION;
+        return null;
     }
 
     @Override
     protected void assertVolumeAvailable(BlockDevice device) {
-        Disk disk = ((GoogleComputeEngineVolumeManager) volumeManager).describeVolume(device);
-        assertNotNull(disk);
-        assertEquals(disk.getStatus(), "READY");
+        Volume volume = ((AbstractOpenstackVolumeManager)volumeManager).describeVolume(device);
+        assertNotNull(volume);
+        assertEquals(volume.getStatus(), Volume.Status.AVAILABLE);
     }
 
     @Override
     protected Optional<JcloudsSshMachineLocation> rebindJcloudsMachine() {
         return Optional.absent();
     }
-
+    
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
+        // TODO Wanted to specify hardware id, but this failed; and wanted to force no imageId (in case specified in brooklyn.properties)
         return jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
                 .build());

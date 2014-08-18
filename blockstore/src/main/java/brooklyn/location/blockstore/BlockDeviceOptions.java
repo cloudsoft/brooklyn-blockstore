@@ -23,13 +23,33 @@ public class BlockDeviceOptions {
         return this;
     }
 
-    public String getZone() {
-        return zone;
-    }
-
     public BlockDeviceOptions zone(String zone) {
         this.zone = zone;
         return this;
+    }
+
+    public BlockDeviceOptions tags(Map<String, String> tags) {
+        this.tags = tags;
+        return this;
+    }
+
+    public BlockDeviceOptions sizeInGb(int sizeInGb) {
+        this.sizeInGb = sizeInGb;
+        return this;
+    }
+
+    public BlockDeviceOptions deviceSuffix(char suffix) {
+        this.deviceSuffix = suffix;
+        return this;
+    }
+
+    public BlockDeviceOptions deleteOnTermination(boolean deleteOnTermination) {
+        this.deleteOnTermination = deleteOnTermination;
+        return this;
+    }
+
+    public String getZone() {
+        return zone;
     }
 
     public Map<String, String> getTags() {
@@ -40,35 +60,16 @@ public class BlockDeviceOptions {
         return getTags() != null && !getTags().isEmpty();
     }
 
-    public BlockDeviceOptions tags(Map<String, String> tags) {
-        this.tags = tags;
-        return this;
-    }
-
     public int getSizeInGb() {
         return sizeInGb;
-    }
-
-    public BlockDeviceOptions sizeInGb(int sizeInGb) {
-        this.sizeInGb = sizeInGb;
-        return this;
     }
 
     public char getDeviceSuffix() {
         return deviceSuffix;
     }
 
-    public BlockDeviceOptions deviceSuffix(char suffix) {
-        this.deviceSuffix = suffix;
-        return this;
-    }
-
     public boolean deleteOnTermination() {
         return deleteOnTermination;
-    }
-
-    public void deleteOnTermination(boolean deleteOnTermination) {
-        this.deleteOnTermination = deleteOnTermination;
     }
 
     @Override

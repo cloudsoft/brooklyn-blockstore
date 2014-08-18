@@ -16,6 +16,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.config.BrooklynProperties;
 import brooklyn.entity.basic.Entities;
+import brooklyn.location.Location;
 import brooklyn.location.basic.SshMachineLocation;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
@@ -28,11 +29,15 @@ import brooklyn.management.internal.LocalManagementContext;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 public abstract class AbstractVolumeManagerLiveTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractVolumeManagerLiveTest.class);
+
+    public static final String BROOKLYN_PROPERTIES_JCLOUDS_PREFIX = "brooklyn.location.jclouds.";
+    public static final String BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX = "brooklyn.jclouds.";
 
     protected BrooklynProperties brooklynProperties;
     protected ManagementContext ctx;
@@ -44,7 +49,6 @@ public abstract class AbstractVolumeManagerLiveTest {
     
     protected abstract String getProvider();
     protected abstract JcloudsLocation createJcloudsLocation();
-    protected abstract VolumeManager createVolumeManager();
     protected abstract int getVolumeSize();
     protected abstract String getDefaultAvailabilityZone();
     protected abstract void assertVolumeAvailable(BlockDevice blockDevice);
@@ -61,19 +65,11 @@ public abstract class AbstractVolumeManagerLiveTest {
     public void setUp() throws Exception {
         ctx = new LocalManagementContext();
         brooklynProperties = (BrooklynProperties) ctx.getConfig();
-
-        // Don't let any defaults from brooklyn.properties (except credentials) interfere with test
-        brooklynProperties.remove("brooklyn.jclouds."+getProvider()+".image-description-regex");
-        brooklynProperties.remove("brooklyn.jclouds."+getProvider()+".image-name-regex");
-        brooklynProperties.remove("brooklyn.jclouds."+getProvider()+".image-id");
-        brooklynProperties.remove("brooklyn.jclouds."+getProvider()+".inboundPorts");
-        brooklynProperties.remove("brooklyn.jclouds."+getProvider()+".hardware-id");
-
-        // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
-        brooklynProperties.remove("brooklyn.ssh.config.scriptHeader");
+        stripBrooklynProperties(brooklynProperties);
+        addBrooklynProperties(brooklynProperties);
 
         jcloudsLocation = createJcloudsLocation();
-        volumeManager = createVolumeManager();
+        volumeManager = createVolumeManager(jcloudsLocation);
     }
 
     @AfterMethod(alwaysRun=true)
@@ -91,6 +87,30 @@ public abstract class AbstractVolumeManagerLiveTest {
             Entities.destroyAll(ctx);
             ctx = null;
         }
+    }
+
+    protected static void stripBrooklynProperties(BrooklynProperties props) {
+        for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
+            if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
+                props.remove(key);
+            }
+            if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
+                props.remove(key);
+            }
+            
+            // Also removes scriptHeader (e.g. if doing `. ~/.bashrc` and `. ~/.profile`, then that can cause "stdin: is not a tty")
+            if (key.startsWith("brooklyn.ssh")) {
+                props.remove(key);
+            }
+        }
+    }
+
+    protected void addBrooklynProperties(BrooklynProperties props) {
+        // no-op; for overriding
+    }
+
+    protected VolumeManager createVolumeManager(Location location) {
+        return VolumeManagers.newVolumeManager(location);
     }
 
     @Test(groups="Live")
@@ -146,7 +166,7 @@ public abstract class AbstractVolumeManagerLiveTest {
             String tmpDestFile = "/tmp/myfile.txt";
             String destFile = mountPoint+"/myfile.txt";
             machine.copyTo(new ByteArrayInputStream("abc".getBytes()), tmpDestFile);
-            assertExecSucceeds(machine, "list mount contents", ImmutableList.of(
+            assertExecSucceeds(machine, "write to mount point", ImmutableList.of(
                     sudo("cp "+tmpDestFile+" "+destFile)));
             
             // Unmount and detach the volume
@@ -221,12 +241,12 @@ public abstract class AbstractVolumeManagerLiveTest {
         volumeManager.deleteBlockDevice(unmounted);
     }
 
-    protected void assertExecSucceeds(SshMachineLocation machine, String description, List<String> cmds) {
+    protected static void assertExecSucceeds(SshMachineLocation machine, String description, List<String> cmds) {
         int success = machine.execCommands(description, cmds);
         assertEquals(success, 0);
     }
     
-    protected void assertExecFails(SshMachineLocation machine, String description, List<String> cmds) {
+    protected static void assertExecFails(SshMachineLocation machine, String description, List<String> cmds) {
         int success = machine.execCommands(description, cmds);
         assertNotEquals(success, 0);
     }
