@@ -1,11 +1,16 @@
 package brooklyn.location.blockstore;
 
-import static brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
-import static brooklyn.util.ssh.BashCommands.sudo;
 import static java.lang.String.format;
+
+import static org.apache.brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.util.Map;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +21,6 @@ import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeManager;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsMachineNamer;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.collections.MutableMap;
 
 public abstract class AbstractVolumeManager implements VolumeManager {
 

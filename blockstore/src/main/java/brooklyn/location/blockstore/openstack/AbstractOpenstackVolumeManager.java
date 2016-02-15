@@ -1,5 +1,7 @@
 package brooklyn.location.blockstore.openstack;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.jclouds.openstack.cinder.v1.CinderApi;
 import org.jclouds.openstack.cinder.v1.domain.Volume;
 import org.jclouds.openstack.cinder.v1.features.VolumeApi;
@@ -16,8 +18,6 @@ import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.Devices;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 /**
  * For managing volumes in OpenStack Cinder (e.g. Rackspace).

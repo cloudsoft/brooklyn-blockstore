@@ -1,6 +1,6 @@
 package brooklyn.location.blockstore;
 
-import static brooklyn.util.ssh.BashCommands.sudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
@@ -8,29 +8,29 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import brooklyn.config.BrooklynProperties;
-import brooklyn.entity.basic.Entities;
-import brooklyn.location.Location;
-import brooklyn.location.basic.SshMachineLocation;
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.api.VolumeManager;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.management.ManagementContext;
-import brooklyn.management.internal.LocalManagementContext;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+
+import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
+import brooklyn.location.blockstore.api.VolumeManager;;
 
 public abstract class AbstractVolumeManagerLiveTest {
 

@@ -3,16 +3,16 @@ package brooklyn.location.blockstore.openstack;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.jclouds.openstack.cinder.v1.domain.Volume;
 import org.testng.annotations.Test;
 
-import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
+import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
+import brooklyn.location.blockstore.api.BlockDevice;
 
 @Test
 public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {

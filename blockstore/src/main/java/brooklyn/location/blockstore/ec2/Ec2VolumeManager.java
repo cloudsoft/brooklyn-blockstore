@@ -5,6 +5,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.jclouds.ec2.EC2Api;
 import org.jclouds.ec2.domain.Attachment;
 import org.jclouds.ec2.domain.Volume;
@@ -14,17 +17,14 @@ import org.jclouds.ec2.options.DetachVolumeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.Devices;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.repeat.Repeater;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 /**
  * For managing EBS volumes via EC2-compatible APIs.

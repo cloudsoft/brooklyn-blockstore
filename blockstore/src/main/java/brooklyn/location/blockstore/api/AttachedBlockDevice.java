@@ -1,6 +1,6 @@
 package brooklyn.location.blockstore.api;
 
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 public interface AttachedBlockDevice extends BlockDevice {
 

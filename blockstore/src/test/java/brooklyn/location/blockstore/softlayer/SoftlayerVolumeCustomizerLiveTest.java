@@ -3,13 +3,13 @@ package brooklyn.location.blockstore.softlayer;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.testng.annotations.Test;
-
-import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
-import brooklyn.location.jclouds.JcloudsLocation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
+import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 
 @Test
 public class SoftlayerVolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {

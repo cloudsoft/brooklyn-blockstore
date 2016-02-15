@@ -2,13 +2,14 @@ package brooklyn.location.blockstore;
 
 import java.util.List;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+
 import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizer;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeCustomizer;
 import brooklyn.location.blockstore.softlayer.SoftlayerVolumeCustomizer;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsLocationCustomizer;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 public class VolumeCustomizers {
 

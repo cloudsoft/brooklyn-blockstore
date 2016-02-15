@@ -1,13 +1,14 @@
 package brooklyn.location.blockstore;
 
-import brooklyn.location.Location;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+
 import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeManager;
 import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
 import brooklyn.location.blockstore.rackspace.RackspaceVolumeManager;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 public class VolumeManagers {
 
@@ -27,6 +28,7 @@ public class VolumeManagers {
             provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
         }
         return provider.equals("aws-ec2") ||
+                provider.equals("openstack-nova") ||
                 provider.startsWith("rackspace-") ||
                 provider.startsWith("cloudservers-") ||
                 provider.equals("google-compute-engine");

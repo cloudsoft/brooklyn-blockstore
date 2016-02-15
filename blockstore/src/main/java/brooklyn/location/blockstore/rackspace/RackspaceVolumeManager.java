@@ -1,5 +1,6 @@
 package brooklyn.location.blockstore.rackspace;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.jclouds.ContextBuilder;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
@@ -7,11 +8,10 @@ import org.jclouds.openstack.cinder.v1.CinderApi;
 import org.jclouds.openstack.nova.v2_0.NovaApi;
 import org.jclouds.sshj.config.SshjSshClientModule;
 
-import brooklyn.location.blockstore.openstack.AbstractOpenstackVolumeManager;
-import brooklyn.location.jclouds.JcloudsLocation;
-
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+
+import brooklyn.location.blockstore.openstack.AbstractOpenstackVolumeManager;
 
 /**
  * For managing volumes in OpenStack Cinder (e.g. Rackspace).

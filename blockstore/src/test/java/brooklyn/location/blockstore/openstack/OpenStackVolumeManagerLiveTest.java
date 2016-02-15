@@ -3,23 +3,23 @@ package brooklyn.location.blockstore.openstack;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.openstack.cinder.v1.domain.Volume;
 import org.testng.annotations.Test;
-
-import brooklyn.config.BrooklynProperties;
-import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.text.Identifiers;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
+import brooklyn.location.blockstore.api.BlockDevice;
+
 @Test
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    public static final String PROVIDER = "opensack-nova";
+    public static final String PROVIDER = "openstack-nova";
     public static final String ENDPOINT = "https://lon.identity.api.rackspacecloud.com/v2.0/";
     public static final String LOCATION_SPEC = PROVIDER+":"+ENDPOINT;
     public static final String NAMED_LOCATION = "OpenStackVolumeManagerLiveTest" + Identifiers.makeRandomId(4);

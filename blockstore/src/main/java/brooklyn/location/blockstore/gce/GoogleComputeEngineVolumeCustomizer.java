@@ -2,12 +2,11 @@ package brooklyn.location.blockstore.gce;
 
 import java.util.List;
 
+import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.options.TemplateOptions;
-
-import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsLocationCustomizer;
 
 public class GoogleComputeEngineVolumeCustomizer {
 

@@ -1,9 +1,10 @@
 package brooklyn.location.blockstore.api;
 
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
 /**
  * Customization hooks to ensure that any volume instances provisioned via a corresponding jclouds location become associated

@@ -5,6 +5,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
+import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
@@ -12,18 +17,13 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
-import brooklyn.location.jclouds.JcloudsLocation;
-import brooklyn.location.jclouds.JcloudsLocationCustomizer;
-import brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import brooklyn.util.collections.MutableMap;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 /**
  * Customization hooks to ensure that any EC2 instances provisioned via a corresponding jclouds location become associated
