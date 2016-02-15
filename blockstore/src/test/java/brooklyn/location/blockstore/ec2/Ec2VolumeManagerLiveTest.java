@@ -66,7 +66,7 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
-        return jcloudsLocation.obtain(ImmutableMap.builder()
+        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_ID, CENTOS_IMAGE_ID)
                 .put(JcloudsLocation.HARDWARE_ID, SMALL_HARDWARE_ID)
                 .build());

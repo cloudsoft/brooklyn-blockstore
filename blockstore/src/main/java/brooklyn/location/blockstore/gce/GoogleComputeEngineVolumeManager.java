@@ -3,7 +3,6 @@ package brooklyn.location.blockstore.gce;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -11,17 +10,20 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.jclouds.ContextBuilder;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.googlecomputeengine.GoogleComputeEngineApi;
+import org.jclouds.googlecomputeengine.domain.AttachDisk;
 import org.jclouds.googlecomputeengine.domain.Disk;
 import org.jclouds.googlecomputeengine.domain.Operation;
 import org.jclouds.googlecomputeengine.features.DiskApi;
 import org.jclouds.googlecomputeengine.features.InstanceApi;
-import org.jclouds.googlecomputeengine.options.AttachDiskOptions;
-import org.jclouds.googlecomputeengine.options.AttachDiskOptions.DiskMode;
-import org.jclouds.googlecomputeengine.options.AttachDiskOptions.DiskType;
+import org.jclouds.googlecomputeengine.options.DiskCreationOptions;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableSet;
+import com.google.inject.Module;
 
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
@@ -32,35 +34,11 @@ import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.repeat.Repeater;
 
-import com.google.common.base.Objects;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
-
 public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(GoogleComputeEngineVolumeManager.class);
     private static final String PROVIDER = "google-compute-engine";
     private static final String DEVICE_PREFIX = "/dev/disk/by-id/google-";
-
-    private final LoadingCache<JcloudsLocation, String> locationProjectName = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .build(new CacheLoader<JcloudsLocation, String>() {
-            @Override
-            public String load(JcloudsLocation location) {
-                String identity = location.getIdentity();
-                identity = identity.substring(0, identity.indexOf('@'));
-                GoogleComputeEngineApi api = getGoogleComputeEngineApi(location);
-                String project = api.getProjectApi().get(identity).getName();
-                try {
-                    api.close();
-                } catch (IOException e) {
-                    LOG.debug("Exception closing GCE api", e);
-                }
-                return project;
-            }});
 
     @Override
     protected String getVolumeDeviceName(char deviceSuffix) {
@@ -77,14 +55,16 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         LOG.info("Creating device: location={}; options={}", location, options);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(location);
-        String project = locationProjectName.getUnchecked(location);
-        DiskApi diskApi = computeApi.getDiskApiForProject(project);
+        DiskApi diskApi = computeApi.disksInZone(options.getZone());
         String name = getOrMakeName(location, options);
 
-        Operation operation = diskApi.createInZone(name, options.getSizeInGb(), options.getZone());
-        waitForOperationToBeDone(computeApi, project, options.getZone(), operation);
+        DiskCreationOptions diskOptions = new DiskCreationOptions.Builder()
+		        .sizeGb(options.getSizeInGb())
+		        .build();
+        Operation operation = diskApi.create(name, diskOptions);
+        waitForOperationToBeDone(computeApi, operation);
 
-        Disk created = diskApi.getInZone(options.getZone(), name);
+        Disk created = diskApi.get(name);
         LOG.info("Created device: location={}, device={}", location, created);
         return new GCEBlockDevice(location, created);
     }
@@ -97,19 +77,21 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
         JcloudsLocation location = machine.getParent();
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(location);
-        String project = locationProjectName.getUnchecked(location);
-        InstanceApi instanceApi = computeApi.getInstanceApiForProject(project);
         String zone = getZoneFromDisk(disk);
+        InstanceApi instanceApi = computeApi.instancesInZone(zone);
 
-        Operation operation = instanceApi.attachDiskInZone(zone, machine.getNode().getName(),
-                new AttachDiskOptions()
-                        .source(disk.getSelfLink())
-                        .type(DiskType.PERSISTENT)
-                        .mode(DiskMode.READ_WRITE)
-                        .deviceName(String.valueOf(options.getDeviceSuffix())));
+        Operation operation = instanceApi.attachDisk(machine.getNode().getName(), AttachDisk.existingDisk(disk.selfLink()));
 
-        waitForOperationToBeDone(computeApi, project, zone, operation);
+        waitForOperationToBeDone(computeApi, operation);
         return device.attachedTo(machine, getVolumeDeviceName(options.getDeviceSuffix()));
+
+        // FIXME Previous code shown below - is this AttachDisk.existingDisk functionally equivalent?!
+        // How do we force it to have options.getDeviceSuffix()?
+//        new AttachDiskOption()
+//                .source(disk.selfLink())
+//                .type(AttachDisk.Type.PERSISTENT)
+//                .mode(AttachDisk.Mode.READ_WRITE)
+//                .deviceName(String.valueOf(options.getDeviceSuffix())));
     }
 
     @Override
@@ -119,12 +101,13 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         LOG.info("Detaching device: {}", device);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
-        String project = locationProjectName.getUnchecked(device.getLocation());
-        InstanceApi instanceApi = computeApi.getInstanceApiForProject(project);
+        String zone = getZoneFromDisk(disk);
+        InstanceApi instanceApi = computeApi.instancesInZone(zone);
 
-        Operation operation = instanceApi.detachDiskInZone(
-                getZoneFromDisk(disk), device.getMachine().getNode().getName(), String.valueOf(device.getDeviceSuffix()));
-        waitForOperationToBeDone(computeApi, project, getZoneFromDisk(disk), operation);
+		Operation operation = instanceApi.detachDisk(
+                device.getMachine().getNode().getName(), 
+                String.valueOf(device.getDeviceSuffix()));
+        waitForOperationToBeDone(computeApi, operation);
 
         return new GCEBlockDevice(device.getLocation(), disk);
     }
@@ -136,11 +119,11 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         LOG.info("Deleting device: {}", device);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
-        String project = locationProjectName.getUnchecked(device.getLocation());
-        DiskApi diskApi = computeApi.getDiskApiForProject(project);
+        String zone = getZoneFromDisk(disk);
+        DiskApi diskApi = computeApi.disksInZone(zone);
 
-        Operation operation = diskApi.deleteInZone(getZoneFromDisk(disk), device.getId());
-        waitForOperationToBeDone(computeApi, project, getZoneFromDisk(disk), operation);
+		Operation operation = diskApi.delete(device.getId());
+        waitForOperationToBeDone(computeApi, operation);
     }
 
     /**
@@ -152,9 +135,9 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         if (LOG.isDebugEnabled())
             LOG.debug("Describing device: {}", device);
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
-        String project = locationProjectName.getUnchecked(device.getLocation());
-        DiskApi diskApi = computeApi.getDiskApiForProject(project);
-        return diskApi.getInZone(getZoneFromDisk(disk), device.getId());
+        String zone = getZoneFromDisk(disk);
+        DiskApi diskApi = computeApi.disksInZone(zone);
+		return diskApi.get(device.getId());
     }
 
     private GoogleComputeEngineApi getGoogleComputeEngineApi(JcloudsLocation location) {
@@ -173,31 +156,30 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
     private String getZoneFromDisk(Disk disk) {
         // extracts from URL like https://www.googleapis.com/compute/v1beta15/projects/jclouds-gce/zones/europe-west1-a
-        String zonePath = disk.getZone().getPath();
+        String zonePath = disk.zone().getPath();
         return zonePath.substring(zonePath.lastIndexOf('/')+1);
     }
 
-    private Operation waitForOperationToBeDone(final GoogleComputeEngineApi api, final String project,
-           final String zone, final Operation operation) {
+    private Operation waitForOperationToBeDone(final GoogleComputeEngineApi api, final Operation operation) {
 
         checkNotNull(operation, "operation should not be null");
         final AtomicReference<Operation> latest = new AtomicReference<Operation>(operation);
-        boolean done = Repeater.create("Waiting for operation to be done: " + operation.getName())
+        boolean done = Repeater.create("Waiting for operation to be done: " + operation.name())
                 .every(1, TimeUnit.SECONDS)
                 .limitTimeTo(60, TimeUnit.SECONDS)
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-                        Operation current = api.getZoneOperationApiForProject(project).getInZone(zone, operation.getName());
+                    	Operation current = api.operations().get(operation.selfLink());
                         latest.set(current);
-                        return current.getStatus() == Operation.Status.DONE;
+                        return current.status() == Operation.Status.DONE;
                     }
                 })
                 .run();
         if (done) {
             return latest.get();
         } else {
-            LOG.error("Operation {} still incomplete after timeout. Trying to continue. Last poll found: {}", operation.getName(), latest.get());
+            LOG.error("Operation {} still incomplete after timeout. Trying to continue. Last poll found: {}", operation.name(), latest.get());
             return latest.get();
         }
     }
@@ -217,7 +199,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
         @Override
         public String getId() {
-            return disk.getName();
+            return disk.name();
         }
 
         @Override

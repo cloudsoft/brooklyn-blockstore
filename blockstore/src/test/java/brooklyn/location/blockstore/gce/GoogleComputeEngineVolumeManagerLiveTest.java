@@ -51,7 +51,7 @@ public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeMana
     protected void assertVolumeAvailable(BlockDevice device) {
         Disk disk = ((GoogleComputeEngineVolumeManager) volumeManager).describeVolume(device);
         assertNotNull(disk);
-        assertEquals(disk.getStatus(), "READY");
+        assertEquals(disk.status(), "READY");
     }
 
     @Override
@@ -61,7 +61,7 @@ public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeMana
 
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
-        return jcloudsLocation.obtain(ImmutableMap.builder()
+        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
                 .build());
     }

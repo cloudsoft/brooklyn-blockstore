@@ -16,8 +16,8 @@ import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeManager;
-import brooklyn.location.cloud.CloudMachineNamer;
 import brooklyn.location.jclouds.JcloudsLocation;
+import brooklyn.location.jclouds.JcloudsMachineNamer;
 import brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import brooklyn.util.collections.MutableMap;
 
@@ -125,7 +125,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
         if (!Strings.isNullOrEmpty(options.getName())) {
             return options.getName();
         } else {
-            return "volume-" + new CloudMachineNamer(location.getLocalConfigBag()).generateNewMachineUniqueName();
+            return "volume-" + new JcloudsMachineNamer().generateNewMachineUniqueName(location.getLocalConfigBag());
         }
     }
 

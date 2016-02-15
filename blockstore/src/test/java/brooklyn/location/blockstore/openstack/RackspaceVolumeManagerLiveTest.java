@@ -58,7 +58,7 @@ public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
         // TODO Wanted to specify hardware id, but this failed; and wanted to force no imageId (in case specified in brooklyn.properties)
-        return jcloudsLocation.obtain(ImmutableMap.builder()
+        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
                 .build());
     }

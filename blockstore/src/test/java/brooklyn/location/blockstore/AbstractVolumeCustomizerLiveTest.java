@@ -52,7 +52,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
                 "purpose", truncate("brooklyn-blockstore-VolumeCustomizerLiveTest", maxTagLength()));
         
         try {
-            return jcloudsLocation.obtain(ImmutableMap.builder()
+            return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                     .putAll(additionalObtainArgs())
                     .put(JcloudsLocation.USER_METADATA_MAP, tags)
                     .put(JcloudsLocation.STRING_TAGS, tags.values())
