@@ -27,6 +27,7 @@ public class VolumeManagers {
             provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
         }
         return provider.equals("aws-ec2") ||
+        		provider.equals("openstack-nova") ||
                 provider.startsWith("rackspace-") ||
                 provider.startsWith("cloudservers-") ||
                 provider.equals("google-compute-engine");

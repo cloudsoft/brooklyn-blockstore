@@ -13,9 +13,10 @@ import brooklyn.location.MachineLocation;
 import brooklyn.location.basic.SimulatedLocation;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeManager;
-import brooklyn.location.blockstore.openstack.AbstractOpenstackVolumeManager;
 import brooklyn.location.blockstore.openstack.OpenStackVolumeManagerLiveTest;
+import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
 import brooklyn.location.blockstore.openstack.RackspaceVolumeManagerLiveTest;
+import brooklyn.location.blockstore.rackspace.RackspaceVolumeManager;
 import brooklyn.location.jclouds.JcloudsLocation;
 import brooklyn.management.internal.LocalManagementContext;
 
@@ -54,14 +55,14 @@ public class VolumeManagersTest {
     public void testRackspaceVolumeManager() {
         JcloudsLocation rackspaceLocation = locationFor(RackspaceVolumeManagerLiveTest.LOCATION_SPEC);
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(rackspaceLocation));
-        assertEquals(VolumeManagers.newVolumeManager(rackspaceLocation).getClass(), AbstractOpenstackVolumeManager.class);
+        assertEquals(VolumeManagers.newVolumeManager(rackspaceLocation).getClass(), RackspaceVolumeManager.class);
     }
 
     @Test
     public void testOpenstackVolumeManager() {
         JcloudsLocation rackspaceLocation = locationFor(OpenStackVolumeManagerLiveTest.LOCATION_SPEC);
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(rackspaceLocation));
-        assertEquals(VolumeManagers.newVolumeManager(rackspaceLocation).getClass(), AbstractOpenstackVolumeManager.class);
+        assertEquals(VolumeManagers.newVolumeManager(rackspaceLocation).getClass(), OpenstackVolumeManager.class);
     }
 
     @Test(expectedExceptions = {IllegalArgumentException.class})

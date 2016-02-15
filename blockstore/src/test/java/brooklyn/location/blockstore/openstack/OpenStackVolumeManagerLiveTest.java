@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
 @Test
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    public static final String PROVIDER = "opensack-nova";
+    public static final String PROVIDER = "openstack-nova";
     public static final String ENDPOINT = "https://lon.identity.api.rackspacecloud.com/v2.0/";
     public static final String LOCATION_SPEC = PROVIDER+":"+ENDPOINT;
     public static final String NAMED_LOCATION = "OpenStackVolumeManagerLiveTest" + Identifiers.makeRandomId(4);
