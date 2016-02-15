@@ -14,6 +14,16 @@ public class BlockDeviceOptions {
     private char deviceSuffix = 'h';
     private boolean deleteOnTermination;
 
+    public static BlockDeviceOptions copy(BlockDeviceOptions other) {
+    	return new BlockDeviceOptions()
+    			.name(other.name)
+    			.zone(other.zone)
+    			.tags(other.tags)
+    			.sizeInGb(other.sizeInGb)
+    			.deviceSuffix(other.deviceSuffix)
+    			.deleteOnTermination(other.deleteOnTermination);
+    }
+    
     public String getName() {
         return name;
     }
@@ -29,7 +39,7 @@ public class BlockDeviceOptions {
     }
 
     public BlockDeviceOptions tags(Map<String, String> tags) {
-        this.tags = tags;
+        if (tags != null) this.tags.putAll(tags);
         return this;
     }
 
@@ -75,12 +85,12 @@ public class BlockDeviceOptions {
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
+                .add("name", name)
                 .add("zone", zone)
+                .add("tags", tags)
                 .add("sizeInGb", sizeInGb)
                 .add("deviceSuffix", deviceSuffix)
                 .add("deleteOnTermination", deleteOnTermination)
-                .add("tags", tags)
                 .toString();
     }
-
 }

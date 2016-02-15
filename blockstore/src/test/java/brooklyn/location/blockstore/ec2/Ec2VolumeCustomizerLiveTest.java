@@ -42,4 +42,13 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
         char deviceSuffix = 'h';
         return ImmutableList.of("/mnt/brooklyn/"+deviceSuffix, "/mnt/brooklyn/"+(deviceSuffix+1));
     }
+    
+    // FIXME Failed: org.jclouds.aws.AWSResponseException: request POST https://ec2.us-east-1.amazonaws.com/ HTTP/1.1 failed with code 400, error: AWSError{requestId='2097294e-eadd-4d4c-bc9b-1a8e672b4beb', requestToken='null', code='InvalidParameterValue', message='Invalid value '/dev/sdh' for unixDevice. Attachment point /dev/sdh is already in use', context='{Response=, Errors=}'}
+    // What should we use instead of 'h'?
+    // 
+    @Test(groups="Live")
+    @Override
+    public void testCreateVmWithAttachedVolume() throws Throwable {
+        super.testCreateVmWithAttachedVolume();
+    }
 }

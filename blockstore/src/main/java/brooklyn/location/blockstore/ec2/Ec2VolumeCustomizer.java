@@ -11,12 +11,14 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.jclouds.compute.ComputeService;
+import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -91,7 +93,12 @@ public class Ec2VolumeCustomizer {
                     BlockDeviceOptions blockOptions = entry.getKey();
                     FilesystemOptions filesystemOptions = entry.getValue();
                     if (filesystemOptions != null) {
-                        ebsVolumeManager.createAttachAndMountVolume(machine, blockOptions, filesystemOptions);
+                    	BlockDeviceOptions blockOptionsCopy = BlockDeviceOptions.copy(blockOptions);
+                    	Optional<NodeMetadata> node = machine.getOptionalNode();
+                    	if (node.isPresent()) {
+                    		blockOptionsCopy.zone(node.get().getLocation().getId());
+                    	}
+                        ebsVolumeManager.createAttachAndMountVolume(machine, blockOptionsCopy, filesystemOptions);
                     }
                 }
             }
