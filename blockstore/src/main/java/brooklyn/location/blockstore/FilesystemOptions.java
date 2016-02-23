@@ -2,13 +2,27 @@ package brooklyn.location.blockstore;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Map;
+
 import com.google.common.base.Objects;
 
 public class FilesystemOptions {
 
-    private final String mountPoint;
-    private final String filesystemType;
+    private String mountPoint;
+    private String filesystemType;
 
+    // For more convenient yaml input
+    public static FilesystemOptions fromMap(Map<String, ?> map) {
+        FilesystemOptions result = new FilesystemOptions();
+        result.mountPoint = (String) map.get("mountPoint");
+        result.filesystemType = (String) map.get("filesystemType");
+        return result;
+    }
+
+    public FilesystemOptions() {
+        // for reflection, e.g. using $brooklyn:object
+    }
+    
     /**
      * Uses the given mountPoint and "auto" for filesystemType.
      */

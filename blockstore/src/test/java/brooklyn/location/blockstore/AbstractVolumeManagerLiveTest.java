@@ -1,10 +1,13 @@
 package brooklyn.location.blockstore;
 
+import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertExecSucceeds;
 import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -27,6 +30,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
@@ -158,31 +162,22 @@ public abstract class AbstractVolumeManagerLiveTest {
             // Create and mount the initial volume
             mountedDevice = volumeManager.createAttachAndMountVolume(machine, blockDeviceOptions, filesystemOptions);
             volume = mountedDevice;
-
-            assertExecSucceeds(machine, "show mount points", ImmutableList.of(
-                    "mount -l", "mount -l | grep \""+mountPoint+"\""));
-            assertExecSucceeds(machine, "list mount contents", ImmutableList.of("ls -la "+mountPoint));
-
-            String tmpDestFile = "/tmp/myfile.txt";
             String destFile = mountPoint+"/myfile.txt";
-            machine.copyTo(new ByteArrayInputStream("abc".getBytes()), tmpDestFile);
-            assertExecSucceeds(machine, "write to mount point", ImmutableList.of(
-                    sudo("cp "+tmpDestFile+" "+destFile)));
+            
+            assertMountPointExists(machine, mountPoint);
+            assertWritable(machine, destFile, "abc".getBytes());
             
             // Unmount and detach the volume
             BlockDevice detachedDevice = volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
 
-            assertExecFails(machine, "show mount points", ImmutableList.of(
-                    "mount -l", "mount -l | grep \""+mountPoint+"\""));
-            assertExecFails(machine, "check file contents", ImmutableList.of("cat "+destFile, "grep abc "+destFile));
+            assertMountPointAbsent(machine, mountPoint);
+            assertFileAbsent(machine, destFile);
             
             // Reattach and mount the volume
             volumeManager.attachAndMountVolume(machine, detachedDevice, blockDeviceOptions, filesystemOptions);
 
-            assertExecSucceeds(machine, "show mount points", ImmutableList.of(
-                    "mount -l", "mount -l | grep \""+mountPoint+"\""));
-            assertExecSucceeds(machine, "list mount contents", ImmutableList.of("ls -la "+mountPoint));
-            assertExecSucceeds(machine, "check file contents", ImmutableList.of("cat "+destFile, "grep abc "+destFile));
+            assertMountPointExists(machine, mountPoint);
+            assertReadable(machine, destFile, "abc".getBytes());
 
         } catch (Throwable t) {
             LOG.error("Error creating and attaching volume", t);
@@ -241,13 +236,47 @@ public abstract class AbstractVolumeManagerLiveTest {
         volumeManager.deleteBlockDevice(unmounted);
     }
 
-    protected static void assertExecSucceeds(SshMachineLocation machine, String description, List<String> cmds) {
+    public static void assertExecSucceeds(SshMachineLocation machine, String description, List<String> cmds) {
         int success = machine.execCommands(description, cmds);
         assertEquals(success, 0);
     }
     
-    protected static void assertExecFails(SshMachineLocation machine, String description, List<String> cmds) {
+    public static void assertExecFails(SshMachineLocation machine, String description, List<String> cmds) {
         int success = machine.execCommands(description, cmds);
         assertNotEquals(success, 0);
+    }
+    
+    // Confirm it's is listed as a mount point, and dir exists
+    public static void assertMountPointExists(JcloudsSshMachineLocation machine, String mountPoint) {
+        assertExecSucceeds(machine, "show mount points", ImmutableList.of(
+                "mount -l", "mount -l | grep \""+mountPoint+"\""));
+        assertExecSucceeds(machine, "list mount contents", ImmutableList.of("ls -la "+mountPoint));
+    }
+
+    public static void assertMountPointAbsent(JcloudsSshMachineLocation machine, String mountPoint) {
+        assertExecFails(machine, "show mount points", ImmutableList.of(
+                "mount -l", "mount -l | grep \""+mountPoint+"\""));
+    }
+
+    public static void assertFileAbsent(JcloudsSshMachineLocation machine, String destFile) {
+        assertExecFails(machine, "check file contents", ImmutableList.of("cat "+destFile));
+    }
+
+    public static void assertWritable(JcloudsSshMachineLocation machine, String destFile, byte[] bytes) {
+        // Confirm it's writable
+        String tmpDestFile = "/tmp/myfile.tmp";
+        machine.copyTo(new ByteArrayInputStream(bytes), tmpDestFile);
+        assertExecSucceeds(machine, "write to mount point", ImmutableList.of(sudo("cp "+tmpDestFile+" "+destFile)));
+    }
+    
+    public static void assertReadable(JcloudsSshMachineLocation machine, String destFile, byte[] bytes) throws Exception {
+        File localFile = File.createTempFile("download", "tmp");
+        try {
+            assertExecSucceeds(machine, "list file", ImmutableList.of("ls -l "+destFile));
+            machine.copyFrom(destFile, localFile.toString());
+            assertEquals(new String(Files.toByteArray(localFile)), new String(bytes));
+        } finally {
+            localFile.delete();
+        }
     }
 }

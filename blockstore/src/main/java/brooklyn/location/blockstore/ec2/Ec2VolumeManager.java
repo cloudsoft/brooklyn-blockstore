@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
+import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.ec2.EC2Api;
 import org.jclouds.ec2.domain.Attachment;
 import org.jclouds.ec2.domain.Volume;
@@ -17,6 +18,7 @@ import org.jclouds.ec2.options.DetachVolumeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
@@ -61,6 +63,7 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         BlockDevice device = Devices.newBlockDevice(location, volume.getId());
         waitForVolumeToBeAvailable(device);
 
+        LOG.debug("Created block device: id="+device.getId()+"; location="+location);
         return device;
     }
 
@@ -68,12 +71,17 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
     public AttachedBlockDevice attachBlockDevice(JcloudsSshMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options) {
         LOG.debug("Attaching block device: machine={}; device={}; options={}", new Object[]{machine, blockDevice, options});
 
+        Optional<NodeMetadata> node = machine.getOptionalNode();
+        if (!node.isPresent()) {
+            throw new IllegalStateException("Cannot find jclouds-node for machine "+node);
+        }
+
         JcloudsLocation location = machine.getParent();
         String region = getRegionName(location);
         ElasticBlockStoreApi ebsApi = getEbsApi(location);
         
         Attachment attachment = ebsApi.attachVolumeInRegion(region, blockDevice.getId(),
-                machine.getNode().getProviderId(), getVolumeDeviceName(options.getDeviceSuffix()));
+                node.get().getProviderId(), getVolumeDeviceName(options.getDeviceSuffix()));
 
         LOG.debug("Finished attaching block device: machine={}; device={}; options={}", new Object[]{machine, blockDevice, options});
         return blockDevice.attachedTo(machine, attachment.getDevice());
@@ -83,8 +91,13 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
     public BlockDevice detachBlockDevice(AttachedBlockDevice attachedBlockDevice) {
         LOG.debug("Detaching block device: {}", attachedBlockDevice);
 
+        Optional<NodeMetadata> node = attachedBlockDevice.getMachine().getOptionalNode();
+        if (!node.isPresent()) {
+            throw new IllegalStateException("Cannot find jclouds-node for machine "+node);
+        }
+
         String region = getRegionName(attachedBlockDevice.getLocation());
-        String instanceId = attachedBlockDevice.getMachine().getNode().getProviderId();
+        String instanceId = node.get().getProviderId();
         ElasticBlockStoreApi ebsApi = getEbsApi(attachedBlockDevice.getLocation());
 
         ebsApi.detachVolumeInRegion(region, attachedBlockDevice.getId(), true,
@@ -110,8 +123,7 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
      * Describes the given volume. Or returns null if it is not found.
      */
     public Volume describeVolume(BlockDevice blockDevice) {
-        if (LOG.isDebugEnabled())
-            LOG.debug("Describing device: {}", blockDevice);
+        LOG.debug("Describing device: {}", blockDevice);
 
         String region = getRegionName(blockDevice.getLocation());
         ElasticBlockStoreApi ebsApi = getEbsApi(blockDevice.getLocation());

@@ -47,6 +47,10 @@ public abstract class AbstractVolumeCustomizerLiveTest {
     protected abstract Map<?,?> additionalObtainArgs() throws Exception;
 
     protected JcloudsSshMachineLocation createJcloudsMachine(List<Integer> capacities) throws Exception {
+        return createJcloudsMachine(createVolumeCustomizer(jcloudsLocation, capacities));
+    }
+    
+    protected JcloudsSshMachineLocation createJcloudsMachine(JcloudsLocationCustomizer customizer) throws Exception {
         Map<String, String> tags = ImmutableMap.of(
                 "user", truncate(System.getProperty("user.name"), maxTagLength()),
                 "purpose", truncate("brooklyn-blockstore-VolumeCustomizerLiveTest", maxTagLength()));
@@ -56,7 +60,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
                     .putAll(additionalObtainArgs())
                     .put(JcloudsLocation.USER_METADATA_MAP, tags)
                     .put(JcloudsLocation.STRING_TAGS, tags.values())
-                    .put(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZER, createVolumeCustomizer(jcloudsLocation, capacities))
+                    .put(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZER, customizer)
                     .build());
         } catch (Exception e) {
             throw e;

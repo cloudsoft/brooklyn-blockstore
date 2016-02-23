@@ -7,7 +7,7 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 
-import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizer;
+import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeCustomizer;
 import brooklyn.location.blockstore.softlayer.SoftlayerVolumeCustomizer;
 
@@ -62,7 +62,7 @@ public class VolumeCustomizers {
         }
 
         if (provider.equals("aws-ec2")) {
-            return Ec2VolumeCustomizer.withNewVolumes(capacities);
+            return Ec2VolumeCustomizers.withNewVolumes(capacities);
         } else if (provider.equals("google-compute-engine")) {
             return GoogleComputeEngineVolumeCustomizer.withNewVolume(capacities);
         } else if (provider.equals("softlayer")) {

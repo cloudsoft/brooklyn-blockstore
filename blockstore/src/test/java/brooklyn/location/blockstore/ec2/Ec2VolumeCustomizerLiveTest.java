@@ -1,15 +1,23 @@
 package brooklyn.location.blockstore.ec2;
 
+import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertMountPointExists;
+import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertReadable;
+import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertWritable;
+
 import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
+import brooklyn.location.blockstore.BlockDeviceOptions;
+import brooklyn.location.blockstore.FilesystemOptions;
 
 @Test
 public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
@@ -43,12 +51,66 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
         return ImmutableList.of("/mnt/brooklyn/"+deviceSuffix, "/mnt/brooklyn/"+(deviceSuffix+1));
     }
     
-    // FIXME Failed: org.jclouds.aws.AWSResponseException: request POST https://ec2.us-east-1.amazonaws.com/ HTTP/1.1 failed with code 400, error: AWSError{requestId='2097294e-eadd-4d4c-bc9b-1a8e672b4beb', requestToken='null', code='InvalidParameterValue', message='Invalid value '/dev/sdh' for unixDevice. Attachment point /dev/sdh is already in use', context='{Response=, Errors=}'}
-    // What should we use instead of 'h'?
-    // 
+    protected String getDefaultAvailabilityZone() {
+        return Ec2VolumeManagerLiveTest.AVAILABILITY_ZONE_NAME;
+    }
+
+//    @Test(groups="Live")
+//    public void testCreateVmWithAttachedVolume() throws Throwable {
+//        List<Character> deviceSuffixes = ImmutableList.of('g');
+//        List<Integer> capacities = ImmutableList.of(1);
+//        List<String> mountPoints = ImmutableList.of("/mnt/brooklyn/g");
+//
+//        Map<BlockDeviceOptions, FilesystemOptions> volumes = Maps.newLinkedHashMap();
+//        for (int i = 0; i < capacities.size(); i++) {
+//            char deviceSuffix = deviceSuffixes.get(i);
+//            Integer capacity = capacities.get(i);
+//            String mountPoint = mountPoints.get(i);
+//            BlockDeviceOptions blockOptions = new BlockDeviceOptions()
+//                    .deviceSuffix(deviceSuffix)
+//                    .sizeInGb(capacity)
+//                    .deleteOnTermination(true);
+//            FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint);
+//            volumes.put(blockOptions, filesystemOptions);
+//        }
+//        JcloudsLocationCustomizer customizer = Ec2VolumeCustomizers.withNewVolumes(volumes);
+//
+//        machine = createJcloudsMachine(customizer);
+//        
+//        for (String mountPoint : mountPoints) {
+//            assertMountPointWritable(mountPoint);
+//        }
+//    }
+    
     @Test(groups="Live")
-    @Override
     public void testCreateVmWithAttachedVolume() throws Throwable {
-        super.testCreateVmWithAttachedVolume();
+        //String mountPoint = "/var/opt2/test1";
+        List<Character> deviceSuffixes = ImmutableList.of('g');
+        List<Integer> capacities = ImmutableList.of(1);
+        List<String> mountPoints = ImmutableList.of("/mnt/brooklyn/g");
+
+        Map<BlockDeviceOptions, FilesystemOptions> volumes = Maps.newLinkedHashMap();
+        for (int i = 0; i < capacities.size(); i++) {
+            BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
+                    .sizeInGb(capacities.get(i))
+                    .zone(getDefaultAvailabilityZone())
+                    .deviceSuffix(deviceSuffixes.get(i))
+                    .tags(ImmutableMap.of(
+                            "user", System.getProperty("user.name"),
+                            "purpose", "brooklyn-blockstore-VolumeCustomizerLiveTest"));
+            FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoints.get(i), "ext3");
+            volumes.put(blockDeviceOptions, filesystemOptions);
+        }
+        
+        JcloudsLocationCustomizer customizer = new Ec2NewVolumeCustomizer(volumes);
+
+        machine = createJcloudsMachine(customizer);
+        
+        for (String mountPoint : mountPoints) {
+            String destFile = mountPoint+"/myfile.txt";
+            assertMountPointExists(machine, mountPoint);
+            assertWritable(machine, destFile, "abc".getBytes());
+            assertReadable(machine, destFile, "abc".getBytes());
+        }
     }
 }

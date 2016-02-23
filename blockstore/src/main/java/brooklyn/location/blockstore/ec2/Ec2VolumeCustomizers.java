@@ -31,15 +31,15 @@ import brooklyn.location.blockstore.api.BlockDevice;
  * Customization hooks to ensure that any EC2 instances provisioned via a corresponding jclouds location become associated
  * with an EBS volume (either an existing volume, specified by ID, or newly created).
  */
-public class Ec2VolumeCustomizer {
+public class Ec2VolumeCustomizers {
 
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(Ec2VolumeCustomizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Ec2VolumeCustomizers.class);
 
     private static final Ec2VolumeManager ebsVolumeManager = new Ec2VolumeManager();
 
     // Prevent construction: helper class.
-    private Ec2VolumeCustomizer() {
+    private Ec2VolumeCustomizers() {
     }
 
     /**
