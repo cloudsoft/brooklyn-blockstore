@@ -1,7 +1,7 @@
 package brooklyn.location.blockstore.openstack;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.jclouds.openstack.cinder.v1.CinderApi;
 import org.jclouds.openstack.cinder.v1.domain.Volume;
 import org.jclouds.openstack.cinder.v1.features.VolumeApi;
@@ -32,6 +32,8 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
 
     protected abstract NovaApi getNovaApi(JcloudsLocation location);
 
+    protected abstract String getRegion(JcloudsLocation location);
+
     protected abstract String getZone(JcloudsLocation location);
 
     @Override
@@ -48,6 +50,7 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
     public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions config) {
         LOG.info("Creating volume: location={}; config={}", location, config);
 
+        String region = getRegion(location);
         String zone = getZone(location);
         String availabilityZone = config.getZone();
         if (availabilityZone != null && !availabilityZone.equals(zone)) {
@@ -55,7 +58,7 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
         }
 
         CinderApi cinderApi = getCinderApi(location);
-        VolumeApi volumeApi = cinderApi.getVolumeApiForZone(zone);
+        VolumeApi volumeApi = cinderApi.getVolumeApi(region);
         CreateVolumeOptions options = CreateVolumeOptions.Builder
                 .name(getOrMakeName(location, config))
                 .metadata(config.getTags());
@@ -65,16 +68,16 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
     }
 
     @Override
-    public AttachedBlockDevice attachBlockDevice(JcloudsSshMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options) {
+    public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options) {
         LOG.info("Attaching volume: machine={}; device={}; options={}", new Object[] {machine, blockDevice, options});
 
         JcloudsLocation location = machine.getParent();
-        String zone = getZone(location);
+        String region = getRegion(location);
         String instanceId = machine.getNode().getProviderId();
         CinderApi cinderApi = getCinderApi(location);
         NovaApi novaApi = getNovaApi(location);
-        VolumeAttachmentApi attachmentApi = novaApi.getVolumeAttachmentExtensionForZone(zone).get();
-        VolumeApi volumeApi = cinderApi.getVolumeApiForZone(zone);
+        VolumeAttachmentApi attachmentApi = novaApi.getVolumeAttachmentApi(region).get();
+        VolumeApi volumeApi = cinderApi.getVolumeApi(region);
         Volume volume = volumeApi.get(blockDevice.getId());
 
         VolumeAttachment attachment = attachmentApi.attachVolumeToServerAsDevice(
@@ -92,14 +95,14 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
     public BlockDevice detachBlockDevice(AttachedBlockDevice attachedBlockDevice) {
         LOG.info("Detaching device: {}", attachedBlockDevice);
 
-        JcloudsSshMachineLocation machine = attachedBlockDevice.getMachine();
+        JcloudsMachineLocation machine = attachedBlockDevice.getMachine();
         JcloudsLocation location = machine.getParent();
-        String zone = getZone(location);
+        String region = getRegion(location);
         String instanceId = machine.getNode().getProviderId();
         CinderApi cinderApi = getCinderApi(location);
         NovaApi novaApi = getNovaApi(location);
-        VolumeAttachmentApi attachmentApi = novaApi.getVolumeAttachmentExtensionForZone(zone).get();
-        VolumeApi volumeApi = cinderApi.getVolumeApiForZone(zone);
+        VolumeAttachmentApi attachmentApi = novaApi.getVolumeAttachmentApi(region).get();
+        VolumeApi volumeApi = cinderApi.getVolumeApi(region);
         Volume volume = volumeApi.get(attachedBlockDevice.getId());
 
         attachmentApi.detachVolumeFromServer(attachedBlockDevice.getId(), instanceId);
@@ -117,9 +120,9 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
         LOG.info("Deleting device: {}", blockDevice);
 
         JcloudsLocation location = blockDevice.getLocation();
-        String zone = getZone(location);
+        String region = getRegion(location);
         CinderApi cinderApi = getCinderApi(location);
-        VolumeApi volumeApi = cinderApi.getVolumeApiForZone(zone);
+        VolumeApi volumeApi = cinderApi.getVolumeApi(region);
 
         volumeApi.delete(blockDevice.getId());
     }
@@ -131,9 +134,9 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
         if (LOG.isDebugEnabled())
             LOG.debug("Describing device: {}", device);
         
-        String zone = getZone(device.getLocation());
+        String region = getRegion(device.getLocation());
         CinderApi cinderApi = getCinderApi(device.getLocation());
-        VolumeApi volumeApi = cinderApi.getVolumeApiForZone(zone);
+        VolumeApi volumeApi = cinderApi.getVolumeApi(region);
         return volumeApi.get(device.getId());
     }
 }

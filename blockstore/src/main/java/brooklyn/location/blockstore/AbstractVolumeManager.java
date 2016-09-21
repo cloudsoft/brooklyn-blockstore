@@ -1,15 +1,15 @@
 package brooklyn.location.blockstore;
 
 import static java.lang.String.format;
-
 import static org.apache.brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
 import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     protected abstract String getOSDeviceName(char deviceSuffix);
 
     @Override
-    public MountedBlockDevice createAttachAndMountVolume(JcloudsSshMachineLocation machine, BlockDeviceOptions deviceOptions,
+    public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine, BlockDeviceOptions deviceOptions,
             FilesystemOptions filesystemOptions) {
         BlockDevice device = createBlockDevice(machine.getParent(), deviceOptions);
         AttachedBlockDevice attached = attachBlockDevice(machine, device, deviceOptions);
@@ -42,7 +42,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     }
 
     @Override
-    public MountedBlockDevice attachAndMountVolume(JcloudsSshMachineLocation machine, BlockDevice device,
+    public MountedBlockDevice attachAndMountVolume(JcloudsMachineLocation machine, BlockDevice device,
             BlockDeviceOptions options, FilesystemOptions filesystemOptions) {
         AttachedBlockDevice attached = attachBlockDevice(machine, device, options);
         return mountFilesystem(attached, filesystemOptions);
@@ -51,6 +51,11 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     // TODO: Running `fdisk -l` after mkfs outputs: "Disk /dev/sdb doesn't contain a valid partition table"
     @Override
     public void createFilesystem(AttachedBlockDevice attachedDevice, FilesystemOptions filesystemOptions) {
+        JcloudsMachineLocation machine = attachedDevice.getMachine();
+        if (!(machine instanceof SshMachineLocation)) {
+            throw new IllegalStateException("Cannot create filesystem for "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
+        }
+        
         String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
         String filesystemType = filesystemOptions.getFilesystemType();
         LOG.debug("Creating filesystem: device={}; osDeviceName={}, config={}", new Object[]{attachedDevice, osDeviceName, filesystemOptions});
@@ -58,19 +63,24 @@ public abstract class AbstractVolumeManager implements VolumeManager {
         // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
         Map<String, ?> flags = MutableMap.of("allocatePTY", true);
 
-        int exitCode = attachedDevice.getMachine().execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
+        int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
                 dontRequireTtyForSudo(),
                 waitForFileCmd(osDeviceName, 60),
                 sudo("/sbin/mkfs -F -t " + filesystemType + " " + osDeviceName)));
 
         if (exitCode != 0) {
             throw new RuntimeException(format("Failed to create file system. machine=%s; osDeviceName=%s; filesystemType=%s",
-                    attachedDevice.getMachine(), osDeviceName, filesystemType));
+                    machine, osDeviceName, filesystemType));
         }
     }
 
     @Override
     public MountedBlockDevice mountFilesystem(AttachedBlockDevice attachedDevice, FilesystemOptions options) {
+        JcloudsMachineLocation machine = attachedDevice.getMachine();
+        if (!(machine instanceof SshMachineLocation)) {
+            throw new IllegalStateException("Cannot mount filesystem for "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
+        }
+        
         LOG.debug("Mounting filesystem: device={}; options={}", attachedDevice, options);
         String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
         String mountPoint = options.getMountPoint();
@@ -78,7 +88,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
 
         // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
         Map<String, ?> flags = MutableMap.of("allocatePTY", true);
-        int exitCode = attachedDevice.getMachine().execCommands(flags, "Mounting EBS volume", ImmutableList.of(
+        int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Mounting EBS volume", ImmutableList.of(
                 dontRequireTtyForSudo(),
                 "echo making dir",
                 sudo("mkdir -p -m 755 " + mountPoint),
@@ -100,13 +110,18 @@ public abstract class AbstractVolumeManager implements VolumeManager {
 
     @Override
     public AttachedBlockDevice unmountFilesystem(MountedBlockDevice mountedDevice) {
+        JcloudsMachineLocation machine = mountedDevice.getMachine();
+        if (!(machine instanceof SshMachineLocation)) {
+            throw new IllegalStateException("Cannot unmount filesystem for "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
+        }
+        
         LOG.debug("Unmounting filesystem: {}", mountedDevice);
         String osDeviceName = getOSDeviceName(mountedDevice.getDeviceSuffix());
         String osDeviceNameEscaped = osDeviceName.replaceAll("/", "\\\\/");
 
         // NOTE: also strips out entry from fstab
         Map<String, ?> flags = MutableMap.of("allocatePTY", true);
-        mountedDevice.getMachine().execCommands(flags, "Unmounting EBS volume", ImmutableList.of(
+        ((SshMachineLocation)machine).execCommands(flags, "Unmounting EBS volume", ImmutableList.of(
                 dontRequireTtyForSudo(),
                 "echo unmounting " + osDeviceName,
                 sudo("sed -i.bk '/" + osDeviceNameEscaped + "/d' /etc/fstab"),

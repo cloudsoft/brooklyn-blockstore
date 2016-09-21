@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.TemplateBuilder;
@@ -79,6 +79,7 @@ public class Ec2NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         return _volumes;
     }
     
+    @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
         BlockDeviceOptions blockOptions = Iterables.getFirst(_volumes.keySet(), null);
         if (blockOptions != null && blockOptions.getZone() != null) {
@@ -86,7 +87,8 @@ public class Ec2NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         }
     }
 
-    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
+    @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
         for (Map.Entry<BlockDeviceOptions, FilesystemOptions> entry : _volumes.entrySet()) {
             BlockDeviceOptions blockDeviceOptions = entry.getKey();
             FilesystemOptions filesystemOptions = entry.getValue();

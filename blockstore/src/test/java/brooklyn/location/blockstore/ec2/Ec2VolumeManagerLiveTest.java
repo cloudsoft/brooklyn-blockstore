@@ -3,8 +3,6 @@ package brooklyn.location.blockstore.ec2;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import java.util.Map;
-
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.jclouds.ec2.domain.Volume;
@@ -14,7 +12,6 @@ import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.api.BlockDevice;
 
 @Test
@@ -42,7 +39,7 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().resolve(LOCATION_SPEC);
+        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged(LOCATION_SPEC);
     }
     
     @Override
@@ -73,11 +70,5 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
                 .put(JcloudsLocation.IMAGE_ID, CENTOS_IMAGE_ID)
                 .put(JcloudsLocation.HARDWARE_ID, SMALL_HARDWARE_ID)
                 .build());
-    }
-    
-    @Test(groups="Live", dependsOnMethods = {"testCreateVolume"})
-    @Override
-    public void testCreateAndAttachVolume() throws Throwable {
-        super.testCreateAndAttachVolume();
     }
 }

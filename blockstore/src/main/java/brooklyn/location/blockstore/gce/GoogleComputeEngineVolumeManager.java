@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.jclouds.ContextBuilder;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
@@ -70,7 +70,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
     }
 
     @Override
-    public AttachedBlockDevice attachBlockDevice(JcloudsSshMachineLocation machine, BlockDevice device, BlockDeviceOptions options) {
+    public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice device, BlockDeviceOptions options) {
         checkArgument(device instanceof GCEBlockDevice, "GCE volume manager cannot handle device: %s", device);
         Disk disk = GCEBlockDevice.class.cast(device).getDisk();
         LOG.info("Attaching device: machine={}; device={}; options={}", new Object[]{machine, device, options});
@@ -212,7 +212,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         }
 
         @Override
-        public GCEAttachedBlockDevice attachedTo(JcloudsSshMachineLocation machine, String deviceName) {
+        public GCEAttachedBlockDevice attachedTo(JcloudsMachineLocation machine, String deviceName) {
             if (!machine.getParent().equals(location)) {
                 LOG.warn("Attaching device to machine in different location to its creation: id={}, location={}, machine={}",
                         new Object[]{getId(), location, machine});
@@ -231,10 +231,10 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
     private static class GCEAttachedBlockDevice extends GCEBlockDevice implements AttachedBlockDevice {
 
-        private final JcloudsSshMachineLocation machine;
+        private final JcloudsMachineLocation machine;
         private final String deviceName;
 
-        private GCEAttachedBlockDevice(JcloudsSshMachineLocation machine, Disk disk, String deviceName) {
+        private GCEAttachedBlockDevice(JcloudsMachineLocation machine, Disk disk, String deviceName) {
             super(machine.getParent(), disk);
             this.machine = machine;
             this.deviceName = deviceName;
@@ -251,7 +251,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         }
 
         @Override
-        public JcloudsSshMachineLocation getMachine() {
+        public JcloudsMachineLocation getMachine() {
             return machine;
         }
 

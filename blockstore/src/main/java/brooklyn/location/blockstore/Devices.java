@@ -1,7 +1,7 @@
 package brooklyn.location.blockstore;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class Devices {
         }
 
         @Override
-        public AttachedBlockDeviceImpl attachedTo(JcloudsSshMachineLocation machine, String deviceName) {
+        public AttachedBlockDeviceImpl attachedTo(JcloudsMachineLocation machine, String deviceName) {
             if (!machine.getParent().equals(location)) {
                 LOG.warn("Attaching device to machine in different location to its creation: id={}, location={}, machine={}",
                         new Object[]{id, location, machine});
@@ -61,10 +61,10 @@ public class Devices {
 
     private static class AttachedBlockDeviceImpl extends BlockDeviceImpl implements AttachedBlockDevice {
 
-        private final JcloudsSshMachineLocation machine;
+        private final JcloudsMachineLocation machine;
         private final String deviceName;
 
-        private AttachedBlockDeviceImpl(JcloudsSshMachineLocation machine, String id, String deviceName) {
+        private AttachedBlockDeviceImpl(JcloudsMachineLocation machine, String id, String deviceName) {
             super(machine.getParent(), id);
             this.machine = machine;
             this.deviceName = deviceName;
@@ -81,7 +81,7 @@ public class Devices {
         }
 
         @Override
-        public JcloudsSshMachineLocation getMachine() {
+        public JcloudsMachineLocation getMachine() {
             return machine;
         }
 

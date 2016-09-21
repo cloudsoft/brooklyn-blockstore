@@ -54,6 +54,22 @@ public class RackspaceVolumeManager extends AbstractOpenstackVolumeManager {
     }
 
     @Override
+    protected String getRegion(JcloudsLocation location) {
+        String region = location.getRegion();
+        if (region != null) {
+            return region;
+        }
+        String provider = location.getProvider();
+        if (provider.matches("rackspace-.*-uk") || provider.matches("cloudservers-uk")) {
+            return "LON";
+        } else if (provider.matches("rackspace-.*-us") || provider.matches("cloudservers-us")) {
+            return "DFW";
+        } else {
+            throw new IllegalStateException("Cannot determine region for provider "+provider);
+        }
+    }
+
+    @Override
     protected String getZone(JcloudsLocation location) {
         String provider = location.getProvider();
         if (provider.matches("rackspace-.*-uk") || provider.matches("cloudservers-uk")) {

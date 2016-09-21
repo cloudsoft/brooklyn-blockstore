@@ -30,6 +30,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
 
     // FIXME Delete volume? Or will it automatically be deleted when VM is deleted for all clouds?!
     
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(AbstractVolumeCustomizerLiveTest.class);
 
     protected BrooklynProperties brooklynProperties;
@@ -60,7 +61,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
                     .putAll(additionalObtainArgs())
                     .put(JcloudsLocation.USER_METADATA_MAP, tags)
                     .put(JcloudsLocation.STRING_TAGS, tags.values())
-                    .put(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZER, customizer)
+                    .put(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZERS, ImmutableList.of(customizer))
                     .build());
         } catch (Exception e) {
             throw e;
@@ -106,7 +107,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
     }
 
     @Test(groups="Live")
-    public void testCreateVmWithAttachedVolume() throws Throwable {
+    public void testCreateVmWithAttachedVolume() throws Exception {
         // TODO Mount more than one volume
         int volumeSize = getVolumeSize();
         List<String> mountPoints = getMountPoints();

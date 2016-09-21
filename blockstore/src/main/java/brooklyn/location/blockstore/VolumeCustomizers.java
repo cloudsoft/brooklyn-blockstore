@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeCustomizer;
@@ -23,13 +23,13 @@ public class VolumeCustomizers {
      *         for the given location.
      */
     public static boolean isVolumeCustomizerSupportedForLocation(Location location) {
-        if (location == null || !(location instanceof JcloudsLocation || location instanceof JcloudsSshMachineLocation))
+        if (location == null || !(location instanceof JcloudsLocation || location instanceof JcloudsMachineLocation))
             return false;
         String provider;
         if (location instanceof JcloudsLocation) {
             provider = JcloudsLocation.class.cast(location).getProvider();
         } else {
-            provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
+            provider = JcloudsMachineLocation.class.cast(location).getParent().getProvider();
         }
         return provider.equals("aws-ec2") ||
                 provider.equals("google-compute-engine") ||
@@ -58,7 +58,7 @@ public class VolumeCustomizers {
         if (location instanceof JcloudsLocation) {
             provider = JcloudsLocation.class.cast(location).getProvider();
         } else {
-            provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
+            provider = JcloudsMachineLocation.class.cast(location).getParent().getProvider();
         }
 
         if (provider.equals("aws-ec2")) {

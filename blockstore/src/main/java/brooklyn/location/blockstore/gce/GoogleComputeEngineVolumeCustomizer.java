@@ -15,6 +15,7 @@ public class GoogleComputeEngineVolumeCustomizer {
 	// FIXME There is no GoogleComputeEngineTemplateOptions.disks!
     public static JcloudsLocationCustomizer withNewVolume(final List<Integer> capacities) {
         return new BasicJcloudsLocationCustomizer() {
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
             	throw new UnsupportedOperationException("Unsupported for GCE");
 //                Set<PersistentDisk> disks = MutableSet.of();

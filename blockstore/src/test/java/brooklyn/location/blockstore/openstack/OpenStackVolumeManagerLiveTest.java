@@ -42,7 +42,7 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().resolve("named:"+NAMED_LOCATION);
+        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged("named:"+NAMED_LOCATION);
     }
     
     @Override

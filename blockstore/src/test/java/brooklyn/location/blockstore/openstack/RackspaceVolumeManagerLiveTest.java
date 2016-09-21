@@ -30,7 +30,7 @@ public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().resolve(LOCATION_SPEC);
+        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged(LOCATION_SPEC);
     }
     
     @Override

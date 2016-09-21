@@ -1,26 +1,18 @@
 package brooklyn.location.blockstore.ec2;
 
-import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertMountPointExists;
-import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertReadable;
-import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertWritable;
-
 import static org.testng.Assert.assertEquals;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;

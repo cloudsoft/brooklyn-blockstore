@@ -1,7 +1,7 @@
 package brooklyn.location.blockstore.api;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 public interface BlockDevice {
 
@@ -20,5 +20,5 @@ public interface BlockDevice {
      * Creates an instance of {@link AttachedBlockDevice} with device name set to that given.
      * Intended for use internally. Does <b>not</b> attach the device to the given machine.
      */
-    AttachedBlockDevice attachedTo(JcloudsSshMachineLocation machine, String deviceName);
+    AttachedBlockDevice attachedTo(JcloudsMachineLocation machine, String deviceName);
 }

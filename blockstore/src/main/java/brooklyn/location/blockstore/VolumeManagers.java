@@ -2,7 +2,7 @@ package brooklyn.location.blockstore;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
@@ -19,13 +19,13 @@ public class VolumeManagers {
      *         for the given location.
      */
     public static boolean isVolumeManagerSupportedForLocation(Location location) {
-        if (location == null || !(location instanceof JcloudsLocation || location instanceof JcloudsSshMachineLocation))
+        if (location == null || !(location instanceof JcloudsLocation || location instanceof JcloudsMachineLocation))
             return false;
         String provider;
         if (location instanceof JcloudsLocation) {
             provider = JcloudsLocation.class.cast(location).getProvider();
         } else {
-            provider = JcloudsSshMachineLocation.class.cast(location).getParent().getProvider();
+            provider = JcloudsMachineLocation.class.cast(location).getParent().getProvider();
         }
         return provider.equals("aws-ec2") ||
                 provider.equals("openstack-nova") ||
@@ -56,7 +56,7 @@ public class VolumeManagers {
         if (location instanceof JcloudsLocation) {
             jcloudsLocation = JcloudsLocation.class.cast(location);
         } else {
-            jcloudsLocation = JcloudsSshMachineLocation.class.cast(location).getParent();
+            jcloudsLocation = JcloudsMachineLocation.class.cast(location).getParent();
         }
         String provider = jcloudsLocation.getProvider();
 
