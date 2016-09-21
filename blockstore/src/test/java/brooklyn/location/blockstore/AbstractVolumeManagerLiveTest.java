@@ -1,13 +1,11 @@
 package brooklyn.location.blockstore;
 
-import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertExecSucceeds;
 import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -132,7 +130,7 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     // Does the attach+mount twice to ensure that cleanup worked
     @Test(groups="Live", dependsOnMethods = {"testCreateVolume"})
-    public void testCreateAndAttachVolume() throws Throwable {
+    public void testCreateAndAttachVolume() throws Exception {
 
         String mountPoint = "/var/opt2/test1";
 

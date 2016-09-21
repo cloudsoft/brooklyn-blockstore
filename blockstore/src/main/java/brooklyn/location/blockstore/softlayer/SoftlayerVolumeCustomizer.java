@@ -13,6 +13,7 @@ public class SoftlayerVolumeCustomizer {
 
     public static JcloudsLocationCustomizer withNewVolume(final List<Integer> capacities) {
         return new BasicJcloudsLocationCustomizer() {
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
                 ((SoftLayerTemplateOptions)templateOptions).diskType("SAN");
                 ((SoftLayerTemplateOptions)templateOptions).blockDevices(capacities);

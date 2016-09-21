@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
@@ -71,10 +71,12 @@ public class Ec2ExistingSnapshotCustomizer extends BasicJcloudsLocationCustomize
         }
     }
     
+    @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
         templateBuilder.locationId(blockOptions.getZone());
     }
 
+    @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
         ((EC2TemplateOptions) templateOptions).mapEBSSnapshotToDeviceName(
                 ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()),
@@ -83,7 +85,8 @@ public class Ec2ExistingSnapshotCustomizer extends BasicJcloudsLocationCustomize
                 blockOptions.deleteOnTermination());
     }
 
-    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
+    @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
         ebsVolumeManager.mountFilesystem(attachedDevice, filesystemOptions);
     }
 }

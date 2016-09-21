@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.text.Strings;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.TemplateBuilder;
@@ -78,6 +78,7 @@ public class Ec2ExistingVolumeCustomizer extends BasicJcloudsLocationCustomizer 
         volumeId = val;
     }
 
+    @Override
     public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
         checkState(device != null ^ volumeId != null, "device=%s and volumeId=%s, but exactly one must be set", device, volumeId);
         // TODO validate that zone is in the same region; or if we were given an AZ then it's the same one
@@ -86,7 +87,8 @@ public class Ec2ExistingVolumeCustomizer extends BasicJcloudsLocationCustomizer 
         }
     }
 
-    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
+    @Override
+    public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
         if (device == null) {
             device = Devices.newBlockDevice(location, volumeId);
         }

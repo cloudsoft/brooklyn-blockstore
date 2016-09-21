@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.ec2.EC2Api;
@@ -68,7 +68,7 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
     }
 
     @Override
-    public AttachedBlockDevice attachBlockDevice(JcloudsSshMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options) {
+    public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options) {
         LOG.debug("Attaching block device: machine={}; device={}; options={}", new Object[]{machine, blockDevice, options});
 
         Optional<NodeMetadata> node = machine.getOptionalNode();

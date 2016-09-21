@@ -1,6 +1,6 @@
 package brooklyn.location.blockstore.api;
 
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 public interface AttachedBlockDevice extends BlockDevice {
 
@@ -16,7 +16,7 @@ public interface AttachedBlockDevice extends BlockDevice {
     public char getDeviceSuffix();
 
     /** @return The machine to which this block device is attached */
-    public JcloudsSshMachineLocation getMachine();
+    public JcloudsMachineLocation getMachine();
 
     // TODO: Bit confusing that this doesn't actually mount the device.
     /**

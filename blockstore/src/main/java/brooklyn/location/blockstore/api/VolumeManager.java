@@ -1,7 +1,7 @@
 package brooklyn.location.blockstore.api;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
@@ -27,7 +27,7 @@ public interface VolumeManager {
      * @param blockDevice The device that should be attached to machine
      * @param options Configuration for the device, e.g. the device's name and suffix
      */
-    public AttachedBlockDevice attachBlockDevice(JcloudsSshMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options);
+    public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options);
 
     /**
      * Attaches the given volume to the given VM, and mounts it.
@@ -37,7 +37,7 @@ public interface VolumeManager {
      * @param blockDeviceOptions Configuration for attaching the device, e.g. the device's name and suffix
      * @param filesystemOptions Configuration for mounting the device, e.g. the device's mount point
      */
-    public MountedBlockDevice attachAndMountVolume(JcloudsSshMachineLocation machine, BlockDevice blockDevice,
+    public MountedBlockDevice attachAndMountVolume(JcloudsMachineLocation machine, BlockDevice blockDevice,
         BlockDeviceOptions blockDeviceOptions, FilesystemOptions filesystemOptions);
 
     /**
@@ -81,7 +81,7 @@ public interface VolumeManager {
      * @param blockDeviceOptions Configuration for attaching the device, e.g. the device's name and suffix
      * @param filesystemOptions Configuration for mounting the device, e.g. the device's mount point
      */
-    public MountedBlockDevice createAttachAndMountVolume(JcloudsSshMachineLocation machine,
+    public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine,
             BlockDeviceOptions blockDeviceOptions, FilesystemOptions filesystemOptions);
 
     /**

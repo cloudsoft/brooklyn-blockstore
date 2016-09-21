@@ -3,6 +3,7 @@ package brooklyn.location.blockstore.ec2;
 import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertMountPointExists;
 import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertReadable;
 import static brooklyn.location.blockstore.AbstractVolumeManagerLiveTest.assertWritable;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,7 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().resolve(Ec2VolumeManagerLiveTest.LOCATION_SPEC);
+        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged(Ec2VolumeManagerLiveTest.LOCATION_SPEC);
     }
     
     @Override
@@ -83,7 +84,8 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
 //    }
     
     @Test(groups="Live")
-    public void testCreateVmWithAttachedVolume() throws Throwable {
+    @Override
+    public void testCreateVmWithAttachedVolume() throws Exception {
         //String mountPoint = "/var/opt2/test1";
         List<Character> deviceSuffixes = ImmutableList.of('g');
         List<Integer> capacities = ImmutableList.of(1);
@@ -91,10 +93,12 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
 
         Map<BlockDeviceOptions, FilesystemOptions> volumes = Maps.newLinkedHashMap();
         for (int i = 0; i < capacities.size(); i++) {
+            Integer capacity = checkNotNull(capacities.get(i), "capacity(%s)", i);
+            Character deviceSuffix = checkNotNull(deviceSuffixes.get(i), "deviceSuffix(%s)", i);
             BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
-                    .sizeInGb(capacities.get(i))
+                    .sizeInGb(capacity)
                     .zone(getDefaultAvailabilityZone())
-                    .deviceSuffix(deviceSuffixes.get(i))
+                    .deviceSuffix(deviceSuffix)
                     .tags(ImmutableMap.of(
                             "user", System.getProperty("user.name"),
                             "purpose", "brooklyn-blockstore-VolumeCustomizerLiveTest"));

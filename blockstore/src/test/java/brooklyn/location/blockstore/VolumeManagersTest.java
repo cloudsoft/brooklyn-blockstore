@@ -72,7 +72,7 @@ public class VolumeManagersTest {
     }
 
     private JcloudsLocation locationFor(String spec) {
-        return JcloudsLocation.class.cast(ctx.getLocationRegistry().resolve(spec));
+        return JcloudsLocation.class.cast(ctx.getLocationRegistry().getLocationManaged(spec));
     }
 
 }

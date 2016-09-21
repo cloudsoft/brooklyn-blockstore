@@ -56,6 +56,11 @@ public class OpenstackVolumeManager extends AbstractOpenstackVolumeManager {
     }
 
     @Override
+    protected String getRegion(JcloudsLocation location) {
+        return location.getRegion();
+    }
+
+    @Override
     protected String getZone(JcloudsLocation location) {
         // FIXME Untested code; what should this be?
         return null;
