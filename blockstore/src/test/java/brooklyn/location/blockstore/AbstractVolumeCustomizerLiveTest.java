@@ -30,6 +30,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
 
     // FIXME Delete volume? Or will it automatically be deleted when VM is deleted for all clouds?!
     
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(AbstractVolumeCustomizerLiveTest.class);
 
     protected BrooklynProperties brooklynProperties;

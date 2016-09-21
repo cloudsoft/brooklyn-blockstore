@@ -72,6 +72,7 @@ public class Ec2VolumeCustomizer {
     
     public static JcloudsLocationCustomizer withNewVolumes(final Map<BlockDeviceOptions, FilesystemOptions> volumes) {
         return new BasicJcloudsLocationCustomizer() {
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
                 BlockDeviceOptions blockOptions = Iterables.getFirst(volumes.keySet(), null);
                 if (blockOptions != null && blockOptions.getZone() != null) {
@@ -79,6 +80,7 @@ public class Ec2VolumeCustomizer {
                 }
             }
 
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
                 for (BlockDeviceOptions blockOptions : volumes.keySet()) {
                     ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(
@@ -86,6 +88,7 @@ public class Ec2VolumeCustomizer {
                 }
             }
 
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
                 for (Map.Entry<BlockDeviceOptions, FilesystemOptions> entry : volumes.entrySet()) {
                     BlockDeviceOptions blockOptions = entry.getKey();
@@ -112,10 +115,12 @@ public class Ec2VolumeCustomizer {
             final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions) {
 
         return new BasicJcloudsLocationCustomizer() {
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
                 templateBuilder.locationId(blockOptions.getZone());
             }
 
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
                 ((EC2TemplateOptions) templateOptions).mapEBSSnapshotToDeviceName(
                         ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()),
@@ -124,6 +129,7 @@ public class Ec2VolumeCustomizer {
                         blockOptions.deleteOnTermination());
             }
 
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
                 ebsVolumeManager.mountFilesystem(attachedDevice, filesystemOptions);
             }
@@ -145,10 +151,12 @@ public class Ec2VolumeCustomizer {
             final String region, final String availabilityZone, final String volumeId) {
 
         return new BasicJcloudsLocationCustomizer() {
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
                 templateBuilder.locationId(blockOptions.getZone());
             }
 
+            @Override
             public void customize(JcloudsLocation location, ComputeService computeService, JcloudsSshMachineLocation machine) {
                 ebsVolumeManager.attachAndMountVolume(machine, device, blockOptions, filesystemOptions);
             }

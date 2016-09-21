@@ -6,7 +6,6 @@ import static org.testng.Assert.assertNotNull;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.jclouds.googlecomputeengine.domain.Disk;
-import org.testng.annotations.Test;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
@@ -16,12 +15,6 @@ import brooklyn.location.blockstore.api.BlockDevice;
 
 public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    // FIXME NO-CHECK IN
-    @Test(groups="Live")
-    public void testCreateAndAttachVolume() throws Throwable {
-        super.testCreateAndAttachVolume();
-    }
-    
     public static final String PROVIDER = "google-compute-engine";
     public static final String REGION = "europe-west1-a";
     public static final String LOCATION_SPEC = "jclouds:" + PROVIDER+":europe-west1-a";// + (REGION == null ? "" : ":" + REGION);
