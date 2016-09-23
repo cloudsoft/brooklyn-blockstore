@@ -2,15 +2,18 @@ package brooklyn.location.blockstore;
 
 import static java.lang.String.format;
 import static org.apache.brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.installPackage;
 import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.ssh.BashCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +69,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
         int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
                 dontRequireTtyForSudo(),
                 waitForFileCmd(osDeviceName, 60),
+                installPackage(ImmutableMap.of("yum", "e4fsprogs"), null),
                 sudo("/sbin/mkfs -F -t " + filesystemType + " " + osDeviceName)));
 
         if (exitCode != 0) {
