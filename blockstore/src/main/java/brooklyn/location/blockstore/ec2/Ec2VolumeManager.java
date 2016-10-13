@@ -55,7 +55,7 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         ElasticBlockStoreApi ebsApi = getEbsApi(location);
         TagApi tagApi = getTagApi(location);
 
-        Volume volume = ebsApi.createVolumeInAvailabilityZone(options.getZone(), options.getSizeInGb());
+        Volume volume = ebsApi.createVolumeInAvailabilityZone(options.getZone(), options.getSizeInGb().intValue());
         if (options.hasTags()) {
             tagApi.applyToResources(options.getTags(), ImmutableList.of(volume.getId()));
         }

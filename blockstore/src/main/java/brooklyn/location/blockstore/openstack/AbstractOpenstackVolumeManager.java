@@ -63,7 +63,7 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
                 .name(getOrMakeName(location, config))
                 .metadata(config.getTags());
 
-        Volume volume = volumeApi.create(config.getSizeInGb(), options);
+        Volume volume = volumeApi.create(config.getSizeInGb().intValue(), options);
         return Devices.newBlockDevice(location, volume.getId());
     }
 

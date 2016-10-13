@@ -59,7 +59,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         String name = getOrMakeName(location, options);
 
         DiskCreationOptions diskOptions = new DiskCreationOptions.Builder()
-		        .sizeGb(options.getSizeInGb())
+		        .sizeGb(options.getSizeInGb().intValue())
 		        .build();
         Operation operation = diskApi.create(name, diskOptions);
         waitForOperationToBeDone(computeApi, operation);

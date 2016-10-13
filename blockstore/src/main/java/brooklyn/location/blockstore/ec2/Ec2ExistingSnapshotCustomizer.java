@@ -81,7 +81,7 @@ public class Ec2ExistingSnapshotCustomizer extends BasicJcloudsLocationCustomize
         ((EC2TemplateOptions) templateOptions).mapEBSSnapshotToDeviceName(
                 ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()),
                 attachedDevice.getId(),
-                blockOptions.getSizeInGb(),
+                blockOptions.getSizeInGb().intValue(),
                 blockOptions.deleteOnTermination());
     }
 

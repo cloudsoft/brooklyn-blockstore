@@ -12,7 +12,7 @@ public class BlockDeviceOptions {
     private String name;
     private String zone;
     private Map<String, String> tags = Maps.newHashMap();
-    private int sizeInGb;
+    private Number sizeInGb;
     private char deviceSuffix = 'h';
     private boolean deleteOnTermination;
 
@@ -27,7 +27,11 @@ public class BlockDeviceOptions {
             }
         }
         if (map.containsKey("sizeInGb")) {
-            result.sizeInGb = (Integer) checkNotNull(map.get("sizeInGb"), "sizeInGb");
+            if (map.get("sizeInGb") instanceof Double && (Double) map.get("sizeInGb") % 1 != 0) {
+                throw new UnsupportedOperationException("Trying to set block device with not allowed sizeInGb value "
+                        + map.get("sizeInGb") + "; sizeInGb must have integer value.");
+            }
+            result.sizeInGb = (Number) checkNotNull(map.get("sizeInGb"), "sizeInGb");
         }
         if (map.containsKey("deviceSuffix")) {
             Object val = checkNotNull(map.get("deviceSuffix"), "deviceSuffix");
@@ -74,7 +78,7 @@ public class BlockDeviceOptions {
         return this;
     }
 
-    public BlockDeviceOptions sizeInGb(int sizeInGb) {
+    public BlockDeviceOptions sizeInGb(Number sizeInGb) {
         this.sizeInGb = sizeInGb;
         return this;
     }
@@ -101,7 +105,7 @@ public class BlockDeviceOptions {
         return getTags() != null && !getTags().isEmpty();
     }
 
-    public int getSizeInGb() {
+    public Number getSizeInGb() {
         return sizeInGb;
     }
 
