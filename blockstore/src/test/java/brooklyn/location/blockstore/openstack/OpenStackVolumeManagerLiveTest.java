@@ -3,6 +3,7 @@ package brooklyn.location.blockstore.openstack;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
@@ -20,10 +21,10 @@ import brooklyn.location.blockstore.api.BlockDevice;
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     public static final String PROVIDER = "openstack-nova";
-    public static final String ENDPOINT = "https://lon.identity.api.rackspacecloud.com/v2.0/";
+    public static final String ENDPOINT = "https://cloudsoft2-lon.openstack.blueboxgrid.com:5000/v2.0/";
     public static final String LOCATION_SPEC = PROVIDER+":"+ENDPOINT;
     public static final String NAMED_LOCATION = "OpenStackVolumeManagerLiveTest" + Identifiers.makeRandomId(4);
-    public static final String IMAGE_NAME_REGEX = ".*CentOS 6.*";
+    public static final String IMAGE_NAME_REGEX = "CentOS 7";
 
     @Override
     protected String getProvider() {
@@ -33,11 +34,20 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     @Override
     protected void addBrooklynProperties(BrooklynProperties props) {
         // re-using rackspace credentials, but pointing at it as a raw OpenStack nova endpoint
-        Object identity = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"rackspace-cloudservers-uk.identity");
-        Object credential = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"rackspace-cloudservers-uk.credential");
+        Object identity = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.identity");
+        Object credential = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.credential");
+//        Object autoGenerateKeypairs = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.auto-generate-keypairs");
+        Object keyPair = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.keyPair");
+        Object privateKeyFile = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.loginUser.privateKeyFile");
+//        Object keystoneCredentialType = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.keystone.credential-type");
         props.put("brooklyn.location.named."+NAMED_LOCATION, LOCATION_SPEC);
         props.put("brooklyn.location.named."+NAMED_LOCATION+".identity", identity);
         props.put("brooklyn.location.named."+NAMED_LOCATION+".credential", credential);
+        props.put("brooklyn.location.named."+NAMED_LOCATION+".region", "RegionOne");
+//        props.put("brooklyn.location.named."+NAMED_LOCATION+".jclouds.openstack-nova.auto-generate-keypairs", autoGenerateKeypairs);
+        props.put("brooklyn.location.named."+NAMED_LOCATION+".keyPair", keyPair);
+        props.put("brooklyn.location.named."+NAMED_LOCATION+".loginUser.privateKeyFile", privateKeyFile);
+//        props.put("brooklyn.location.named."+NAMED_LOCATION+".credential-type", keystoneCredentialType);
     }
 
     @Override
@@ -72,6 +82,13 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
         // TODO Wanted to specify hardware id, but this failed; and wanted to force no imageId (in case specified in brooklyn.properties)
         return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
+                .put("generate.hostname", true)
+                .put("loginUser", "centos")
+                .put("user", "amp")
+                .put("securityGroups", "VPN_local")
+                .put("templateOptions", ImmutableMap.of(
+                        "networks", ImmutableList.of("426bb8f6-c8c7-4f84-ad3c-19f66b28a288")
+                ))
                 .build());
     }
 }

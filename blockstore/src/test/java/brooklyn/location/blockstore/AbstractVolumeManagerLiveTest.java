@@ -58,7 +58,6 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     /**
      * Speed tests up by rebinding and returning an existing virtual machine.
-     * See {@link JcloudsLocation#rebindMachine(brooklyn.util.config.ConfigBag)}.
      */
     protected abstract Optional<JcloudsSshMachineLocation> rebindJcloudsMachine();
     
@@ -93,8 +92,11 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     protected static void stripBrooklynProperties(BrooklynProperties props) {
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
-            if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
-                props.remove(key);
+            if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential") || key.endsWith("loginUser.privateKeyFile"))) {
+                if (!(key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova") &&
+                        (key.endsWith("auto-create-floating-ips") || key.endsWith("auto-generate-keypairs") || key.endsWith("keyPair")|| key.endsWith("keystone.credential-type")))) {
+                    props.remove(key);
+                }
             }
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
                 props.remove(key);
@@ -129,7 +131,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     }
 
     // Does the attach+mount twice to ensure that cleanup worked
-    @Test(groups="Live", dependsOnMethods = {"testCreateVolume"})
+    @Test(groups="Live"/*, dependsOnMethods = "testCreateVolume"*/)
     public void testCreateAndAttachVolume() throws Exception {
 
         String mountPoint = "/var/opt2/test1";
