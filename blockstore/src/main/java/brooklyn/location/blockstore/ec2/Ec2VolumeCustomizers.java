@@ -1,11 +1,13 @@
 package brooklyn.location.blockstore.ec2;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.List;
-import java.util.Map;
-
+import brooklyn.location.blockstore.BlockDeviceOptions;
+import brooklyn.location.blockstore.FilesystemOptions;
+import brooklyn.location.blockstore.api.AttachedBlockDevice;
+import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
+import com.google.common.base.Optional;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
@@ -19,14 +21,10 @@ import org.jclouds.ec2.compute.options.EC2TemplateOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
+import java.util.List;
+import java.util.Map;
 
-import brooklyn.location.blockstore.BlockDeviceOptions;
-import brooklyn.location.blockstore.FilesystemOptions;
-import brooklyn.location.blockstore.api.AttachedBlockDevice;
-import brooklyn.location.blockstore.api.BlockDevice;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Customization hooks to ensure that any EC2 instances provisioned via a corresponding jclouds location become associated
@@ -70,6 +68,7 @@ public class Ec2VolumeCustomizers {
             FilesystemOptions filesystemOptions = new FilesystemOptions("/mnt/brooklyn/"+deviceSuffix);
             volumes.put(blockOptions, filesystemOptions);
         }
+
         return new NewVolumeCustomizer(volumes);
     }
 
@@ -96,6 +95,11 @@ public class Ec2VolumeCustomizers {
         public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
             BlockDeviceOptions blockOptions = Iterables.getFirst(volumes.keySet(), null);
             if (blockOptions != null && blockOptions.getZone() != null) {
+                if (!templateBuilder.build().getLocation().getId().isEmpty()
+                        && templateBuilder.build().getLocation().getId() != blockOptions.getZone()) {
+                    LOG.warn("There is already existing location id [" + templateBuilder.build().getLocation().getId()
+                            + "] which is different from the required [" + blockOptions.getZone() + "]");
+                }
                 templateBuilder.locationId(blockOptions.getZone());
             }
         }
@@ -104,7 +108,7 @@ public class Ec2VolumeCustomizers {
         public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
             for (BlockDeviceOptions blockOptions : volumes.keySet()) {
                 ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(
-                        ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()), blockOptions.getSizeInGb().intValue(), blockOptions.deleteOnTermination());
+                        ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()), blockOptions.getSizeInGb(), blockOptions.deleteOnTermination());
             }
         }
 
@@ -169,7 +173,7 @@ public class Ec2VolumeCustomizers {
             ((EC2TemplateOptions) templateOptions).mapEBSSnapshotToDeviceName(
                     ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()),
                     attachedDevice.getId(),
-                    blockOptions.getSizeInGb().intValue(),
+                    blockOptions.getSizeInGb(),
                     blockOptions.deleteOnTermination());
         }
 
