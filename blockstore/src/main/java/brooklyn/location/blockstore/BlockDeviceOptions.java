@@ -27,7 +27,17 @@ public class BlockDeviceOptions {
             }
         }
         if (map.containsKey("sizeInGb")) {
-            result.sizeInGb = (Integer) checkNotNull(map.get("sizeInGb"), "sizeInGb");
+            if (map.get("sizeInGb") instanceof Double && Math.abs((Double) map.get("sizeInGb") - ((Double) map.get("sizeInGb")).intValue()) >= 0.01
+                    || map.get("sizeInGb") instanceof Float && Math.abs((Float) map.get("sizeInGb") - ((Float) map.get("sizeInGb")).intValue()) >= 0.01) {
+                throw new UnsupportedOperationException("Trying to set block device with not allowed sizeInGb value "
+                        + map.get("sizeInGb") + "; sizeInGb must have integer value.");
+            } else if (map.get("sizeInGb") instanceof Double) {
+                result.sizeInGb = checkNotNull(((Double) map.get("sizeInGb")).intValue(), "sizeInGb");
+            } else if (map.get("sizeInGb") instanceof Float) {
+                result.sizeInGb = checkNotNull(((Float) map.get("sizeInGb")).intValue(), "sizeInGb");
+            } else {
+                result.sizeInGb = (int) checkNotNull(map.get("sizeInGb"), "sizeInGb");
+            }
         }
         if (map.containsKey("deviceSuffix")) {
             Object val = checkNotNull(map.get("deviceSuffix"), "deviceSuffix");
