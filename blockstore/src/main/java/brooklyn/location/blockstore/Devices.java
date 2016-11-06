@@ -59,12 +59,12 @@ public class Devices {
         }
     }
 
-    private static class AttachedBlockDeviceImpl extends BlockDeviceImpl implements AttachedBlockDevice {
+    public static class AttachedBlockDeviceImpl extends BlockDeviceImpl implements AttachedBlockDevice {
 
         private final JcloudsMachineLocation machine;
         private final String deviceName;
 
-        private AttachedBlockDeviceImpl(JcloudsMachineLocation machine, String id, String deviceName) {
+        public AttachedBlockDeviceImpl(JcloudsMachineLocation machine, String id, String deviceName) {
             super(machine.getParent(), id);
             this.machine = machine;
             this.deviceName = deviceName;

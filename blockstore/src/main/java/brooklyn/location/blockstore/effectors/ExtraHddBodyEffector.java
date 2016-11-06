@@ -4,6 +4,7 @@ import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
+import brooklyn.location.blockstore.vclouddirector15.VcloudNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -23,15 +24,43 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
+/**
+ * Effector for attaching disks during runtime.
+ * To attach the effector you should apply the following initializer with different type reference than the one for the non-karaf version - notice that Bundle-SymbolicName is added as a prefix:
+ * <pre>
+ *    brooklyn.initializers:
+ *     - type: io.cloudsoft.amp.vm-customization:io.cloudsoft.amp.vmcustomization.ExtraHddBodyEffector
+ * </pre>
+ *
+ * The expected effector argument value is json map applicable to Ec2NewVolumeCustomizer's fileds.<br>
+ * For example:
+ * <pre>
+ *    {
+ *      "blockDevice": {
+ *        "sizeInGb": 3,
+ *        "deviceSuffix": "h",
+ *        "deleteOnTermination": false,
+ *        "tags": {
+ *          "brooklyn": "br-example-val-test-1"
+ *        }
+ *      },
+ *      "filesystem": {
+ *        "mountPoint": "/mount/brooklyn/h",
+ *        "filesystemType": "ext3"
+ *      }
+ *    }
+ * </pre>
+ */
 public class ExtraHddBodyEffector extends AddEffector {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtraHddBodyEffector.class);
 
     static ConfigKey<Map<?,?>> LOCATION_CUSTOMIZER_FIELDS = ConfigKeys.newConfigKey(new TypeToken<Map<?,?>>() {}, "location.customizer.fields",
-            "Map of location customizer fields", MutableMap.of());
+            "Map of location customizer fields.", MutableMap.of());
 
     public static final String EXTRA_HDD_EFFECTOR_NAME = "addExtraHdd";
     public static final String AWS_CLOUD = "aws-ec2";
+    public static final String VCLOUD_DIRECTOR = "vcloud-director";
 
     public ExtraHddBodyEffector() {
         super(newEffectorBuilder().build());
@@ -64,20 +93,21 @@ public class ExtraHddBodyEffector extends AddEffector {
             JcloudsMachineLocation machine = EffectorTasks.getMachine(entity(), JcloudsMachineLocation.class);
             String provider = machine.getParent().getProvider();
 
-            if (provider.equals(AWS_CLOUD)) {
-                LOG.info("Invoking effector addExtraHdd for cloud "+ provider + " on entity " + entity());
+            LOG.info("Invoking effector addExtraHdd for cloud "+ provider + " on entity " + entity());
 
-                Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields = transformMapToLocationCustomizerFields(locationCustomizerFieldsMap);
-                LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + locationCustomizerFields);
-
-                JcloudsLocationCustomizer awsVmCustomizer = new Ec2VolumeCustomizers.NewVolumeCustomizer(locationCustomizerFields);
-                awsVmCustomizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
-
-                return ((Ec2VolumeCustomizers.NewVolumeCustomizer) awsVmCustomizer).getMountedBlockDevice();
+            Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields = transformMapToLocationCustomizerFields(locationCustomizerFieldsMap);
+            LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + locationCustomizerFields);
+            JcloudsLocationCustomizer hddVmCustomizer;
+            if (AWS_CLOUD.equals(provider)) {
+                hddVmCustomizer = new Ec2VolumeCustomizers.NewVolumeCustomizer(locationCustomizerFields);
+            } else if (VCLOUD_DIRECTOR.equals(provider)) {
+                hddVmCustomizer = new VcloudNewVolumeCustomizer(locationCustomizerFields);
             } else {
                 throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
                         + provider + " which does not support adding disks from an effector.");
             }
+            hddVmCustomizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
+            return ((Ec2VolumeCustomizers.NewVolumeCustomizer) hddVmCustomizer).getMountedBlockDevice();
         }
 
         public static Map<BlockDeviceOptions, FilesystemOptions> transformMapToLocationCustomizerFields(Map<?, ?> map) {

@@ -5,7 +5,7 @@ import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
-import com.google.common.base.Optional;
+import brooklyn.location.blockstore.api.VolumeManager;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
@@ -14,7 +14,6 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.jclouds.compute.ComputeService;
-import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.compute.options.TemplateOptions;
 import org.jclouds.ec2.compute.options.EC2TemplateOptions;
@@ -72,23 +71,25 @@ public class Ec2VolumeCustomizers {
         return new NewVolumeCustomizer(volumes);
     }
 
-    public static class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
-
-        private Map<BlockDeviceOptions, FilesystemOptions> volumes;
-
-        private MountedBlockDevice mountedBlockDevice;
-
+    public static class NewVolumeCustomizer extends brooklyn.location.blockstore.NewVolumeCustomizer {
         public NewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volumes) {
             this.volumes = volumes;
             this.mountedBlockDevice = null;
         }
 
+        @Override
         public Map<BlockDeviceOptions, FilesystemOptions> getVolumes() {
             return volumes;
         }
 
+        @Override
         public MountedBlockDevice getMountedBlockDevice() {
             return mountedBlockDevice;
+        }
+
+        @Override
+        protected VolumeManager getVolumeManager() {
+            return ebsVolumeManager;
         }
 
         @Override
@@ -114,18 +115,7 @@ public class Ec2VolumeCustomizers {
 
         @Override
         public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
-            for (Map.Entry<BlockDeviceOptions, FilesystemOptions> entry : volumes.entrySet()) {
-                BlockDeviceOptions blockOptions = entry.getKey();
-                FilesystemOptions filesystemOptions = entry.getValue();
-                if (filesystemOptions != null) {
-                    BlockDeviceOptions blockOptionsCopy = BlockDeviceOptions.copy(blockOptions);
-                    Optional<NodeMetadata> node = machine.getOptionalNode();
-                    if (node.isPresent()) {
-                        blockOptionsCopy.zone(node.get().getLocation().getId());
-                    }
-                    mountedBlockDevice = ebsVolumeManager.createAttachAndMountVolume(machine, blockOptionsCopy, filesystemOptions);
-                }
-            }
+            createAndAttachDisks(machine);
         }
     }
 
