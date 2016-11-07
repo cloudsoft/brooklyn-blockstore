@@ -4,7 +4,6 @@ import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
-import brooklyn.location.blockstore.vclouddirector15.VcloudNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -100,8 +99,6 @@ public class ExtraHddBodyEffector extends AddEffector {
             JcloudsLocationCustomizer hddVmCustomizer;
             if (AWS_CLOUD.equals(provider)) {
                 hddVmCustomizer = new Ec2VolumeCustomizers.NewVolumeCustomizer(locationCustomizerFields);
-            } else if (VCLOUD_DIRECTOR.equals(provider)) {
-                hddVmCustomizer = new VcloudNewVolumeCustomizer(locationCustomizerFields);
             } else {
                 throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
                         + provider + " which does not support adding disks from an effector.");
