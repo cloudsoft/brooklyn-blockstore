@@ -20,7 +20,7 @@ import brooklyn.location.blockstore.api.BlockDevice;
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     public static final String PROVIDER = "openstack-nova";
-    public static final String ENDPOINT = "https://lon.identity.api.rackspacecloud.com/v2.0/";
+    public static final String ENDPOINT = "https://cloudsoft2-lon.openstack.blueboxgrid.com:5000/v2.0/";
     public static final String LOCATION_SPEC = PROVIDER+":"+ENDPOINT;
     public static final String NAMED_LOCATION = "OpenStackVolumeManagerLiveTest" + Identifiers.makeRandomId(4);
     public static final String IMAGE_NAME_REGEX = ".*CentOS 6.*";
@@ -33,11 +33,12 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     @Override
     protected void addBrooklynProperties(BrooklynProperties props) {
         // re-using rackspace credentials, but pointing at it as a raw OpenStack nova endpoint
-        Object identity = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"rackspace-cloudservers-uk.identity");
-        Object credential = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"rackspace-cloudservers-uk.credential");
+        Object identity = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.identity");
+        Object credential = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.credential");
         props.put("brooklyn.location.named."+NAMED_LOCATION, LOCATION_SPEC);
         props.put("brooklyn.location.named."+NAMED_LOCATION+".identity", identity);
         props.put("brooklyn.location.named."+NAMED_LOCATION+".credential", credential);
+        props.put("brooklyn.location.named."+NAMED_LOCATION+".region", "RegionOne");
     }
 
     @Override
