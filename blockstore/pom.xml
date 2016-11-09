@@ -19,6 +19,26 @@
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${brooklyn.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.jclouds.api</groupId>
+                    <artifactId>openstack-nova</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.jclouds</groupId>
+                    <artifactId>jclouds-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.cloudsoft.jclouds</groupId>
+            <artifactId>jclouds-core</artifactId>
+            <version>1.9.3-cloudsoft.20160825</version>
+        </dependency>
+        <dependency>
+            <groupId>io.cloudsoft.jclouds.api</groupId>
+            <artifactId>openstack-nova</artifactId>
+            <version>1.9.3-cloudsoft.20160725</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jclouds.api</groupId>
