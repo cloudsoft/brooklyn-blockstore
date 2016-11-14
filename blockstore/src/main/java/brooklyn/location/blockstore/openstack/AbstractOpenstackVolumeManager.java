@@ -26,7 +26,7 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractOpenstackVolumeManager.class);
     private static final String DEVICE_PREFIX = "/dev/sd";
-    private static final String OS_DEVICE_PREFIX = "/dev/xvd";
+    private static final String OS_DEVICE_PREFIX = "/dev/vd";
 
     protected abstract CinderApi getCinderApi(JcloudsLocation location);
 

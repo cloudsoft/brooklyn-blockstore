@@ -44,6 +44,11 @@ public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     }
 
     @Override
+    protected char getDefaultDeviseSuffix() {
+        return 0;
+    }
+
+    @Override
     protected void assertVolumeAvailable(BlockDevice device) {
         Volume volume = ((AbstractOpenstackVolumeManager)volumeManager).describeVolume(device);
         assertNotNull(volume);

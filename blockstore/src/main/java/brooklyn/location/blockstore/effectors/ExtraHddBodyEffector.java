@@ -4,6 +4,7 @@ import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
+import brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -59,6 +60,7 @@ public class ExtraHddBodyEffector extends AddEffector {
 
     public static final String EXTRA_HDD_EFFECTOR_NAME = "addExtraHdd";
     public static final String AWS_CLOUD = "aws-ec2";
+    public static final String OPENSTACK_NOVA = "openstack-nova";
     public static final String VCLOUD_DIRECTOR = "vcloud-director";
 
     public ExtraHddBodyEffector() {
@@ -96,15 +98,11 @@ public class ExtraHddBodyEffector extends AddEffector {
 
             Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields = transformMapToLocationCustomizerFields(locationCustomizerFieldsMap);
             LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + locationCustomizerFields);
-            JcloudsLocationCustomizer hddVmCustomizer;
-            if (AWS_CLOUD.equals(provider)) {
-                hddVmCustomizer = new Ec2VolumeCustomizers.NewVolumeCustomizer(locationCustomizerFields);
-            } else {
-                throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
-                        + provider + " which does not support adding disks from an effector.");
-            }
-            hddVmCustomizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
-            return ((Ec2VolumeCustomizers.NewVolumeCustomizer) hddVmCustomizer).getMountedBlockDevice();
+
+            JcloudsLocationCustomizer customizer = getCustomizerForCloud(provider, locationCustomizerFields);
+            customizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
+
+            return getMountedBlockDevice(customizer);
         }
 
         public static Map<BlockDeviceOptions, FilesystemOptions> transformMapToLocationCustomizerFields(Map<?, ?> map) {
@@ -124,6 +122,36 @@ public class ExtraHddBodyEffector extends AddEffector {
             } else {
                 throw new IllegalArgumentException("Invoked addExtraHdd effector with not appropriate parameters. " +
                         "Expected parameter of type { \"blockDevice\": {}, \"filesystem\": {} }, but found " + map);
+            }
+        }
+
+        private JcloudsLocationCustomizer getCustomizerForCloud(String provider, Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields) {
+            JcloudsLocationCustomizer customizer;
+
+            switch (provider) {
+                case AWS_CLOUD:
+                    customizer = new Ec2VolumeCustomizers.NewVolumeCustomizer(locationCustomizerFields);
+                    return customizer;
+
+                case OPENSTACK_NOVA:
+                    customizer = new OpenstackNewVolumeCustomizer(locationCustomizerFields);
+                    return customizer;
+
+                default:
+                    throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
+                            + provider + " which does not support adding disks from an effector.");
+
+            }
+        }
+
+        private MountedBlockDevice getMountedBlockDevice(JcloudsLocationCustomizer customizer) {
+            if (customizer instanceof Ec2VolumeCustomizers.NewVolumeCustomizer) {
+                return ((Ec2VolumeCustomizers.NewVolumeCustomizer) customizer).getMountedBlockDevice();
+            } else if (customizer instanceof OpenstackNewVolumeCustomizer) {
+                return ((OpenstackNewVolumeCustomizer) customizer).getMountedBlockDevice();
+            } else {
+                throw new UnsupportedOperationException("Tried to call method getMountedBlockDevice() from custozier "
+                        +  customizer + " which doesn't have such method");
             }
         }
     }

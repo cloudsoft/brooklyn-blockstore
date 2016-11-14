@@ -60,7 +60,7 @@ public class VolumeManagersTest {
 
     @Test
     public void testOpenstackVolumeManager() {
-        JcloudsLocation openstackLocation = locationFor(OpenStackVolumeManagerLiveTest.LOCATION_SPEC);
+        JcloudsLocation openstackLocation = locationFor(OpenStackVolumeManagerLiveTest.locationConfig.LOCATION_SPEC);
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(openstackLocation));
         assertEquals(VolumeManagers.newVolumeManager(openstackLocation).getClass(), OpenstackVolumeManager.class);
     }

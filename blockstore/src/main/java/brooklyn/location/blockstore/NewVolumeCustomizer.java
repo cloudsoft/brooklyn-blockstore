@@ -10,13 +10,23 @@ import org.jclouds.compute.domain.NodeMetadata;
 import java.util.Map;
 
 public abstract class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
+
+    public NewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volumes) {
+        this.volumes = volumes;
+        this.mountedBlockDevice = null;
+    }
+
     protected Map<BlockDeviceOptions, FilesystemOptions> volumes;
 
     protected MountedBlockDevice mountedBlockDevice;
 
-    public abstract Map<BlockDeviceOptions, FilesystemOptions> getVolumes();
+    public Map<BlockDeviceOptions, FilesystemOptions> getVolumes() {
+        return volumes;
+    }
 
-    public abstract MountedBlockDevice getMountedBlockDevice();
+    public MountedBlockDevice getMountedBlockDevice() {
+        return mountedBlockDevice;
+    }
 
     protected abstract VolumeManager getVolumeManager();
 

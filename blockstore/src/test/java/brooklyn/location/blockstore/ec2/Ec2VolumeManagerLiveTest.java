@@ -38,6 +38,11 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     @Override
+    protected char getDefaultDeviseSuffix() {
+        return 'h';
+    }
+
+    @Override
     protected JcloudsLocation createJcloudsLocation() {
         return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged(LOCATION_SPEC);
     }

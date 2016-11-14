@@ -73,18 +73,7 @@ public class Ec2VolumeCustomizers {
 
     public static class NewVolumeCustomizer extends brooklyn.location.blockstore.NewVolumeCustomizer {
         public NewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volumes) {
-            this.volumes = volumes;
-            this.mountedBlockDevice = null;
-        }
-
-        @Override
-        public Map<BlockDeviceOptions, FilesystemOptions> getVolumes() {
-            return volumes;
-        }
-
-        @Override
-        public MountedBlockDevice getMountedBlockDevice() {
-            return mountedBlockDevice;
+            super(volumes);
         }
 
         @Override

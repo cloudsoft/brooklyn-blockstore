@@ -53,6 +53,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected abstract JcloudsLocation createJcloudsLocation();
     protected abstract int getVolumeSize();
     protected abstract String getDefaultAvailabilityZone();
+    protected abstract char getDefaultDeviseSuffix();
     protected abstract void assertVolumeAvailable(BlockDevice blockDevice);
     protected abstract JcloudsSshMachineLocation createJcloudsMachine() throws Exception;
 
@@ -94,7 +95,8 @@ public abstract class AbstractVolumeManagerLiveTest {
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential") || key.endsWith("loginUser.privateKeyFile"))) {
                 if (!(key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova") &&
-                        (key.endsWith("auto-create-floating-ips") || key.endsWith("auto-generate-keypairs") || key.endsWith("keyPair")|| key.endsWith("keystone.credential-type")))) {
+                        (key.endsWith("auto-create-floating-ips") || key.endsWith("auto-generate-keypairs") || key.endsWith("keyPair")
+                                || key.endsWith("keystone.credential-type") || key.endsWith("endpoint")))) {
                     props.remove(key);
                 }
             }
@@ -124,6 +126,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                 "purpose", "brooklyn-blockstore-VolumeManagerLiveTest");
         BlockDeviceOptions options = new BlockDeviceOptions()
                 .zone(getDefaultAvailabilityZone())
+                .deviceSuffix(getDefaultDeviseSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
         volume = volumeManager.createBlockDevice(jcloudsLocation, options);
@@ -131,7 +134,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     }
 
     // Does the attach+mount twice to ensure that cleanup worked
-    @Test(groups="Live"/*, dependsOnMethods = "testCreateVolume"*/)
+    @Test(groups="Live", dependsOnMethods = "testCreateVolume")
     public void testCreateAndAttachVolume() throws Exception {
 
         String mountPoint = "/var/opt2/test1";
@@ -139,7 +142,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         final BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
                 .sizeInGb(getVolumeSize())
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix('h')
+                .deviceSuffix(getDefaultDeviseSuffix())
                 .tags(ImmutableMap.of(
                         "user", System.getProperty("user.name"),
                         "purpose", "brooklyn-blockstore-VolumeManagerLiveTest"));
@@ -206,7 +209,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         BlockDeviceOptions deviceOptions = new BlockDeviceOptions()
                 .sizeInGb(getVolumeSize())
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix('h')
+                .deviceSuffix(getDefaultDeviseSuffix())
                 .tags(ImmutableMap.of(
                     "user", user,
                     "purpose", "brooklyn-blockstore-test-move-between-machines"));

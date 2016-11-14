@@ -31,6 +31,11 @@ public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeMana
     }
 
     @Override
+    protected char getDefaultDeviseSuffix() {
+        return 0;
+    }
+
+    @Override
     protected int getVolumeSize() {
         return 1;
     }
