@@ -129,7 +129,9 @@ public abstract class AbstractVolumeManagerLiveTest {
                 .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
-        volume = volumeManager.createBlockDevice(jcloudsLocation, options);
+        JcloudsSshMachineLocation machine = createJcloudsMachine();
+        machines.add(machine);
+        volume = volumeManager.createBlockDevice(machine, options);
         assertVolumeAvailable(volume);
     }
 

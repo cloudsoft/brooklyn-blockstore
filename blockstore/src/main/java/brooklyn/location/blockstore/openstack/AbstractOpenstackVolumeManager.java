@@ -47,7 +47,8 @@ public abstract class AbstractOpenstackVolumeManager extends AbstractVolumeManag
     }
 
     @Override
-    public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions config) {
+    public BlockDevice createBlockDevice(JcloudsMachineLocation jcloudsMachineLocation, BlockDeviceOptions config) {
+        JcloudsLocation location = jcloudsMachineLocation.getParent();
         LOG.info("Creating volume: location={}; config={}", location, config);
 
         String region = getRegion(location);

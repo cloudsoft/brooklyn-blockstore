@@ -49,7 +49,8 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
     }
 
     @Override
-    public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options) {
+    public BlockDevice createBlockDevice(JcloudsMachineLocation jcloudsMachineLocation, BlockDeviceOptions options) {
+        JcloudsLocation location = jcloudsMachineLocation.getParent();
         LOG.debug("Creating block device: location={}; options={}", location, options);
 
         ElasticBlockStoreApi ebsApi = getEbsApi(location);

@@ -51,7 +51,8 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
     }
 
     @Override
-    public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options) {
+    public BlockDevice createBlockDevice(JcloudsMachineLocation jcloudsMachineLocation, BlockDeviceOptions options) {
+        JcloudsLocation location = jcloudsMachineLocation.getParent();
         LOG.info("Creating device: location={}; options={}", location, options);
 
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(location);

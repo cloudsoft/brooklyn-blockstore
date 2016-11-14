@@ -15,10 +15,10 @@ public interface VolumeManager {
     /**
      * Creates a new volume in the given availability zone.
      * 
-     * @param location Location where the volume should be created
+     * @param jcloudsMachineLocation Location where the volume should be created
      * @param options Configuration for the new volume
      */
-    public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options);
+    public BlockDevice createBlockDevice(JcloudsMachineLocation jcloudsMachineLocation, BlockDeviceOptions options);
 
     /**
      * Attaches the given volume to the given VM.
