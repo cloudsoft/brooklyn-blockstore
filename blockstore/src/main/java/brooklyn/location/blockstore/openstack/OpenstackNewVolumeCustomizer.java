@@ -15,6 +15,33 @@ import org.jclouds.compute.domain.NodeMetadata;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Customizer that can be used for attaching additional disk on provisioning time for OpenStack.<br><br>
+ *
+ * Below is shown an example:
+ *
+ * <pre>
+ *   provisioning.properties:
+ *     customizers:
+ *     - $brooklyn:object:
+ *         type: brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer
+ *         object.fields:
+ *           volumes:
+ *           - blockDevice:
+ *               sizeInGb: 3
+ *               deviceSuffix: 'b'
+ *               deleteOnTermination: false
+ *               tags:
+ *                 brooklyn: br-example-val-test-1
+ *            filesystem:
+ *              mountPoint: /mount/brooklyn/b
+ *              filesystemType: ext3
+ * </pre>
+ *
+ * Important notice is that KVM is configured as the default hypervisor for OpenStack which means that the defined device name will be of type /dev/vd*.
+ * This means that the device suffix must be set as the next letter in alphabetical order from the existing device names on the VM.
+ */
+
 public class OpenstackNewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
 
     private static final OpenstackVolumeManager openstackVolumeManager = new OpenstackVolumeManager();

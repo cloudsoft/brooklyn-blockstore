@@ -38,7 +38,7 @@ import java.util.Map;
  *    {
  *      "blockDevice": {
  *        "sizeInGb": 3,
- *        "deviceSuffix": "h",
+ *        "deviceSuffix": 'h',
  *        "deleteOnTermination": false,
  *        "tags": {
  *          "brooklyn": "br-example-val-test-1"
@@ -50,6 +50,11 @@ import java.util.Map;
  *      }
  *    }
  * </pre>
+ *
+ * Important notice is that KVM is configured as the default hypervisor for OpenStack which means that the defined device name will be of type /dev/vd*.
+ * This means that the device suffix must be set as the next letter in alphabetical order from the existing device names on the VM.
+ * In other words, "deviceSuffix" have to be set to 'b', 'c' and etc. depending on the already available device names.
+ *
  */
 public class ExtraHddBodyEffector extends AddEffector {
 
