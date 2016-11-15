@@ -2,8 +2,9 @@ package brooklyn.location.blockstore.effectors;
 
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
+import brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer;
 import brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
@@ -104,10 +105,10 @@ public class ExtraHddBodyEffector extends AddEffector {
             Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields = transformMapToLocationCustomizerFields(locationCustomizerFieldsMap);
             LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + locationCustomizerFields);
 
-            JcloudsLocationCustomizer customizer = getCustomizerForCloud(provider, locationCustomizerFields);
+            NewVolumeCustomizer customizer = getCustomizerForCloud(provider, locationCustomizerFields);
             customizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
 
-            return getMountedBlockDevice(customizer);
+            return customizer.getMountedBlockDevice();
         }
 
         public static Map<BlockDeviceOptions, FilesystemOptions> transformMapToLocationCustomizerFields(Map<?, ?> map) {
@@ -130,33 +131,22 @@ public class ExtraHddBodyEffector extends AddEffector {
             }
         }
 
-        private JcloudsLocationCustomizer getCustomizerForCloud(String provider, Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields) {
+        private NewVolumeCustomizer getCustomizerForCloud(String provider, Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields) {
             JcloudsLocationCustomizer customizer;
 
             switch (provider) {
                 case AWS_CLOUD:
-                    customizer = new Ec2VolumeCustomizers.NewVolumeCustomizer(locationCustomizerFields);
-                    return customizer;
+                    customizer = new Ec2NewVolumeCustomizer(locationCustomizerFields);
+                    return (NewVolumeCustomizer) customizer;
 
                 case OPENSTACK_NOVA:
                     customizer = new OpenstackNewVolumeCustomizer(locationCustomizerFields);
-                    return customizer;
+                    return (NewVolumeCustomizer) customizer;
 
                 default:
                     throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
                             + provider + " which does not support adding disks from an effector.");
 
-            }
-        }
-
-        private MountedBlockDevice getMountedBlockDevice(JcloudsLocationCustomizer customizer) {
-            if (customizer instanceof Ec2VolumeCustomizers.NewVolumeCustomizer) {
-                return ((Ec2VolumeCustomizers.NewVolumeCustomizer) customizer).getMountedBlockDevice();
-            } else if (customizer instanceof OpenstackNewVolumeCustomizer) {
-                return ((OpenstackNewVolumeCustomizer) customizer).getMountedBlockDevice();
-            } else {
-                throw new UnsupportedOperationException("Tried to call method getMountedBlockDevice() from custozier "
-                        +  customizer + " which doesn't have such method");
             }
         }
     }

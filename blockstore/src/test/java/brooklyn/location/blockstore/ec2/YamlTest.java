@@ -8,6 +8,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
@@ -47,8 +48,12 @@ public class YamlTest extends AbstractYamlTest {
 
         JcloudsLocation loc = (JcloudsLocation) Iterables.getOnlyElement(app.getLocations());
         Ec2NewVolumeCustomizer customizer = (Ec2NewVolumeCustomizer) Iterables.getOnlyElement(loc.config().get(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZERS));
-        
-        Map<BlockDeviceOptions, FilesystemOptions> volumes = customizer.getParsedVolumes();
+
+        Map<BlockDeviceOptions, FilesystemOptions> volumes = MutableMap.of();
+
+        if (customizer.getVolumes().iterator().hasNext()) {
+            volumes =(Map<BlockDeviceOptions, FilesystemOptions>) customizer.getVolumes().iterator().next();
+        }
         String msg = "volumes="+volumes;
         
         assertEquals(volumes.size(), 1, msg);

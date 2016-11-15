@@ -1,14 +1,14 @@
 package brooklyn.location.blockstore;
 
-import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
+import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
+import brooklyn.location.blockstore.api.VolumeManager;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
@@ -23,16 +23,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.api.VolumeManager;;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+
+;
 
 public abstract class AbstractVolumeManagerLiveTest {
 
@@ -53,7 +53,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected abstract JcloudsLocation createJcloudsLocation();
     protected abstract int getVolumeSize();
     protected abstract String getDefaultAvailabilityZone();
-    protected abstract char getDefaultDeviseSuffix();
+    protected abstract char getDefaultDeviceSuffix();
     protected abstract void assertVolumeAvailable(BlockDevice blockDevice);
     protected abstract JcloudsSshMachineLocation createJcloudsMachine() throws Exception;
 
@@ -93,12 +93,9 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     protected static void stripBrooklynProperties(BrooklynProperties props) {
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
-            if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential") || key.endsWith("loginUser.privateKeyFile"))) {
-                if (!(key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova") &&
-                        (key.endsWith("auto-create-floating-ips") || key.endsWith("auto-generate-keypairs") || key.endsWith("keyPair")
-                                || key.endsWith("keystone.credential-type") || key.endsWith("endpoint")))) {
+            if (!key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-cinder")
+                    && !(key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova"))) {
                     props.remove(key);
-                }
             }
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
                 props.remove(key);
@@ -126,7 +123,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                 "purpose", "brooklyn-blockstore-VolumeManagerLiveTest");
         BlockDeviceOptions options = new BlockDeviceOptions()
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix(getDefaultDeviseSuffix())
+                .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
         volume = volumeManager.createBlockDevice(jcloudsLocation, options);
@@ -142,7 +139,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         final BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
                 .sizeInGb(getVolumeSize())
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix(getDefaultDeviseSuffix())
+                .deviceSuffix(getDefaultDeviceSuffix())
                 .tags(ImmutableMap.of(
                         "user", System.getProperty("user.name"),
                         "purpose", "brooklyn-blockstore-VolumeManagerLiveTest"));
@@ -209,7 +206,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         BlockDeviceOptions deviceOptions = new BlockDeviceOptions()
                 .sizeInGb(getVolumeSize())
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix(getDefaultDeviseSuffix())
+                .deviceSuffix(getDefaultDeviceSuffix())
                 .tags(ImmutableMap.of(
                     "user", user,
                     "purpose", "brooklyn-blockstore-test-move-between-machines"));

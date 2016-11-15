@@ -5,8 +5,6 @@ import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.api.VolumeManager;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
@@ -51,7 +49,7 @@ public class Ec2VolumeCustomizers {
      * </ul>
      */
     public static JcloudsLocationCustomizer withNewVolume(final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions) {
-        return new NewVolumeCustomizer(MutableMap.of(checkNotNull(blockOptions, "blockOptions"), filesystemOptions));
+        return new Ec2NewVolumeCustomizer(MutableMap.of(checkNotNull(blockOptions, "blockOptions"), filesystemOptions));
     }
 
     // TODO what mount point etc?
@@ -68,44 +66,7 @@ public class Ec2VolumeCustomizers {
             volumes.put(blockOptions, filesystemOptions);
         }
 
-        return new NewVolumeCustomizer(volumes);
-    }
-
-    public static class NewVolumeCustomizer extends brooklyn.location.blockstore.NewVolumeCustomizer {
-        public NewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volumes) {
-            super(volumes);
-        }
-
-        @Override
-        protected VolumeManager getVolumeManager() {
-            return ebsVolumeManager;
-        }
-
-        @Override
-        public void customize(JcloudsLocation location, ComputeService computeService, TemplateBuilder templateBuilder) {
-            BlockDeviceOptions blockOptions = Iterables.getFirst(volumes.keySet(), null);
-            if (blockOptions != null && blockOptions.getZone() != null) {
-                if (!templateBuilder.build().getLocation().getId().isEmpty()
-                        && templateBuilder.build().getLocation().getId() != blockOptions.getZone()) {
-                    LOG.warn("There is already existing location id [" + templateBuilder.build().getLocation().getId()
-                            + "] which is different from the required [" + blockOptions.getZone() + "]");
-                }
-                templateBuilder.locationId(blockOptions.getZone());
-            }
-        }
-
-        @Override
-        public void customize(JcloudsLocation location, ComputeService computeService, TemplateOptions templateOptions) {
-            for (BlockDeviceOptions blockOptions : volumes.keySet()) {
-                ((EC2TemplateOptions) templateOptions).mapNewVolumeToDeviceName(
-                        ebsVolumeManager.getVolumeDeviceName(blockOptions.getDeviceSuffix()), blockOptions.getSizeInGb(), blockOptions.deleteOnTermination());
-            }
-        }
-
-        @Override
-        public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
-            createAndAttachDisks(machine);
-        }
+        return new Ec2NewVolumeCustomizer(volumes);
     }
 
     // TODO: Either the JavaDoc or the implementation is incorrect. The implementation makes no attempt to attach volumes.

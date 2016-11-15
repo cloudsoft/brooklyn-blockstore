@@ -50,7 +50,7 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     }
 
     @Override
-    protected char getDefaultDeviseSuffix() {
+    protected char getDefaultDeviceSuffix() {
         return 'b';
     }
 
