@@ -39,6 +39,16 @@ public class Ec2NewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSupport {
                         "filesystem", MutableMap.of(
                                 "mountPoint", "/mount/brooklyn/h",
                                 "filesystemType", "ext3"
+                        )),
+
+                MutableMap.of("blockDevice", MutableMap.of(
+                        "sizeInGb", 3,
+                        "deviceSuffix", 'g',
+                        "deleteOnTermination", true
+                        ),
+                        "filesystem", MutableMap.of(
+                                "mountPoint", "/mount/brooklyn/g",
+                                "filesystemType", "ext3"
                         ))));
 
         EmptySoftwareProcess entity = app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class)

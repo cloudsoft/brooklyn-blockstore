@@ -42,6 +42,15 @@ public class OpenStackNewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSup
                         "filesystem", MutableMap.of(
                                 "mountPoint", "/mount/brooklyn/b",
                                 "filesystemType", "ext3"
+                        )),
+                MutableMap.of("blockDevice", MutableMap.of(
+                        "sizeInGb", 3,
+                        "deviceSuffix", 'c',
+                        "deleteOnTermination", true
+                        ),
+                        "filesystem", MutableMap.of(
+                                "mountPoint", "/mount/brooklyn/c",
+                                "filesystemType", "ext3"
                         ))));
 
         EmptySoftwareProcess entity = app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class)

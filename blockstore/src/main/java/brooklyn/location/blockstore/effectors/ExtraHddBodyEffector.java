@@ -42,7 +42,7 @@ import java.util.Map;
  *        "deviceSuffix": 'h',
  *        "deleteOnTermination": false,
  *        "tags": {
- *          "brooklyn": "br-example-val-test-1"
+ *          "brooklyn": "br-example-test-1"
  *        }
  *      },
  *      "filesystem": {
