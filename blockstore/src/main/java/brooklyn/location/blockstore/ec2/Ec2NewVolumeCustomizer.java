@@ -4,7 +4,6 @@ import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeManager;
-import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import java.util.Map;
 
@@ -23,7 +22,7 @@ import java.util.Map;
  *   provisioning.properties:
  *     customizers:
  *     - $brooklyn:object:
- *         type: brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer
+ *         type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer
  *         brooklyn.config:
  *           volumes:
  *           - blockDevice:

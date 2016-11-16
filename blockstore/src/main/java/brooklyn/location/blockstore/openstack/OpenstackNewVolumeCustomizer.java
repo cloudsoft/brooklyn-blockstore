@@ -16,7 +16,7 @@ import java.util.Map;
  *   provisioning.properties:
  *     customizers:
  *     - $brooklyn:object:
- *         type: brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer
+ *         type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer
  *         brooklyn.config:
  *           volumes:
  *           - blockDevice:
