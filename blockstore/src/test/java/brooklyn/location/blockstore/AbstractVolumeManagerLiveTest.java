@@ -15,6 +15,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.slf4j.Logger;
@@ -45,9 +46,10 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected ManagementContext ctx;
     
     protected JcloudsLocation jcloudsLocation;
+    protected JcloudsMachineLocation currentJcloudshMachineLocation;
     protected VolumeManager volumeManager;
     protected BlockDevice volume;
-    protected List<JcloudsSshMachineLocation> machines = Lists.newCopyOnWriteArrayList();
+    protected List<JcloudsMachineLocation> machines = Lists.newCopyOnWriteArrayList();
 
     // TODO Consider removing
     @Deprecated
@@ -78,7 +80,7 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        for (JcloudsSshMachineLocation machine : machines) {
+        for (JcloudsMachineLocation machine : machines) {
             jcloudsLocation.release(machine);
         }
         machines.clear();
@@ -129,9 +131,9 @@ public abstract class AbstractVolumeManagerLiveTest {
                 .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
-        JcloudsSshMachineLocation machine = createJcloudsMachine();
-        machines.add(machine);
-        volume = volumeManager.createBlockDevice(machine, options);
+        currentJcloudshMachineLocation = createJcloudsMachine();
+        machines.add(currentJcloudshMachineLocation);
+        volume = volumeManager.createBlockDevice(currentJcloudshMachineLocation, options);
         assertVolumeAvailable(volume);
     }
 

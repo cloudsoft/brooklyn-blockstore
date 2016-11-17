@@ -1,5 +1,6 @@
 package brooklyn.location.blockstore;
 
+import brooklyn.location.blockstore.vclouddirector15.VcloudVolumeManager;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
@@ -31,7 +32,8 @@ public class VolumeManagers {
                 provider.equals("openstack-nova") ||
                 provider.startsWith("rackspace-") ||
                 provider.startsWith("cloudservers-") ||
-                provider.equals("google-compute-engine");
+                provider.equals("google-compute-engine") ||
+                provider.equals("vcloud-director");
     }
 
     /**
@@ -68,11 +70,11 @@ public class VolumeManagers {
             return new GoogleComputeEngineVolumeManager();
         } else if (provider.startsWith("openstack-nova")) {
             return new OpenstackVolumeManager();
+        } else if (provider.equals("vcloud-director")) {
+            return new VcloudVolumeManager();
         } else {
             throw new IllegalArgumentException("Cannot handle volumes in location: " + location +
                     " (mismatch between isVolumeManagerSupportedForLocation and newVolumeManager)");
         }
     }
-
-
 }
