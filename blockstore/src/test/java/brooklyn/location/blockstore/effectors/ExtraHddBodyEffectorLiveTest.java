@@ -19,11 +19,13 @@ import org.testng.annotations.Test;
 
 import java.util.concurrent.ExecutionException;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertNotNull;
 
 public class ExtraHddBodyEffectorLiveTest extends BrooklynAppLiveTestSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(ExtraHddBodyEffectorLiveTest.class);
 
     protected Location jcloudsLocation;
     protected BrooklynProperties brooklynProperties;

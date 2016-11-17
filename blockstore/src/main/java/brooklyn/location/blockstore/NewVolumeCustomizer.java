@@ -2,6 +2,7 @@ package brooklyn.location.blockstore;
 
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeManager;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
@@ -10,48 +11,48 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public abstract class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
-
     public static final ConfigKey<List<Map<?, ?>>> VOLUMES = ConfigKeys.newConfigKey(
             new TypeToken<List<Map<?, ?>>>() {},
-            "volumes", "List of volumes to be attached");
+            "volumes", "List of volumes to be attached", ImmutableList.<Map<?, ?>>of());
 
     /**
      * Used only for checking results from customization
      */
-    protected transient MountedBlockDevice mountedBlockDevice;
+    protected transient List<MountedBlockDevice> mountedBlockDeviceList;
 
     protected NewVolumeCustomizer() {
+        mountedBlockDeviceList = MutableList.of();
     }
 
-    public NewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volume) {
+    public NewVolumeCustomizer(Map<?, ?> volume) {
         setVolumes(ImmutableList.<Map<?, ?>>of(volume));
+        mountedBlockDeviceList = MutableList.of();
     }
 
     public List<Map<?, ?>> getVolumes() {
-        try {
-            return this.getConfig(VOLUMES);
-        } catch (Exception e) {
-            // We don't want to break execution here but prefer to throw more informative exception
-            // for empty volumes when this method is invoked
-            LOG.warn("Trying to get missing config " + VOLUMES);
-            return ImmutableList.of();
-        }
+        return this.getConfig(VOLUMES);
     }
 
-    public MountedBlockDevice getMountedBlockDevice() {
-        return mountedBlockDevice;
+    public List<Map<BlockDeviceOptions, FilesystemOptions>> getParsedVolumes() {
+        List<Map<BlockDeviceOptions, FilesystemOptions>> parsedVolumes = MutableList.of();
+        for (Map<?, ?> volume: this.getConfig(VOLUMES)) {
+            parsedVolumes.add(transformMapToVolume(volume));
+        }
+        return parsedVolumes;
+    }
+
+    public List<MountedBlockDevice> getMountedBlockDeviceList() {
+        return mountedBlockDeviceList;
     }
 
     protected abstract VolumeManager getVolumeManager();
@@ -63,11 +64,8 @@ public abstract class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer
         this.config().set(VOLUMES,volumes);
     }
 
+    @VisibleForTesting
     public static Map<BlockDeviceOptions, FilesystemOptions> transformMapToVolume(Map<?, ?> map) {
-        if (map.keySet().iterator().next() instanceof BlockDeviceOptions && map.values().iterator().next() instanceof FilesystemOptions) {
-            return (Map<BlockDeviceOptions, FilesystemOptions>) map;
-        }
-
         if (map.containsKey("blockDevice") && map.containsKey("filesystem")) {
             BlockDeviceOptions blockDeviceOptions = (map.get("blockDevice") instanceof BlockDeviceOptions) ?
                     (BlockDeviceOptions) map.get("blockDevice") : BlockDeviceOptions.fromMap((Map<String, ?>) map.get("blockDevice"));
@@ -113,7 +111,7 @@ public abstract class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer
                 if (node.isPresent()) {
                     blockOptionsCopy.zone(node.get().getLocation().getId());
                 }
-                mountedBlockDevice = getVolumeManager().createAttachAndMountVolume(machine, blockOptionsCopy, filesystemOptions);
+                mountedBlockDeviceList.add(getVolumeManager().createAttachAndMountVolume(machine, blockOptionsCopy, filesystemOptions));
             }
         }
     }

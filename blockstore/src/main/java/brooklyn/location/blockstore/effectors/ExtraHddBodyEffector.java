@@ -1,12 +1,11 @@
 package brooklyn.location.blockstore.effectors;
 
-import brooklyn.location.blockstore.BlockDeviceOptions;
-import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer;
 import brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
@@ -95,43 +94,26 @@ public class ExtraHddBodyEffector extends AddEffector {
         @Override
         public MountedBlockDevice call(ConfigBag parameters) {
             Preconditions.checkNotNull(parameters.get(LOCATION_CUSTOMIZER_FIELDS), LOCATION_CUSTOMIZER_FIELDS.getName() + " is required");
-            Map<?, ?> locationCustomizerFieldsMap = TypeCoercions.coerce(parameters.get(LOCATION_CUSTOMIZER_FIELDS), Map.class);
+            Map<?, ?> locationCustomizerFields = TypeCoercions.coerce(parameters.get(LOCATION_CUSTOMIZER_FIELDS), Map.class);
 
             JcloudsMachineLocation machine = EffectorTasks.getMachine(entity(), JcloudsMachineLocation.class);
             String provider = machine.getParent().getProvider();
 
             LOG.info("Invoking effector addExtraHdd for cloud "+ provider + " on entity " + entity());
 
-            Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields = transformMapToLocationCustomizerFields(locationCustomizerFieldsMap);
             LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + locationCustomizerFields);
 
             NewVolumeCustomizer customizer = getCustomizerForCloud(provider, locationCustomizerFields);
             customizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
 
-            return customizer.getMountedBlockDevice();
-        }
-
-        public static Map<BlockDeviceOptions, FilesystemOptions> transformMapToLocationCustomizerFields(Map<?, ?> map) {
-            if (map.containsKey("blockDevice") && map.containsKey("filesystem")) {
-                BlockDeviceOptions blockDeviceOptions =  BlockDeviceOptions.fromMap((Map<String, ?>) map.get("blockDevice"));
-                if (blockDeviceOptions.getSizeInGb() == 0) {
-                    throw new IllegalArgumentException("Invoked addExtraHdd effector with not appropriate parameters "
-                            + map + "; \"blockDevice\" should contain value for \"sizeInGb\"");
-                }
-                FilesystemOptions filesystemOptions = FilesystemOptions.fromMap((Map<String, ?>) map.get("filesystem"));
-                Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields = MutableMap.of(
-                        blockDeviceOptions,
-                        filesystemOptions
-                );
-
-                return locationCustomizerFields;
-            } else {
-                throw new IllegalArgumentException("Invoked addExtraHdd effector with not appropriate parameters. " +
-                        "Expected parameter of type { \"blockDevice\": {}, \"filesystem\": {} }, but found " + map);
+            if (customizer.getMountedBlockDeviceList().isEmpty()) {
+                throw new IllegalStateException("Returned mounted block device after invoking addExtraHdd effector is empty. Might have failed to attach disk.");
             }
+
+            return Iterables.getLast(customizer.getMountedBlockDeviceList());
         }
 
-        private NewVolumeCustomizer getCustomizerForCloud(String provider, Map<BlockDeviceOptions, FilesystemOptions> locationCustomizerFields) {
+        private NewVolumeCustomizer getCustomizerForCloud(String provider, Map<?, ?> locationCustomizerFields) {
             JcloudsLocationCustomizer customizer;
 
             switch (provider) {

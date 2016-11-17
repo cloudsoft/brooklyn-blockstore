@@ -32,7 +32,7 @@ public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeMana
 
     @Override
     protected char getDefaultDeviceSuffix() {
-        throw new IllegalStateException("Figure out the correct device suffix");
+        throw new IllegalStateException("Not implemented. Figure out the correct device suffix.");
     }
 
     @Override

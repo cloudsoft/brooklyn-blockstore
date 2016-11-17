@@ -1,7 +1,5 @@
 package brooklyn.location.blockstore.openstack;
 
-import brooklyn.location.blockstore.BlockDeviceOptions;
-import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeManager;
 
@@ -40,7 +38,7 @@ public class OpenstackNewVolumeCustomizer extends NewVolumeCustomizer {
         // for reflective creation (e.g. with $brooklyn:object)
     }
 
-    public OpenstackNewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volume) {
+    public OpenstackNewVolumeCustomizer(Map<?, ?> volume) {
         super(volume);
     }
 

@@ -48,12 +48,10 @@ public class YamlTest extends AbstractYamlTest {
 
         JcloudsLocation loc = (JcloudsLocation) Iterables.getOnlyElement(app.getLocations());
         Ec2NewVolumeCustomizer customizer = (Ec2NewVolumeCustomizer) Iterables.getOnlyElement(loc.config().get(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZERS));
+;
+        Map<BlockDeviceOptions, FilesystemOptions> volumes = customizer.getVolumes().isEmpty() ?
+                MutableMap.<BlockDeviceOptions, FilesystemOptions>of() : customizer.getParsedVolumes().iterator().next();
 
-        Map<BlockDeviceOptions, FilesystemOptions> volumes = MutableMap.of();
-
-        if (customizer.getVolumes().iterator().hasNext()) {
-            volumes =(Map<BlockDeviceOptions, FilesystemOptions>) customizer.getVolumes().iterator().next();
-        }
         String msg = "volumes="+volumes;
         
         assertEquals(volumes.size(), 1, msg);

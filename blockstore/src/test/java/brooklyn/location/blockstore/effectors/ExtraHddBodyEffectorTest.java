@@ -2,11 +2,11 @@ package brooklyn.location.blockstore.effectors;
 
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.effectors.ExtraHddBodyEffector;
-import org.apache.brooklyn.api.effector.Effector;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.test.entity.TestEntity;
@@ -99,7 +99,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
 
         Map<?, ?> parameterMap = TypeCoercions.coerce(parameterInput, Map.class);
 
-        Map<BlockDeviceOptions, FilesystemOptions> transformed = ExtraHddBodyEffector.Body.transformMapToLocationCustomizerFields(parameterMap);
+        Map<BlockDeviceOptions, FilesystemOptions> transformed = NewVolumeCustomizer.transformMapToVolume(parameterMap);
         assertTrue(((MutableMap) transformed).asImmutableCopy().keySet().iterator().next() instanceof BlockDeviceOptions);
         assertTrue(((MutableMap) transformed).asImmutableCopy().values().iterator().next() instanceof FilesystemOptions);
 
@@ -128,7 +128,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
 
         parameterMap = TypeCoercions.coerce(parameterInputWithDoubleSizeInGB, Map.class);
 
-        transformed = ExtraHddBodyEffector.Body.transformMapToLocationCustomizerFields(parameterMap);
+        transformed = NewVolumeCustomizer.transformMapToVolume(parameterMap);
 
         assertEquals(((BlockDeviceOptions) ((MutableMap) transformed).asImmutableCopy().keySet().iterator().next()).getSizeInGb(), 4);
     }
@@ -153,7 +153,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
 
         try {
             parameterMap = TypeCoercions.coerce(parameterInputWithMissingSizeInGb, Map.class);
-            ExtraHddBodyEffector.Body.transformMapToLocationCustomizerFields(parameterMap);
+            NewVolumeCustomizer.transformMapToVolume(parameterMap);
             Asserts.shouldHaveFailedPreviously("\"blockDevice\" should contain value for \"sizeInGb\"");
         } catch (Exception e) {
             Asserts.expectedFailureOfType(e, IllegalArgumentException.class);
@@ -177,7 +177,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
 
         try {
             parameterMap = TypeCoercions.coerce(parameterInputWithNonIntegerSizeInGb, Map.class);
-            ExtraHddBodyEffector.Body.transformMapToLocationCustomizerFields(parameterMap);
+            NewVolumeCustomizer.transformMapToVolume(parameterMap);
             Asserts.shouldHaveFailedPreviously("Trying to set block device with not allowed sizeInGb value");
         } catch (Exception e) {
             Asserts.expectedFailureOfType(e, UnsupportedOperationException.class);
@@ -201,7 +201,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
 
         try {
             parameterMap = TypeCoercions.coerce(parameterInputWithWrongValueTypes, Map.class);
-            ExtraHddBodyEffector.Body.transformMapToLocationCustomizerFields(parameterMap);
+            NewVolumeCustomizer.transformMapToVolume(parameterMap);
             Asserts.shouldHaveFailedPreviously();
         } catch (Exception e) {
             Asserts.expectedFailureOfType(e, ClassCastException.class);

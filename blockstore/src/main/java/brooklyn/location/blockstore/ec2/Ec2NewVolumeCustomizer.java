@@ -1,7 +1,5 @@
 package brooklyn.location.blockstore.ec2;
 
-import brooklyn.location.blockstore.BlockDeviceOptions;
-import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeManager;
 
@@ -42,7 +40,7 @@ public class Ec2NewVolumeCustomizer extends NewVolumeCustomizer {
         // for reflective creation (e.g. with $brooklyn:object)
     }
 
-    public Ec2NewVolumeCustomizer(Map<BlockDeviceOptions, FilesystemOptions> volume) {
+    public Ec2NewVolumeCustomizer(Map<?, ?> volume) {
         super(volume);
     }
 
