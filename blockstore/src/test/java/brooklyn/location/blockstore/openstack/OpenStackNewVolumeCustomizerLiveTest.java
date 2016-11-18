@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.testng.Assert.assertTrue;
 
+// Run with -da (disable assertions) die to bug in jclouds openstack-nova for not properly cloning template options
 public class OpenStackNewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSupport {
 
     protected Location jcloudsLocation;

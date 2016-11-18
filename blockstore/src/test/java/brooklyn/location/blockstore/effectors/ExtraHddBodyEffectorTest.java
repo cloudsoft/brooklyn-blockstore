@@ -36,6 +36,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
         assertEffectorIsProperlyAttached(effector);
     }
 
+    // Run with -da (disable assertions) die to bug in jclouds openstack-nova for not properly cloning template options
     @Test
     public void testEffectorFailsForLocationsNotOfJcloudsMachineLocationType() throws Exception {
 

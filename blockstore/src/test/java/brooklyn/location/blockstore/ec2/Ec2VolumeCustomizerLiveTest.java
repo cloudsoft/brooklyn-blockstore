@@ -21,7 +21,7 @@ import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 
-@Test
+@Test(groups = "WIP")
 public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
 
     @Override

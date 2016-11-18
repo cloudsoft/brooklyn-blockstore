@@ -1,21 +1,18 @@
 package brooklyn.location.blockstore.ec2;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
+import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
+import brooklyn.location.blockstore.api.BlockDevice;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.jclouds.ec2.domain.Volume;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
-import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.BlockDevice;
-
-@Test
+@Test(groups = "WIP")
 public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     // Note we're using the region-name with an explicit availability zone, as is done in the 

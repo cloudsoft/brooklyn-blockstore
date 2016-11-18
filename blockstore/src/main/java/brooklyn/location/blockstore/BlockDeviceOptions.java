@@ -7,6 +7,7 @@ import java.util.Map;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 public class BlockDeviceOptions {
 
@@ -40,7 +41,7 @@ public class BlockDeviceOptions {
             } else if (map.get("sizeInGb") instanceof Integer){
                 result.sizeInGb = (Integer)map.get("sizeInGb");
             } else {
-                result.sizeInGb = Integer.parseInt((String)map.get("sizeInGb"));
+                result.sizeInGb = TypeCoercions.coerce(map.get("sizeInGb"), Integer.class);
             }
             checkArgument(result.sizeInGb > 0, "sizeInGb should be grater than zero"); 
         } else {
