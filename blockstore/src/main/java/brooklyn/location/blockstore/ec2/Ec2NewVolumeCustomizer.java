@@ -2,8 +2,9 @@ package brooklyn.location.blockstore.ec2;
 
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.blockstore.api.VolumeOptions;
 
-import java.util.Map;
+import java.util.List;
 
 /**
  * Creates a location customizer that:
@@ -40,8 +41,8 @@ public class Ec2NewVolumeCustomizer extends NewVolumeCustomizer {
         // for reflective creation (e.g. with $brooklyn:object)
     }
 
-    public Ec2NewVolumeCustomizer(Map<?, ?> volume) {
-        super(volume);
+    public Ec2NewVolumeCustomizer(List<VolumeOptions> volumes) {
+        super(volumes);
     }
 
     @Override

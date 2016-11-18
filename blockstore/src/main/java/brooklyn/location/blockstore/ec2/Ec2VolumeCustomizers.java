@@ -5,11 +5,15 @@ import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
+import brooklyn.location.blockstore.api.VolumeOptions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.TemplateBuilder;
@@ -38,23 +42,9 @@ public class Ec2VolumeCustomizers {
     private Ec2VolumeCustomizers() {
     }
 
-    /**
-     * Returns a location customizer that:
-     * <ul>
-     * <li>configures the EC2 availability zone</li>
-     * <li>creates a new EBS volume of the requested size in the given availability zone</li>
-     * <li>attaches the new volume to the newly-provisioned EC2 instance</li>
-     * <li>formats the new volume with the requested filesystem</li>
-     * <li>mounts the filesystem under the requested path</li>
-     * </ul>
-     */
-    public static JcloudsLocationCustomizer withNewVolume(final BlockDeviceOptions blockOptions, final FilesystemOptions filesystemOptions) {
-        return new Ec2NewVolumeCustomizer(MutableMap.of(checkNotNull(blockOptions, "blockOptions"), filesystemOptions));
-    }
-
     // TODO what mount point etc?
     public static JcloudsLocationCustomizer withNewVolumes(List<Integer> capacities) {
-        Map<BlockDeviceOptions, FilesystemOptions> volumes = Maps.newLinkedHashMap();
+        List<VolumeOptions> volumes = MutableList.of();
         for (int i = 0; i < capacities.size(); i++) {
             Integer capacity = checkNotNull(capacities.get(i), "capacity(%s)", i);
             char deviceSuffix = (char)('h'+i);
@@ -62,8 +52,8 @@ public class Ec2VolumeCustomizers {
                     .deviceSuffix(deviceSuffix)
                     .sizeInGb(capacity)
                     .deleteOnTermination(true);
-            FilesystemOptions filesystemOptions = new FilesystemOptions("/mnt/brooklyn/"+deviceSuffix);
-            volumes.put(blockOptions, filesystemOptions);
+            FilesystemOptions fileSystemOptions = new FilesystemOptions("/mnt/brooklyn/"+deviceSuffix);
+            volumes.add(new VolumeOptions(blockOptions, fileSystemOptions));
         }
 
         return new Ec2NewVolumeCustomizer(volumes);

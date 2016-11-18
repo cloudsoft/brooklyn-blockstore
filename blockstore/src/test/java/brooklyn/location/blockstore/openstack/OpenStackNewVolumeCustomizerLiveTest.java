@@ -1,5 +1,6 @@
 package brooklyn.location.blockstore.openstack;
 
+import brooklyn.location.blockstore.api.VolumeOptions;
 import com.google.common.collect.ImmutableList;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
@@ -33,25 +34,25 @@ public class OpenStackNewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSup
         jcloudsLocation = mgmt.getLocationRegistry().getLocationManaged(locationConfig.NAMED_LOCATION, locationConfig.getConfigMap());
 
         OpenstackNewVolumeCustomizer customizer = new OpenstackNewVolumeCustomizer();
-        customizer.setVolumes(MutableList.<Map<?, ?>>of(
-                MutableMap.of("blockDevice", MutableMap.of(
-                        "sizeInGb", 3,
-                        "deviceSuffix", 'b',
-                        "deleteOnTermination", true
-                        ),
-                        "filesystem", MutableMap.of(
-                                "mountPoint", "/mount/brooklyn/b",
-                                "filesystemType", "ext3"
-                        )),
-                MutableMap.of("blockDevice", MutableMap.of(
-                        "sizeInGb", 3,
-                        "deviceSuffix", 'c',
-                        "deleteOnTermination", true
-                        ),
-                        "filesystem", MutableMap.of(
-                                "mountPoint", "/mount/brooklyn/c",
-                                "filesystemType", "ext3"
-                        ))));
+        customizer.setVolumes(MutableList.of(
+                VolumeOptions.<Map<String, Map<String, ?>>>fromMap(
+                        MutableMap.<String, Map<String,?>>of(
+                                "blockDevice", MutableMap.of(
+                                        "sizeInGb", 3,
+                                        "deviceSuffix", 'b',
+                                        "deleteOnTermination", true),
+                                "filesystem", MutableMap.<String, Object>of(
+                                        "mountPoint", "/mount/brooklyn/b",
+                                        "filesystemType", "ext3"))),
+                VolumeOptions.<String, Map<String,?>>fromMap(
+                        MutableMap.<String, Map<String, ?>>of(
+                                "blockDevice", MutableMap.<String, Object>of(
+                                    "sizeInGb", 3,
+                                    "deviceSuffix", 'c',
+                                    "deleteOnTermination", true),
+                                "filesystem", MutableMap.<String, Object>of(
+                                        "mountPoint", "/mount/brooklyn/c",
+                                        "filesystemType", "ext3")))));
 
         EmptySoftwareProcess entity = app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class)
                 .configure(MachineEntity.PROVISIONING_PROPERTIES.subKey(JcloudsLocationConfig.JCLOUDS_LOCATION_CUSTOMIZERS.getName()),

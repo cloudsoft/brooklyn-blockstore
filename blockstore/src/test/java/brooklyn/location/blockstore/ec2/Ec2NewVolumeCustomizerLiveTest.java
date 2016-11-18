@@ -1,5 +1,6 @@
 package brooklyn.location.blockstore.ec2;
 
+import brooklyn.location.blockstore.api.VolumeOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -30,26 +31,28 @@ public class Ec2NewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSupport {
                 .build());
 
         Ec2NewVolumeCustomizer customizer = new Ec2NewVolumeCustomizer();
-        customizer.setVolumes(MutableList.<Map<?, ?>>of(
-                MutableMap.of("blockDevice", MutableMap.of(
-                        "sizeInGb", 3,
-                        "deviceSuffix", 'h',
-                        "deleteOnTermination", true
-                        ),
+        customizer.setVolumes(MutableList.of(
+                VolumeOptions.fromMap(MutableMap.<String, Map<String,?>>of(
+                        "blockDevice", MutableMap.of(
+                            "sizeInGb", 3,
+                            "deviceSuffix", 'h',
+                            "deleteOnTermination", true
+                            ),
                         "filesystem", MutableMap.of(
                                 "mountPoint", "/mount/brooklyn/h",
                                 "filesystemType", "ext3"
-                        )),
+                        ))),
 
-                MutableMap.of("blockDevice", MutableMap.of(
-                        "sizeInGb", 3,
-                        "deviceSuffix", 'g',
-                        "deleteOnTermination", true
+                VolumeOptions.fromMap(MutableMap.<String, Map<String,?>>of(
+                        "blockDevice", MutableMap.of(
+                            "sizeInGb", 3,
+                            "deviceSuffix", 'g',
+                            "deleteOnTermination", true
                         ),
                         "filesystem", MutableMap.of(
                                 "mountPoint", "/mount/brooklyn/g",
                                 "filesystemType", "ext3"
-                        ))));
+                        )))));
 
         EmptySoftwareProcess entity = app.createAndManageChild(EntitySpec.create(EmptySoftwareProcess.class)
                 .configure(MachineEntity.PROVISIONING_PROPERTIES.subKey(JcloudsLocationConfig.JCLOUDS_LOCATION_CUSTOMIZERS.getName()),

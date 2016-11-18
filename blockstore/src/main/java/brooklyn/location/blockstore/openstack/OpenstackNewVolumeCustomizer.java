@@ -2,7 +2,9 @@ package brooklyn.location.blockstore.openstack;
 
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.blockstore.api.VolumeOptions;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,7 +40,7 @@ public class OpenstackNewVolumeCustomizer extends NewVolumeCustomizer {
         // for reflective creation (e.g. with $brooklyn:object)
     }
 
-    public OpenstackNewVolumeCustomizer(Map<?, ?> volume) {
+    public OpenstackNewVolumeCustomizer(List<VolumeOptions> volume) {
         super(volume);
     }
 

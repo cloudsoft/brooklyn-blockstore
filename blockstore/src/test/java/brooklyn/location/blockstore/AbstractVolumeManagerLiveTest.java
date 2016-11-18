@@ -13,7 +13,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
-import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -48,7 +48,9 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected VolumeManager volumeManager;
     protected BlockDevice volume;
     protected List<JcloudsSshMachineLocation> machines = Lists.newCopyOnWriteArrayList();
-    
+
+    // TODO Consider removing
+    @Deprecated
     protected abstract String getProvider();
     protected abstract JcloudsLocation createJcloudsLocation();
     protected abstract int getVolumeSize();
@@ -65,10 +67,10 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        ctx = new LocalManagementContext();
-        brooklynProperties = (BrooklynProperties) ctx.getConfig();
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
         stripBrooklynProperties(brooklynProperties);
         addBrooklynProperties(brooklynProperties);
+        ctx = new LocalManagementContextForTests(brooklynProperties);
 
         jcloudsLocation = createJcloudsLocation();
         volumeManager = createVolumeManager(jcloudsLocation);
@@ -94,7 +96,8 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected static void stripBrooklynProperties(BrooklynProperties props) {
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
             if (!key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-cinder")
-                    && !(key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova"))) {
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova")
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "aws-ec2")) {
                     props.remove(key);
             }
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
