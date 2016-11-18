@@ -13,10 +13,13 @@ import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public abstract class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
+    private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
 
     public static final ConfigKey<List<VolumeOptions>> VOLUMES = ConfigKeys.newConfigKey(
             new TypeToken<List<VolumeOptions>>() {},
@@ -70,6 +73,8 @@ public abstract class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer
             Optional<NodeMetadata> node = machine.getOptionalNode();
             if (node.isPresent()) {
                 blockOptionsCopy.zone(node.get().getLocation().getId());
+            } else {
+                LOG.warn("JcloudsNodeMetadata is not available for the MachineLocation. Using zone specified from a parameter.");
             }
             mountedBlockDeviceList.add(getVolumeManager().createAttachAndMountVolume(machine, blockOptionsCopy, volumeOptions.getFilesystemOptions()));
         }
