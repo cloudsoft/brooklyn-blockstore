@@ -3,16 +3,11 @@ package brooklyn.location.blockstore.vclouddirector15;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
 import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Iterables;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import org.jclouds.vcloud.director.v1_5.VCloudDirectorApi;
-import org.jclouds.vcloud.director.v1_5.domain.RasdItemsList;
 import org.jclouds.vcloud.director.v1_5.domain.dmtf.RasdItem;
 import org.testng.Assert;
-
-import javax.annotation.Nullable;
+import org.testng.annotations.Test;
 
 public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     public static final String PROVIDER = "vcloud-director";
@@ -22,11 +17,15 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
         return PROVIDER;
     }
 
+    @Test(groups="Live")
+    public void testCreateAndAttachVolume() throws Exception {
+        super.testCreateAndAttachVolume();
+    }
+
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        String namedLocation = System.getProperty("vcloud-director.named-location");
-        if (namedLocation != null) {
-            return (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("named:" + namedLocation);
+        if (namedLocation().isPresent()) {
+            return (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("named:" + namedLocation().get());
         } else {
             return (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("vcloud-director");
         }
@@ -49,19 +48,17 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     @Override
     protected void assertVolumeAvailable(final BlockDevice blockDevice) {
-        VCloudDirectorApi vCloudDirectorApi = jcloudsLocation.getComputeService().getContext().unwrapApi(VCloudDirectorApi.class);
-        RasdItemsList disks = vCloudDirectorApi.getVmApi().getVirtualHardwareSectionDisks(((VcloudBlockDevice)blockDevice).getVm().getId());
-        Optional<RasdItem> diskCreated = Iterables.tryFind(disks, new Predicate<RasdItem>() {
-                   @Override public boolean apply(@Nullable RasdItem input) {
-                      return RasdItem.ResourceType.DISK_DRIVE.equals(input.getResourceType()) && blockDevice.getId().equals(input.getInstanceID());
-                   }
-               });
+        Optional<RasdItem> diskCreated = VcloudVolumeManager.describeVolume((VcloudBlockDevice)blockDevice);
         Assert.assertTrue(diskCreated.isPresent(), "Disk is available.");
     }
 
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
         return (JcloudsSshMachineLocation)jcloudsLocation.obtain();
+    }
+
+    protected Optional<String> namedLocation() {
+        return Optional.of(System.getProperty("vcloud-director.named-location"));
     }
 
     @Override

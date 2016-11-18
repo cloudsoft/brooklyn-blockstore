@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Optional;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
@@ -72,7 +73,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
     public void setUp() throws Exception {
         ctx = new LocalManagementContext();
         brooklynProperties = (BrooklynProperties) ctx.getConfig();
-        AbstractVolumeManagerLiveTest.stripBrooklynProperties(brooklynProperties);
+        AbstractVolumeManagerLiveTest.stripBrooklynProperties(brooklynProperties, Optional.<String>absent());
 
         jcloudsLocation = createJcloudsLocation();
     }

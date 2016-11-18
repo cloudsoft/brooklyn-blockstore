@@ -12,11 +12,20 @@ public class VcloudBlockDevice implements AttachedBlockDevice {
     private RasdItem rasdItem;
     private JcloudsMachineLocation jcloudsMachineLocation;
     private Vm vm;
+    private String osDeviceName;
 
-    public VcloudBlockDevice(RasdItem rasdItem, JcloudsMachineLocation jcloudsMachineLocation, Vm vm) {
+    public VcloudBlockDevice(RasdItem rasdItem, JcloudsMachineLocation jcloudsMachineLocation, Vm vm, String osDeviceName) {
         this.rasdItem = rasdItem;
         this.jcloudsMachineLocation = jcloudsMachineLocation;
         this.vm = vm;
+        this.osDeviceName = osDeviceName;
+    }
+
+    protected VcloudBlockDevice(VcloudBlockDevice vcloudBlockDevice) {
+        this.rasdItem = vcloudBlockDevice.rasdItem;
+        this.jcloudsMachineLocation = vcloudBlockDevice.jcloudsMachineLocation;
+        this.vm = vcloudBlockDevice.vm;
+        this.osDeviceName = vcloudBlockDevice.osDeviceName;
     }
 
     /**
@@ -48,12 +57,15 @@ public class VcloudBlockDevice implements AttachedBlockDevice {
 
     @Override
     public String getDeviceName() {
-        return "/dev/sd" + getDeviceSuffix();
+        return osDeviceName;
     }
 
+    /**
+     * Better criteria is for device suffix to filter all should count all disks and put the latter as the new suffix.
+     */
     @Override
     public char getDeviceSuffix() {
-        return ((char)('a' + Integer.parseInt(rasdItem.getAddressOnParent())));
+        return getDeviceName().charAt(getDeviceName().length()-1);
     }
 
     @Override
@@ -63,6 +75,6 @@ public class VcloudBlockDevice implements AttachedBlockDevice {
 
     @Override
     public MountedBlockDevice mountedAt(String mountPoint) {
-        return new Devices.MountedBlockDeviceImpl(this, mountPoint);
+        return new VcloudMountedBlockDevice(this, mountPoint);
     }
 }

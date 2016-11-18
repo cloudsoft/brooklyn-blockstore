@@ -19,6 +19,8 @@
 -->
 <included>
 
+    <!-- TODO Doesn't work can I enable jclouds.wire? -->
+    <logger name="jclouds.wire" level="DEBUG"/>
     <!--
 
         this file is a placeholder for contexts which wish to supply additional logging.

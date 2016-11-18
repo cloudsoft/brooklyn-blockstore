@@ -7,12 +7,12 @@ import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.jclouds.ec2.domain.Volume;
 import org.jclouds.util.Predicates2;
 import org.jclouds.vcloud.director.v1_5.VCloudDirectorApi;
 import org.jclouds.vcloud.director.v1_5.domain.RasdItemsList;
@@ -25,14 +25,20 @@ import org.jclouds.vcloud.director.v1_5.features.VmApi;
 import org.jclouds.vcloud.director.v1_5.functions.AddScsiLogicSASBus;
 import org.jclouds.vcloud.director.v1_5.functions.NewScsiLogicSASDisk;
 import org.jclouds.vcloud.director.v1_5.predicates.TaskSuccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import javax.xml.namespace.QName;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class VcloudVolumeManager extends AbstractVolumeManager {
+    private static final String VCLOUD_DISKS_ARE_BOUND_TO_VM_MSG = "In Vcloud Director each disk is bound to the VM. Disks will be deleted on VM termination.";
+    private static final Logger LOG = LoggerFactory.getLogger(VcloudVolumeManager.class);
     public static final long EDIT_VM_TIMEOUT_MS = 600000L;
+    public static final String OS_DEVICE_PREFIX = "/dev/sd";
+
     @Override
     protected String getVolumeDeviceName(char deviceSuffix) {
         return null;
@@ -40,10 +46,9 @@ public class VcloudVolumeManager extends AbstractVolumeManager {
 
     @Override
     protected String getOSDeviceName(char deviceSuffix) {
-        return null;
+        return OS_DEVICE_PREFIX + deviceSuffix;
     }
 
-    // TODO
     @Override
     public BlockDevice createBlockDevice(JcloudsMachineLocation jcloudsMachineLocation, BlockDeviceOptions options) {
         Optional<NodeMetadata> vcloudNodeMetadata = jcloudsMachineLocation.getOptionalNode();
@@ -61,7 +66,7 @@ public class VcloudVolumeManager extends AbstractVolumeManager {
 
         CimString newDiskHostResource = new CimString(Iterables.getOnlyElement(nextDisk.getHostResources()));
         Preconditions.checkNotNull(newDiskHostResource, "HostResource for the existing disk should not be null");
-        newDiskHostResource.getOtherAttributes().put(new QName("http://www.vmware.com/vcloud/v1.5", "capacity"), "" + (64 * 1024));
+        newDiskHostResource.getOtherAttributes().put(new QName("http://www.vmware.com/vcloud/v1.5", "capacity"), "" + (options.getSizeInGb() * 1024));
         RasdItem newDiskToBeCreated = RasdItem.builder()
                 .fromRasdItem(nextDisk) // The same AddressOnParent (SCSI Controller)
                 .hostResources(ImmutableList.of(newDiskHostResource)) // NB! Use hostResources to override hostResources from newDisk
@@ -73,47 +78,57 @@ public class VcloudVolumeManager extends AbstractVolumeManager {
                 Predicates2.DEFAULT_PERIOD * 5L,
                 Predicates2.DEFAULT_MAX_PERIOD * 5L,
                 EDIT_VM_TIMEOUT_MS).apply(task);
+        String osDeviceName = getOSDeviceName(options.getDeviceSuffix());
+        VcloudBlockDevice vcloudBlockDevice = new VcloudBlockDevice(newDiskToBeCreated, jcloudsMachineLocation, vm, osDeviceName);
 
-        return new VcloudBlockDevice(newDiskToBeCreated, jcloudsMachineLocation, vm);
+        // Extra check for which seems to be necessary.
+        waitForVolumeToBeAvailable(vcloudBlockDevice);
+        return vcloudBlockDevice;
     }
 
-
-    // TODO
+    // In Vcloud Director, Hard Disk is bound to the VM
     @Override
     public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice blockDevice, BlockDeviceOptions options) {
-        return new Devices.AttachedBlockDeviceImpl(machine, null, "/dev/sdb");
+        return (VcloudBlockDevice)blockDevice;
     }
 
+    // In Vcloud Director, Hard Disk is bound to the VM
     @Override
     public BlockDevice detachBlockDevice(AttachedBlockDevice attachedBlockDevice) {
-        return null;
+        LOG.info("Detach block device called. It will be still visible to the VM. " + VCLOUD_DISKS_ARE_BOUND_TO_VM_MSG);
+        return attachedBlockDevice;
     }
 
     @Override
     public void deleteBlockDevice(BlockDevice blockDevice) {
-
+        LOG.info("delete Block device queried. " + VCLOUD_DISKS_ARE_BOUND_TO_VM_MSG);
     }
 
-    protected Volume waitForVolumeToBeAvailable(final BlockDevice device) {
-        final AtomicReference<Volume> lastVolume = new AtomicReference<Volume>();
-
+    protected void waitForVolumeToBeAvailable(final VcloudBlockDevice device) {
         boolean available = Repeater.create("waiting for volume available:" + device)
                 .every(1, TimeUnit.SECONDS)
-                .limitTimeTo(60, TimeUnit.SECONDS)
+                .limitTimeTo(120, TimeUnit.SECONDS)
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-//                        Volume volume = describeVolume(device);
-//                        lastVolume.set(volume);
-//                        return volume.getStatus() == Volume.Status.AVAILABLE;
-                        return null;
+                        Optional<RasdItem> volume = describeVolume(device);
+                        return volume.isPresent();
                     }})
                 .run();
 
         if (!available) {
-//            LOG.error("Volume {} still not available. Last known was: {}; continuing", device, lastVolume.get());
+            LOG.error("Volume {} still not available. Last known was: {}; continuing", device, null);
         }
+    }
 
-        return lastVolume.get();
+    public static Optional<RasdItem> describeVolume(final VcloudBlockDevice device) {
+        final VCloudDirectorApi vmApi = device.getMachine().getParent().getComputeService().getContext().unwrapApi(VCloudDirectorApi.class);
+        RasdItemsList disks = vmApi.getVmApi().getVirtualHardwareSectionDisks(device.getVm().getId());
+        Optional<RasdItem> rasdItemOptional = Iterables.tryFind(disks, new Predicate<RasdItem>() {
+            @Override public boolean apply(@Nullable RasdItem input) {
+                return RasdItem.ResourceType.DISK_DRIVE.equals(input.getResourceType()) && device.getId().equals(input.getInstanceID());
+            }
+        });
+        return rasdItemOptional;
     }
 }

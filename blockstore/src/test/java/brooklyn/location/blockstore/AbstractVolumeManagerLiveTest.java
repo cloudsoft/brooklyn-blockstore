@@ -33,8 +33,8 @@ import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
 
-;
-
+// TODO separate testing for creating BlockDevice -> AttachedBlockDevice -> MountedBlockDevice
+// TODO separate testing for destroying(or what ever operations there are at the time) MountedBlock -> AttachedBlockDevice -> BlockDevice
 public abstract class AbstractVolumeManagerLiveTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractVolumeManagerLiveTest.class);
@@ -70,7 +70,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newDefault();
-        stripBrooklynProperties(brooklynProperties);
+        stripBrooklynProperties(brooklynProperties, namedLocation());
         addBrooklynProperties(brooklynProperties);
         ctx = new LocalManagementContextForTests(brooklynProperties);
 
@@ -95,11 +95,16 @@ public abstract class AbstractVolumeManagerLiveTest {
         }
     }
 
-    protected static void stripBrooklynProperties(BrooklynProperties props) {
+    protected Optional<String> namedLocation() {
+        return Optional.absent();
+    }
+
+    protected static void stripBrooklynProperties(BrooklynProperties props, Optional<String> namedLocation) {
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
             if (!key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-cinder")
                     && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova")
-                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "aws-ec2")) {
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "aws-ec2")
+                    && !(namedLocation.isPresent() && key.contains(namedLocation.get()))) {
                     props.remove(key);
             }
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {

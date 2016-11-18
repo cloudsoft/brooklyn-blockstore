@@ -5,6 +5,7 @@ import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeOptions;
 import brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer;
 import brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer;
+import brooklyn.location.blockstore.vclouddirector15.VcloudNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -115,17 +116,18 @@ public class ExtraHddBodyEffector extends AddEffector {
         }
 
         private NewVolumeCustomizer getCustomizerForCloud(String provider, List<VolumeOptions> locationCustomizerFields) {
-            JcloudsLocationCustomizer customizer;
+            NewVolumeCustomizer customizer;
 
             switch (provider) {
                 case AWS_CLOUD:
                     customizer = new Ec2NewVolumeCustomizer(locationCustomizerFields);
-                    return (NewVolumeCustomizer) customizer;
-
+                    return customizer;
                 case OPENSTACK_NOVA:
                     customizer = new OpenstackNewVolumeCustomizer(locationCustomizerFields);
-                    return (NewVolumeCustomizer) customizer;
-
+                    return customizer;
+                case VCLOUD_DIRECTOR:
+                    customizer = new VcloudNewVolumeCustomizer(locationCustomizerFields);
+                    return customizer;
                 default:
                     throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
                             + provider + " which does not support adding disks from an effector.");
