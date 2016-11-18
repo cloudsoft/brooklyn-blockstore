@@ -8,19 +8,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.location.blockstore.api.VolumeOptions;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 
 import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 
-@Test
+@Test(groups = "WIP")
 public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
 
     @Override
@@ -91,7 +92,7 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
         List<Integer> capacities = ImmutableList.of(1);
         List<String> mountPoints = ImmutableList.of("/mnt/brooklyn/g");
 
-        Map<BlockDeviceOptions, FilesystemOptions> volumes = Maps.newLinkedHashMap();
+        List<VolumeOptions> volumes = MutableList.of();
         for (int i = 0; i < capacities.size(); i++) {
             Integer capacity = checkNotNull(capacities.get(i), "capacity(%s)", i);
             Character deviceSuffix = checkNotNull(deviceSuffixes.get(i), "deviceSuffix(%s)", i);
@@ -103,7 +104,7 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
                             "user", System.getProperty("user.name"),
                             "purpose", "brooklyn-blockstore-VolumeCustomizerLiveTest"));
             FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoints.get(i), "ext3");
-            volumes.put(blockDeviceOptions, filesystemOptions);
+            volumes.add(new VolumeOptions(blockDeviceOptions, filesystemOptions));
         }
         
         JcloudsLocationCustomizer customizer = new Ec2NewVolumeCustomizer(volumes);

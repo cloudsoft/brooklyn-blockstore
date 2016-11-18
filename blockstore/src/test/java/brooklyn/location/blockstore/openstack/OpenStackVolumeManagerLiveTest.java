@@ -1,48 +1,42 @@
 package brooklyn.location.blockstore.openstack;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-
+import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
+import brooklyn.location.blockstore.api.BlockDevice;
+import com.google.common.base.Optional;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
-import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.openstack.cinder.v1.domain.Volume;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-
-import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.BlockDevice;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Test
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    public static final String PROVIDER = "openstack-nova";
-    public static final String ENDPOINT = "https://lon.identity.api.rackspacecloud.com/v2.0/";
-    public static final String LOCATION_SPEC = PROVIDER+":"+ENDPOINT;
-    public static final String NAMED_LOCATION = "OpenStackVolumeManagerLiveTest" + Identifiers.makeRandomId(4);
-    public static final String IMAGE_NAME_REGEX = ".*CentOS 6.*";
+    public static OpenStackLocationConfig locationConfig;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        super.setUp();
+        locationConfig = new OpenStackLocationConfig();
+    }
 
     @Override
     protected String getProvider() {
-        return PROVIDER;
+        return locationConfig.PROVIDER;
     }
 
     @Override
     protected void addBrooklynProperties(BrooklynProperties props) {
-        // re-using rackspace credentials, but pointing at it as a raw OpenStack nova endpoint
-        Object identity = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"rackspace-cloudservers-uk.identity");
-        Object credential = props.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"rackspace-cloudservers-uk.credential");
-        props.put("brooklyn.location.named."+NAMED_LOCATION, LOCATION_SPEC);
-        props.put("brooklyn.location.named."+NAMED_LOCATION+".identity", identity);
-        props.put("brooklyn.location.named."+NAMED_LOCATION+".credential", credential);
+        locationConfig.addBrooklynProperties(props);
     }
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged("named:"+NAMED_LOCATION);
+        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged("named:"+locationConfig.NAMED_LOCATION);
     }
     
     @Override
@@ -53,6 +47,11 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     @Override
     protected String getDefaultAvailabilityZone() {
         return null;
+    }
+
+    @Override
+    protected char getDefaultDeviceSuffix() {
+        return 'b';
     }
 
     @Override
@@ -69,9 +68,6 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
-        // TODO Wanted to specify hardware id, but this failed; and wanted to force no imageId (in case specified in brooklyn.properties)
-        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
-                .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
-                .build());
+        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(locationConfig.getConfigMap());
     }
 }

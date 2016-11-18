@@ -2,8 +2,9 @@ package brooklyn.location.blockstore.ec2;
 
 import static org.testng.Assert.assertEquals;
 
-import java.util.Map;
+import java.util.List;
 
+import brooklyn.location.blockstore.api.VolumeOptions;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.entity.stock.BasicApplication;
@@ -47,20 +48,19 @@ public class YamlTest extends AbstractYamlTest {
 
         JcloudsLocation loc = (JcloudsLocation) Iterables.getOnlyElement(app.getLocations());
         Ec2NewVolumeCustomizer customizer = (Ec2NewVolumeCustomizer) Iterables.getOnlyElement(loc.config().get(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZERS));
+;
+        List<VolumeOptions> volumes = customizer.getVolumes();
+
+        VolumeOptions volume = Iterables.getOnlyElement(volumes);
         
-        Map<BlockDeviceOptions, FilesystemOptions> volumes = customizer.getParsedVolumes();
-        String msg = "volumes="+volumes;
-        
-        assertEquals(volumes.size(), 1, msg);
-        
-        BlockDeviceOptions blockDevice = Iterables.getOnlyElement(volumes.keySet());
+        BlockDeviceOptions blockDevice = volume.getBlockDeviceOptions();
         assertEquals(blockDevice.getSizeInGb(), 1);
         assertEquals(blockDevice.deleteOnTermination(), false);
         assertEquals(blockDevice.getZone(), "us-east-1b");
         assertEquals(blockDevice.getDeviceSuffix(), 'z');
         assertEquals(blockDevice.getTags(), ImmutableMap.of("tag1", "val1"));
 
-        FilesystemOptions filesystemOptions = Iterables.getOnlyElement(volumes.values());
+        FilesystemOptions filesystemOptions = volume.getFilesystemOptions();
         assertEquals(filesystemOptions.getMountPoint(), "/my/mount/point");
         assertEquals(filesystemOptions.getFilesystemType(), "ext3");
     }

@@ -1,11 +1,13 @@
 package brooklyn.location.blockstore;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Maps;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 public class BlockDeviceOptions {
 
@@ -27,17 +29,24 @@ public class BlockDeviceOptions {
             }
         }
         if (map.containsKey("sizeInGb")) {
+            checkNotNull(map.get("sizeInGb"), "sizeInGb should not be null");
             if (map.get("sizeInGb") instanceof Double && Math.abs((Double) map.get("sizeInGb") - ((Double) map.get("sizeInGb")).intValue()) >= 0.01
                     || map.get("sizeInGb") instanceof Float && Math.abs((Float) map.get("sizeInGb") - ((Float) map.get("sizeInGb")).intValue()) >= 0.01) {
                 throw new UnsupportedOperationException("Trying to set block device with not allowed sizeInGb value "
                         + map.get("sizeInGb") + "; sizeInGb must have integer value.");
             } else if (map.get("sizeInGb") instanceof Double) {
-                result.sizeInGb = checkNotNull(((Double) map.get("sizeInGb")).intValue(), "sizeInGb");
+                result.sizeInGb = ((Double) map.get("sizeInGb")).intValue();
             } else if (map.get("sizeInGb") instanceof Float) {
-                result.sizeInGb = checkNotNull(((Float) map.get("sizeInGb")).intValue(), "sizeInGb");
+                result.sizeInGb = ((Float) map.get("sizeInGb")).intValue();
+            } else if (map.get("sizeInGb") instanceof Integer){
+                result.sizeInGb = (Integer)map.get("sizeInGb");
             } else {
-                result.sizeInGb = (int) checkNotNull(map.get("sizeInGb"), "sizeInGb");
+                result.sizeInGb = TypeCoercions.coerce(map.get("sizeInGb"), Integer.class);
             }
+            checkArgument(result.sizeInGb > 0, "sizeInGb should be grater than zero"); 
+        } else {
+            throw new IllegalArgumentException("Tried to create volume with not appropriate parameters "
+                        + map + "; \"blockDevice\" should contain value for \"sizeInGb\"");
         }
         if (map.containsKey("deviceSuffix")) {
             Object val = checkNotNull(map.get("deviceSuffix"), "deviceSuffix");
@@ -74,6 +83,12 @@ public class BlockDeviceOptions {
         return this;
     }
 
+    /**
+     * @param zone Availability zone for the disk.
+     * @deprecated This is not obtainable from YAML
+     *             and will be overridden to use the same Availability zone as the machine location.
+     */
+    @Deprecated
     public BlockDeviceOptions zone(String zone) {
         this.zone = zone;
         return this;

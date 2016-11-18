@@ -1,19 +1,19 @@
 package brooklyn.location.blockstore;
 
-import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.List;
-import java.util.Map;
-
+import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
+import brooklyn.location.blockstore.api.VolumeManager;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
-import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -23,16 +23,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.api.VolumeManager;;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+
+;
 
 public abstract class AbstractVolumeManagerLiveTest {
 
@@ -48,27 +48,29 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected VolumeManager volumeManager;
     protected BlockDevice volume;
     protected List<JcloudsSshMachineLocation> machines = Lists.newCopyOnWriteArrayList();
-    
+
+    // TODO Consider removing
+    @Deprecated
     protected abstract String getProvider();
     protected abstract JcloudsLocation createJcloudsLocation();
     protected abstract int getVolumeSize();
     protected abstract String getDefaultAvailabilityZone();
+    protected abstract char getDefaultDeviceSuffix();
     protected abstract void assertVolumeAvailable(BlockDevice blockDevice);
     protected abstract JcloudsSshMachineLocation createJcloudsMachine() throws Exception;
 
     /**
      * Speed tests up by rebinding and returning an existing virtual machine.
-     * See {@link JcloudsLocation#rebindMachine(brooklyn.util.config.ConfigBag)}.
      */
     protected abstract Optional<JcloudsSshMachineLocation> rebindJcloudsMachine();
     
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        ctx = new LocalManagementContext();
-        brooklynProperties = (BrooklynProperties) ctx.getConfig();
+        brooklynProperties = BrooklynProperties.Factory.newDefault();
         stripBrooklynProperties(brooklynProperties);
         addBrooklynProperties(brooklynProperties);
+        ctx = new LocalManagementContextForTests(brooklynProperties);
 
         jcloudsLocation = createJcloudsLocation();
         volumeManager = createVolumeManager(jcloudsLocation);
@@ -93,8 +95,10 @@ public abstract class AbstractVolumeManagerLiveTest {
 
     protected static void stripBrooklynProperties(BrooklynProperties props) {
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
-            if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
-                props.remove(key);
+            if (!key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-cinder")
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova")
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "aws-ec2")) {
+                    props.remove(key);
             }
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
                 props.remove(key);
@@ -122,6 +126,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                 "purpose", "brooklyn-blockstore-VolumeManagerLiveTest");
         BlockDeviceOptions options = new BlockDeviceOptions()
                 .zone(getDefaultAvailabilityZone())
+                .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
         volume = volumeManager.createBlockDevice(jcloudsLocation, options);
@@ -129,7 +134,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     }
 
     // Does the attach+mount twice to ensure that cleanup worked
-    @Test(groups="Live", dependsOnMethods = {"testCreateVolume"})
+    @Test(groups="Live", dependsOnMethods = "testCreateVolume")
     public void testCreateAndAttachVolume() throws Exception {
 
         String mountPoint = "/var/opt2/test1";
@@ -137,7 +142,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         final BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
                 .sizeInGb(getVolumeSize())
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix('h')
+                .deviceSuffix(getDefaultDeviceSuffix())
                 .tags(ImmutableMap.of(
                         "user", System.getProperty("user.name"),
                         "purpose", "brooklyn-blockstore-VolumeManagerLiveTest"));
@@ -204,7 +209,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         BlockDeviceOptions deviceOptions = new BlockDeviceOptions()
                 .sizeInGb(getVolumeSize())
                 .zone(getDefaultAvailabilityZone())
-                .deviceSuffix('h')
+                .deviceSuffix(getDefaultDeviceSuffix())
                 .tags(ImmutableMap.of(
                     "user", user,
                     "purpose", "brooklyn-blockstore-test-move-between-machines"));

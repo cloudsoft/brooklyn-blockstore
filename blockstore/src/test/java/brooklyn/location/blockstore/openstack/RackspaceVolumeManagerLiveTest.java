@@ -44,6 +44,11 @@ public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     }
 
     @Override
+    protected char getDefaultDeviceSuffix() {
+        throw new IllegalStateException("Not implemented. Figure out the correct device suffix.");
+    }
+
+    @Override
     protected void assertVolumeAvailable(BlockDevice device) {
         Volume volume = ((AbstractOpenstackVolumeManager)volumeManager).describeVolume(device);
         assertNotNull(volume);
