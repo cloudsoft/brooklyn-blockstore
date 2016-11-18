@@ -43,6 +43,11 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     @Override
+    protected char getDefaultDeviceSuffix() {
+        return 'b';
+    }
+
+    @Override
     protected void assertVolumeAvailable(final BlockDevice blockDevice) {
         VCloudDirectorApi vCloudDirectorApi = jcloudsLocation.getComputeService().getContext().unwrapApi(VCloudDirectorApi.class);
         RasdItemsList disks = vCloudDirectorApi.getVmApi().getVirtualHardwareSectionDisks(((VcloudBlockDevice)blockDevice).getVm().getId());

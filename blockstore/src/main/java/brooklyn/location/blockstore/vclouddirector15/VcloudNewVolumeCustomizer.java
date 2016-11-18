@@ -23,14 +23,4 @@ public class VcloudNewVolumeCustomizer extends NewVolumeCustomizer {
         this.volumes = volumes;
         this.mountedBlockDevice = null;
     }
-
-    @Override
-    public Map<BlockDeviceOptions, FilesystemOptions> getVolumes() {
-        return volumes;
-    }
-
-    @Override
-    public MountedBlockDevice getMountedBlockDevice() {
-        return mountedBlockDevice;
-    }
 }

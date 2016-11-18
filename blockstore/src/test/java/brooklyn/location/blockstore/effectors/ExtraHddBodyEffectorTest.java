@@ -100,6 +100,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
 
         assertEquals(transformed.getBlockDeviceOptions().getSizeInGb(), 4);
         assertEquals(transformed.getBlockDeviceOptions().getDeviceSuffix(), 'h');
+        assertEquals(transformed.getBlockDeviceOptions().deleteOnTermination(), true);
         assertEquals(transformed.getBlockDeviceOptions().getTags().get("brooklyn"), "br-test-1");
 
         assertEquals(transformed.getFilesystemOptions().getFilesystemType(), "ext3");
