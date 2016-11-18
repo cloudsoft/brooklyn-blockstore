@@ -83,6 +83,12 @@ public class BlockDeviceOptions {
         return this;
     }
 
+    /**
+     * @param zone Availability zone for the disk.
+     * @deprecated This is not obtainable from YAML
+     *             and will be overridden to use the same Availability zone as the machine location.
+     */
+    @Deprecated
     public BlockDeviceOptions zone(String zone) {
         this.zone = zone;
         return this;
