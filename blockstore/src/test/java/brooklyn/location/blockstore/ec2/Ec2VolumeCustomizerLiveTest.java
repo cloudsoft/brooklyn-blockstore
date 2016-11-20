@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeOptions;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
@@ -106,7 +107,7 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
             volumes.add(new VolumeOptions(blockDeviceOptions, filesystemOptions));
         }
         
-        JcloudsLocationCustomizer customizer = new Ec2NewVolumeCustomizer(volumes);
+        JcloudsLocationCustomizer customizer = new NewVolumeCustomizer(volumes);
 
         machine = createJcloudsMachine(customizer);
         

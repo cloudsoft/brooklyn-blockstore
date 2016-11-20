@@ -3,9 +3,6 @@ package brooklyn.location.blockstore.effectors;
 import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeOptions;
-import brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer;
-import brooklyn.location.blockstore.openstack.OpenstackNewVolumeCustomizer;
-import brooklyn.location.blockstore.vclouddirector15.VcloudNewVolumeCustomizer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -17,7 +14,6 @@ import org.apache.brooklyn.core.effector.AddEffector;
 import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.effector.EffectorTasks;
 import org.apache.brooklyn.core.effector.Effectors;
-import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
@@ -66,9 +62,6 @@ public class ExtraHddBodyEffector extends AddEffector {
             "Map of location customizer fields.");
 
     public static final String EXTRA_HDD_EFFECTOR_NAME = "addExtraHdd";
-    public static final String AWS_CLOUD = "aws-ec2";
-    public static final String OPENSTACK_NOVA = "openstack-nova";
-    public static final String VCLOUD_DIRECTOR = "vcloud-director";
 
     public ExtraHddBodyEffector() {
         super(newEffectorBuilder().build());
@@ -99,13 +92,10 @@ public class ExtraHddBodyEffector extends AddEffector {
             VolumeOptions volumeOptions = parameters.get(LOCATION_CUSTOMIZER_FIELDS);
 
             JcloudsMachineLocation machine = EffectorTasks.getMachine(entity(), JcloudsMachineLocation.class);
-            String provider = machine.getParent().getProvider();
-
-            LOG.info("Invoking effector addExtraHdd for cloud "+ provider + " on entity " + entity());
 
             LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + volumeOptions);
 
-            NewVolumeCustomizer customizer = getCustomizerForCloud(provider, ImmutableList.of(volumeOptions));
+            NewVolumeCustomizer customizer = getCustomizerForCloud(ImmutableList.of(volumeOptions));
             customizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
 
             if (customizer.getMountedBlockDeviceList().isEmpty()) {
@@ -115,24 +105,8 @@ public class ExtraHddBodyEffector extends AddEffector {
             return Iterables.getLast(customizer.getMountedBlockDeviceList());
         }
 
-        private NewVolumeCustomizer getCustomizerForCloud(String provider, List<VolumeOptions> locationCustomizerFields) {
-            NewVolumeCustomizer customizer;
-
-            switch (provider) {
-                case AWS_CLOUD:
-                    customizer = new Ec2NewVolumeCustomizer(locationCustomizerFields);
-                    return customizer;
-                case OPENSTACK_NOVA:
-                    customizer = new OpenstackNewVolumeCustomizer(locationCustomizerFields);
-                    return customizer;
-                case VCLOUD_DIRECTOR:
-                    customizer = new VcloudNewVolumeCustomizer(locationCustomizerFields);
-                    return customizer;
-                default:
-                    throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " +  entity() + " for cloud "
-                            + provider + " which does not support adding disks from an effector.");
-
-            }
+        private NewVolumeCustomizer getCustomizerForCloud(List<VolumeOptions> locationCustomizerFields) {
+            return new NewVolumeCustomizer(locationCustomizerFields);
         }
     }
 }

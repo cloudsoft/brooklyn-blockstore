@@ -4,6 +4,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeOptions;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
@@ -27,7 +28,7 @@ public class YamlTest extends AbstractYamlTest {
                 "  aws-ec2:us-east-1:",
                 "    customizers:",
                 "    - $brooklyn:object:",
-                "        type: "+Ec2NewVolumeCustomizer.class.getName(),
+                "        type: "+NewVolumeCustomizer.class.getName(),
                 "        object.fields:",
                 "          volumes:",
                 "          - blockDevice:",
@@ -47,7 +48,7 @@ public class YamlTest extends AbstractYamlTest {
         waitForApplicationTasks(app);
 
         JcloudsLocation loc = (JcloudsLocation) Iterables.getOnlyElement(app.getLocations());
-        Ec2NewVolumeCustomizer customizer = (Ec2NewVolumeCustomizer) Iterables.getOnlyElement(loc.config().get(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZERS));
+        NewVolumeCustomizer customizer = (NewVolumeCustomizer) Iterables.getOnlyElement(loc.config().get(JcloudsLocation.JCLOUDS_LOCATION_CUSTOMIZERS));
 ;
         List<VolumeOptions> volumes = customizer.getVolumes();
 

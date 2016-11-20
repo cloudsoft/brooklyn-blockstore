@@ -2,6 +2,7 @@ package brooklyn.location.blockstore.ec2;
 
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
@@ -56,7 +57,7 @@ public class Ec2VolumeCustomizers {
             volumes.add(new VolumeOptions(blockOptions, fileSystemOptions));
         }
 
-        return new Ec2NewVolumeCustomizer(volumes);
+        return new NewVolumeCustomizer(volumes);
     }
 
     // TODO: Either the JavaDoc or the implementation is incorrect. The implementation makes no attempt to attach volumes.
