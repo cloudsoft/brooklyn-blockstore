@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
+import static brooklyn.location.blockstore.VolumeManagers.*;
+
 /**
  * Creates a location customizer that:
  * <ul>
@@ -52,11 +54,6 @@ import java.util.List;
  * </pre>
  */
 public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
-    public static final String AWS_CLOUD = "aws-ec2";
-    public static final String OPENSTACK_NOVA = "openstack-nova";
-    public static final String VCLOUD_DIRECTOR = "vcloud-director";
-
-
     private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
 
     public static final ConfigKey<List<VolumeOptions>> VOLUMES = ConfigKeys.newConfigKey(
@@ -94,7 +91,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         }
 
         switch (provider) {
-            case AWS_CLOUD:
+            case AWS_EC2:
                 return new Ec2VolumeManager();
             case OPENSTACK_NOVA:
                 return new OpenstackVolumeManager();

@@ -11,6 +11,8 @@ import brooklyn.location.blockstore.ec2.Ec2VolumeCustomizers;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeCustomizer;
 import brooklyn.location.blockstore.softlayer.SoftlayerVolumeCustomizer;
 
+import static brooklyn.location.blockstore.VolumeManagers.*;
+
 public class VolumeCustomizers {
 
     private VolumeCustomizers() {}
@@ -31,9 +33,9 @@ public class VolumeCustomizers {
         } else {
             provider = JcloudsMachineLocation.class.cast(location).getParent().getProvider();
         }
-        return provider.equals("aws-ec2") ||
-                provider.equals("google-compute-engine") ||
-                provider.equals("softlayer");
+        return provider.equals(AWS_EC2) ||
+                provider.equals(GOOGLE_COMPUTE_ENGINE) ||
+                provider.equals(SOFTLAYER);
     }
 
 
@@ -61,11 +63,11 @@ public class VolumeCustomizers {
             provider = JcloudsMachineLocation.class.cast(location).getParent().getProvider();
         }
 
-        if (provider.equals("aws-ec2")) {
+        if (provider.equals(AWS_EC2)) {
             return Ec2VolumeCustomizers.withNewVolumes(capacities);
-        } else if (provider.equals("google-compute-engine")) {
+        } else if (provider.equals(GOOGLE_COMPUTE_ENGINE)) {
             return GoogleComputeEngineVolumeCustomizer.withNewVolume(capacities);
-        } else if (provider.equals("softlayer")) {
+        } else if (provider.equals(SOFTLAYER)) {
             return SoftlayerVolumeCustomizer.withNewVolume(capacities);
         } else {
             // TODO What is it for OpenStack? Something like:
