@@ -101,10 +101,10 @@ public class Devices {
 
     }
 
-    public static class MountedBlockDeviceImpl extends AttachedBlockDeviceImpl implements MountedBlockDevice {
+    private static class MountedBlockDeviceImpl extends AttachedBlockDeviceImpl implements MountedBlockDevice {
         private final String mountPoint;
 
-        public MountedBlockDeviceImpl(AttachedBlockDevice attachedDevice, String mountPoint) {
+        private MountedBlockDeviceImpl(AttachedBlockDevice attachedDevice, String mountPoint) {
             super(attachedDevice.getMachine(), attachedDevice.getId(), attachedDevice.getDeviceName());
             this.mountPoint = mountPoint;
         }

@@ -46,7 +46,6 @@ public abstract class AbstractVolumeManagerLiveTest {
     protected ManagementContext ctx;
     
     protected JcloudsLocation jcloudsLocation;
-    protected JcloudsMachineLocation currentJcloudshMachineLocation;
     protected VolumeManager volumeManager;
     protected BlockDevice volume;
     protected List<JcloudsMachineLocation> machines = Lists.newCopyOnWriteArrayList();
@@ -136,9 +135,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                 .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
-        currentJcloudshMachineLocation = createJcloudsMachine();
-        machines.add(currentJcloudshMachineLocation);
-        volume = volumeManager.createBlockDevice(currentJcloudshMachineLocation, options);
+        volume = volumeManager.createBlockDevice(jcloudsLocation, options);
         assertVolumeAvailable(volume);
     }
 

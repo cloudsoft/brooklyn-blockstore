@@ -38,7 +38,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     @Override
     public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine, BlockDeviceOptions deviceOptions,
             FilesystemOptions filesystemOptions) {
-        BlockDevice device = createBlockDevice(machine, deviceOptions);
+        BlockDevice device = createBlockDevice(machine.getParent(), deviceOptions);
         AttachedBlockDevice attached = attachBlockDevice(machine, device, deviceOptions);
         createFilesystem(attached, filesystemOptions);
         return mountFilesystem(attached, filesystemOptions);

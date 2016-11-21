@@ -52,6 +52,9 @@ import static brooklyn.location.blockstore.VolumeManagers.*;
  *              mountPoint: /mount/brooklyn/h
  *              filesystemType: ext3
  * </pre>
+ *
+ * Important notice is that KVM is configured as the default hypervisor for OpenStack which means that the defined device name will be of type /dev/vd*.
+ * This means that the device suffix must be set as the next letter in alphabetical order from the existing device names on the VM.
  */
 public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
     private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);

@@ -2,14 +2,16 @@ package brooklyn.location.blockstore.vclouddirector15;
 
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
-import brooklyn.location.blockstore.Devices;
+import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -50,6 +52,19 @@ public class VcloudVolumeManager extends AbstractVolumeManager {
     }
 
     @Override
+    public BlockDevice createBlockDevice(JcloudsLocation jcloudsLocation, BlockDeviceOptions options) {
+        throw new IllegalStateException("This method shouldn't be called for Vcloud Director.");
+    }
+
+    @Override
+    public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine, BlockDeviceOptions deviceOptions,
+                                                         FilesystemOptions filesystemOptions) {
+        BlockDevice device = createBlockDevice(machine, deviceOptions);
+        AttachedBlockDevice attached = attachBlockDevice(machine, device, deviceOptions);
+        createFilesystem(attached, filesystemOptions);
+        return mountFilesystem(attached, filesystemOptions);
+    }
+
     public BlockDevice createBlockDevice(JcloudsMachineLocation jcloudsMachineLocation, BlockDeviceOptions options) {
         Optional<NodeMetadata> vcloudNodeMetadata = jcloudsMachineLocation.getOptionalNode();
         VCloudDirectorApi vCloudDirectorApi = jcloudsMachineLocation.getParent().getComputeService().getContext().unwrapApi(VCloudDirectorApi.class);

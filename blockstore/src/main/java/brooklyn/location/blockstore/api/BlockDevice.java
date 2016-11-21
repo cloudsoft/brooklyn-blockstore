@@ -13,7 +13,6 @@ public interface BlockDevice {
     /**
      * @return The location that contains this device
      */
-    // TODO change this method to getJcloudsMachineLocation()
     public JcloudsLocation getLocation();
 
     // TODO: Bit confusing that this doesn't actually attach the device.
