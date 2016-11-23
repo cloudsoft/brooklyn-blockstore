@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import java.util.Map;
 
+@Test(groups = "Live")
 public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     public static final String PROVIDER = "vcloud-director";
 

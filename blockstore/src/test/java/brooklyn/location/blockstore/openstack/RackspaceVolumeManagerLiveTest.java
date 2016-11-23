@@ -14,7 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
 
-@Test
+@Test(groups = "Live")
 public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     public static final String PROVIDER = "rackspace-cloudservers-uk";

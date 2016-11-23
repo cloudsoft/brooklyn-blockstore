@@ -18,7 +18,7 @@ public class OpenStackLocationConfig {
 
     public static final String BROOKLYN_PROPERTIES_JCLOUDS_PREFIX = "brooklyn.location.jclouds.";
 
-    public static Map configMap;
+    private Map configMap;
 
     public OpenStackLocationConfig() {
         setConfigMap();
@@ -44,7 +44,7 @@ public class OpenStackLocationConfig {
 
     }
 
-    private static void setConfigMap() {
+    private void setConfigMap() {
         configMap = ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
                 .put("generate.hostname", true)
@@ -62,7 +62,7 @@ public class OpenStackLocationConfig {
                 .build();
     }
 
-    public static Map getConfigMap() {
+    public Map getConfigMap() {
         return configMap;
     }
 }

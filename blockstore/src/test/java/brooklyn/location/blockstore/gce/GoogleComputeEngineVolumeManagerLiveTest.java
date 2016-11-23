@@ -12,7 +12,9 @@ import com.google.common.collect.ImmutableMap;
 
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
+import org.testng.annotations.Test;
 
+@Test(groups = "Live")
 public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     public static final String PROVIDER = "google-compute-engine";

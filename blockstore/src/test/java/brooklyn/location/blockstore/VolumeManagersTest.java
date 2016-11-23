@@ -15,7 +15,7 @@ import org.testng.annotations.Test;
 
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeManager;
-import brooklyn.location.blockstore.openstack.OpenStackVolumeManagerLiveTest;
+import brooklyn.location.blockstore.openstack.OpenStackLocationConfig;
 import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
 import brooklyn.location.blockstore.openstack.RackspaceVolumeManagerLiveTest;
 import brooklyn.location.blockstore.rackspace.RackspaceVolumeManager;
@@ -60,7 +60,7 @@ public class VolumeManagersTest {
 
     @Test
     public void testOpenstackVolumeManager() {
-        JcloudsLocation openstackLocation = locationFor(OpenStackVolumeManagerLiveTest.locationConfig.LOCATION_SPEC);
+        JcloudsLocation openstackLocation = locationFor(OpenStackLocationConfig.LOCATION_SPEC);
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(openstackLocation));
         assertEquals(VolumeManagers.newVolumeManager(openstackLocation).getClass(), OpenstackVolumeManager.class);
     }

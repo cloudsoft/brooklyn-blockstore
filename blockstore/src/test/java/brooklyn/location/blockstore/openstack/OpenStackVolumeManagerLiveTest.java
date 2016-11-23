@@ -13,10 +13,10 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Test
+@Test(groups = "Live")
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    public static OpenStackLocationConfig locationConfig;
+    private OpenStackLocationConfig locationConfig;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
