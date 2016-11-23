@@ -1,0 +1,127 @@
+brooklyn.catalog:
+  items:
+  - https://raw.githubusercontent.com/brooklyncentral/common-catalog-utils/master/common-tests/src/main/resources/commontests/common.tests.bom
+  - id: new-volume-customizer-openstack-vcd-tests
+    version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Customizer tests for OpenStack and vCD
+    description: Attaching additional disks in provisioning time and after provisioning via effector is running correctly
+    item:
+      services:
+      - type: new-volume-customizer-openstack-vcd
+        id: espentity
+
+      - type: test-case
+        brooklyn.config:
+          targetResolutionTimeout: 10s
+          timeout: 20m
+
+        brooklyn.children:
+
+        - type: assert-up-and-running-initial
+          target: $brooklyn:component("espentity")
+          name: "1. Node up and running"
+
+        - type: test-ssh
+          target: $brooklyn:component("espentity")
+          name: "2. Additional mount devices successfully added"
+          brooklyn.config:
+            command: |
+              df -h | grep /mount/brooklyn/b &&
+              df -h | grep /mount/brooklyn/c &&
+              egrep "/mount/brooklyn/b" /proc/mounts &&
+              egrep "/mount/brooklyn/c" /proc/mounts
+            assert.out:
+            - contains: /mount/brooklyn/b
+            - contains: /mount/brooklyn/c
+            - contains: rw
+
+        - type: invoke-effector
+          target: $brooklyn:component("espentity")
+          name: "3. Invoke addExtraHdd effector"
+          effector: addExtraHdd
+          params:
+            location.customizer.fields:
+              blockDevice:
+                sizeInGb: 1
+                deviceSuffix: 'd'
+                deleteOnTermination: true
+                tags:
+                  brooklyn: "br-example-test-1"
+              filesystem:
+                mountPoint: "/mount/brooklyn/d"
+                filesystemType: "ext3"
+
+        - type: test-ssh
+          target: $brooklyn:component("espentity")
+          name: "4. addExtraHdd effector executed successfully"
+          brooklyn.config:
+            command: |
+              df -h | grep /mount/brooklyn/d &&
+              egrep "/mount/brooklyn/d" /proc/mounts
+            assert.out:
+            - contains: /mount/brooklyn/d
+            - contains: rw
+
+
+  - id: new-volume-customizer-aws-tests
+    version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Customizer tests for AWS
+    description: Attaching additional disks in provisioning time and after provisioning via effector is running correctly
+    item:
+      services:
+      - type: new-volume-customizer-aws
+        id: espentity
+
+      - type: test-case
+        brooklyn.config:
+          targetResolutionTimeout: 10s
+          timeout: 20m
+
+        brooklyn.children:
+
+        - type: assert-up-and-running-initial
+          target: $brooklyn:component("espentity")
+          name: "1. Node up and running"
+
+        - type: test-ssh
+          target: $brooklyn:component("espentity")
+          name: "2. Additional mount devices successfully added"
+          brooklyn.config:
+            command: |
+              df -h | grep /mount/brooklyn/h &&
+              df -h | grep /mount/brooklyn/g &&
+              egrep "/mount/brooklyn/h" /proc/mounts &&
+              egrep "/mount/brooklyn/g" /proc/mounts
+            assert.out:
+            - contains: /mount/brooklyn/h
+            - contains: /mount/brooklyn/g
+            - contains: rw
+
+        - type: invoke-effector
+          target: $brooklyn:component("espentity")
+          name: "3. Invoke addExtraHdd effector"
+          effector: addExtraHdd
+          params:
+            location.customizer.fields:
+              blockDevice:
+                sizeInGb: 1
+                deviceSuffix: 'k'
+                deleteOnTermination: true
+                tags:
+                  brooklyn: "br-example-test-1"
+              filesystem:
+                mountPoint: "/mount/brooklyn/k"
+                filesystemType: "ext3"
+
+        - type: test-ssh
+          target: $brooklyn:component("espentity")
+          name: "4. addExtraHdd effector executed successfully"
+          brooklyn.config:
+            command: |
+              df -h | grep /mount/brooklyn/k &&
+              egrep "/mount/brooklyn/k" /proc/mounts
+            assert.out:
+            - contains: /mount/brooklyn/k
+            - contains: rw

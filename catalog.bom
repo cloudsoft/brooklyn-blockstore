@@ -1,0 +1,101 @@
+#
+# Copyright &copy; 2013 Cloudsoft Corporation Limited
+#
+# Licensed under the Cloudsoft EULA v1.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.cloudsoftcorp.com/cloudsoft-developer-license/
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+brooklyn.catalog:
+  items:
+
+  - id: new-volume-customizer-openstack-vcd
+    version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    name: New Volume Customizer OpenStack and vCD
+    description: Attaches additional disks in provisioning time
+    itemType: template
+    license: Apache-2.0
+    publish:
+      license_code: Apache-2.0
+      reference: reference.json
+    item:
+      services:
+      - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
+        id: espentity
+        brooklyn.initializers:
+          - type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+        brooklyn.config:
+          provisioning.properties:
+            customizers:
+            - $brooklyn:object:
+                type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.NewVolumeCustomizer
+                brooklyn.config:
+                  volumes:
+                  - blockDevice:
+                      sizeInGb: 1
+                      deviceSuffix: 'b'
+                      deleteOnTermination: true
+                      tags:
+                        brooklyn: br-example-test-1
+                    filesystem:
+                      mountPoint: /mount/brooklyn/b
+                      filesystemType: ext3
+                  - blockDevice:
+                      sizeInGb: 1
+                      deviceSuffix: 'c'
+                      deleteOnTermination: true
+                      tags:
+                        brooklyn: br-example-test-1
+                    filesystem:
+                      mountPoint: /mount/brooklyn/c
+                      filesystemType: ext3
+
+
+  - id: new-volume-customizer-aws
+    version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    name: New Volume Customizer AWS
+    description: Attaches additional disks in provisioning time
+    itemType: template
+    license: Apache-2.0
+    publish:
+      license_code: Apache-2.0
+      reference: reference.json
+    item:
+      services:
+      - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
+        id: espentity
+        brooklyn.initializers:
+          - type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+        brooklyn.config:
+          provisioning.properties:
+            customizers:
+            - $brooklyn:object:
+                type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.NewVolumeCustomizer
+                brooklyn.config:
+                  volumes:
+                  - blockDevice:
+                      sizeInGb: 1
+                      deviceSuffix: 'h'
+                      deleteOnTermination: true
+                      tags:
+                        brooklyn: br-example-test-1
+                    filesystem:
+                      mountPoint: /mount/brooklyn/h
+                      filesystemType: ext3
+                  - blockDevice:
+                      sizeInGb: 1
+                      deviceSuffix: 'g'
+                      deleteOnTermination: true
+                      tags:
+                        brooklyn: br-example-test-1
+                    filesystem:
+                      mountPoint: /mount/brooklyn/g
+                      filesystemType: ext3

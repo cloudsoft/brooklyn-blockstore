@@ -1,0 +1,19 @@
+brooklyn.catalog:
+  version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+  dependsOn:
+    - catalog.tests.bom
+
+  items:
+    - id: test-new-volume-customizer-openstack-vcd
+      name: "New Volume Customizer OpenStack and vCD Tests"
+      description: |
+        Tests attaching additional disks in provisioning time and after provisioning via effector
+      itemType: template
+      item:
+        brooklyn.config:
+          timeout: 1h
+          timeout.initialStartup: 1h
+          timeout.runtimeAssertion: 1h
+
+        services:
+          - type: new-volume-customizer-openstack-vcd-tests
