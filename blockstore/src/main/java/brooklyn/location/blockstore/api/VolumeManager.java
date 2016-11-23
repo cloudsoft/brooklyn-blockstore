@@ -14,7 +14,7 @@ public interface VolumeManager {
 
     /**
      * Creates a new volume in the given availability zone.
-     * 
+     *
      * @param location Location where the volume should be created
      * @param options Configuration for the new volume
      */

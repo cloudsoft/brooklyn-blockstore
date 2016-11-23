@@ -8,6 +8,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.List;
 import java.util.Map;
 
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeOptions;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
@@ -21,7 +22,8 @@ import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 
-@Test(groups = "WIP")
+// TODO merge with Ec2NewVolumeCustomizerLiveTest and delete this test
+@Test
 public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
 
     @Override
@@ -43,7 +45,6 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
     protected Map<?, ?> additionalObtainArgs() throws Exception {
         return ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_ID, Ec2VolumeManagerLiveTest.CENTOS_IMAGE_ID)
-                .put(JcloudsLocation.HARDWARE_ID, Ec2VolumeManagerLiveTest.SMALL_HARDWARE_ID)
                 .build();
     }
 
@@ -98,7 +99,6 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
             Character deviceSuffix = checkNotNull(deviceSuffixes.get(i), "deviceSuffix(%s)", i);
             BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
                     .sizeInGb(capacity)
-                    .zone(getDefaultAvailabilityZone())
                     .deviceSuffix(deviceSuffix)
                     .tags(ImmutableMap.of(
                             "user", System.getProperty("user.name"),
@@ -107,7 +107,7 @@ public class Ec2VolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTes
             volumes.add(new VolumeOptions(blockDeviceOptions, filesystemOptions));
         }
         
-        JcloudsLocationCustomizer customizer = new Ec2NewVolumeCustomizer(volumes);
+        JcloudsLocationCustomizer customizer = new NewVolumeCustomizer(volumes);
 
         machine = createJcloudsMachine(customizer);
         

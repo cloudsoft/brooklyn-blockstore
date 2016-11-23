@@ -12,7 +12,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-@Test(groups = "WIP")
+@Test(groups = "Live")
 public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     // Note we're using the region-name with an explicit availability zone, as is done in the 
@@ -71,7 +71,6 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
         return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_ID, CENTOS_IMAGE_ID)
-                .put(JcloudsLocation.HARDWARE_ID, SMALL_HARDWARE_ID)
                 .build());
     }
 }

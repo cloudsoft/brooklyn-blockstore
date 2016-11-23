@@ -1,5 +1,6 @@
 package brooklyn.location.blockstore.openstack;
 
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeOptions;
 import com.google.common.collect.ImmutableList;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -34,7 +35,7 @@ public class OpenStackNewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSup
 
         jcloudsLocation = mgmt.getLocationRegistry().getLocationManaged(locationConfig.NAMED_LOCATION, locationConfig.getConfigMap());
 
-        OpenstackNewVolumeCustomizer customizer = new OpenstackNewVolumeCustomizer();
+        NewVolumeCustomizer customizer = new NewVolumeCustomizer();
         customizer.setVolumes(MutableList.of(
                 VolumeOptions.<Map<String, Map<String, ?>>>fromMap(
                         MutableMap.<String, Map<String,?>>of(

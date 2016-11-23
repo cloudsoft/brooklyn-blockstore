@@ -1,9 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <included>
 
-    <logger name="brooklyn.SSH" level="DEBUG"/>
-    <logger name="brooklyn.location.basic.jclouds" level="DEBUG"/>
-    <logger name="brooklyn.util.internal.ssh" level="DEBUG"/>
-    <logger name="jclouds" level="DEBUG"/>
-    <logger name="org.jclouds" level="DEBUG"/>
+    <!-- TODO Doesn't work can I enable jclouds.wire? -->
+    <logger name="jclouds.wire" level="DEBUG"/>
+    <!--
+
+        this file is a placeholder for contexts which wish to supply additional logging.
+
+        simply create a file with this name on your classpath,
+        ensuring your project is first on the classpath,
+        and the settings here and additional categories will be included.
+        for example, you might wish debug logging for your packages:
+
+    <logger name="com.acme.app" level="DEBUG"/>
+
+        or to move the jclouds messages to a separate log file:
+-->
+    <!-- create a separate jclouds log file  -->
+    <!-- create a separate jclouds log file  -->
+    <appender name="JCLOUDS-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.dir:-./}${logging.basename:-brooklyn}.jclouds.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d %-5level %logger{30} [%thread{15}]: %msg%n</pattern>
+        </encoder>
+
+        <!-- Truncate log at 100 MB, max history of 10 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${logging.dir:-./}${logging.basename:-brooklyn}.jclouds-%i.log.zip</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>10</maxIndex>
+        </rollingPolicy>
+
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>100MB</maxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <logger name="org.jclouds" additivity="false">
+        <appender-ref ref="JCLOUDS-FILE" />
+    </logger>
+    <logger name="jclouds" additivity="false">
+        <appender-ref ref="JCLOUDS-FILE" />
+    </logger>
+<!--
+        in addition, two variables are used to define the log file name and dir;
+        to set a different name or location, simply define the following (with the right values):
+
+    <property name="logging.basename" scope="context" value="acme-app" />
+    <property name="logging.dir" scope="context" value="./" />
+
+      -->
 
 </included>

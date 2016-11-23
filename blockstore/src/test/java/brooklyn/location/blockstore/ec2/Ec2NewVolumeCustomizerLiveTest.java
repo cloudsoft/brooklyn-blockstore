@@ -1,5 +1,6 @@
 package brooklyn.location.blockstore.ec2;
 
+import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.VolumeOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +31,7 @@ public class Ec2NewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSupport {
                 .put("imageId", "eu-west-1/ami-1d841c6a")
                 .build());
 
-        Ec2NewVolumeCustomizer customizer = new Ec2NewVolumeCustomizer();
+        NewVolumeCustomizer customizer = new NewVolumeCustomizer();
         customizer.setVolumes(MutableList.of(
                 VolumeOptions.fromMap(MutableMap.<String, Map<String,?>>of(
                         "blockDevice", MutableMap.of(
