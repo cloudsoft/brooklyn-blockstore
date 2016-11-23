@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
-import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
@@ -25,8 +24,6 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import brooklyn.location.blockstore.api.BlockDevice;
-
 public abstract class AbstractVolumeCustomizerLiveTest {
 
     // FIXME Delete volume? Or will it automatically be deleted when VM is deleted for all clouds?!
@@ -38,8 +35,6 @@ public abstract class AbstractVolumeCustomizerLiveTest {
     protected ManagementContext ctx;
     
     protected JcloudsLocation jcloudsLocation;
-    protected JcloudsLocationCustomizer volumeCustomizer;
-    protected BlockDevice volume;
     protected JcloudsSshMachineLocation machine;
     
     protected abstract String getProvider();
@@ -48,10 +43,6 @@ public abstract class AbstractVolumeCustomizerLiveTest {
     protected abstract List<String> getMountPoints();
     protected abstract Map<?,?> additionalObtainArgs() throws Exception;
 
-    protected JcloudsSshMachineLocation createJcloudsMachine(List<Integer> capacities) throws Exception {
-        return createJcloudsMachine(createVolumeCustomizer(jcloudsLocation, capacities));
-    }
-    
     protected JcloudsSshMachineLocation createJcloudsMachine(JcloudsLocationCustomizer customizer) throws Exception {
         Map<String, String> tags = ImmutableMap.of(
                 "user", truncate(System.getProperty("user.name"), maxTagLength()),
@@ -103,17 +94,13 @@ public abstract class AbstractVolumeCustomizerLiveTest {
         // no-op; for overriding
     }
 
-    protected JcloudsLocationCustomizer createVolumeCustomizer(Location location, List<Integer> capacities) {
-        return VolumeCustomizers.newVolumesCustomizer(location, capacities);
-    }
-
-    @Test(groups="Live")
+    @Test(groups={"Live", "WIP"})
     public void testCreateVmWithAttachedVolume() throws Exception {
         // TODO Mount more than one volume
         int volumeSize = getVolumeSize();
         List<String> mountPoints = getMountPoints();
         
-        machine = createJcloudsMachine(ImmutableList.of(volumeSize, volumeSize));
+        machine = createJcloudsMachine(new NewVolumeCustomizer());
         
         for (String mountPoint : mountPoints) {
             assertExecSucceeds(machine, "show mount points", ImmutableList.of(
