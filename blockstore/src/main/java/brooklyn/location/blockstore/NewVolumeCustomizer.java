@@ -57,6 +57,8 @@ import static brooklyn.location.blockstore.VolumeManagers.*;
  * This means that the device suffix must be set as the next letter in alphabetical order from the existing device names on the VM.
  */
 public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
+    // TODO write a rebind test
+
     private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
 
     public static final ConfigKey<List<VolumeOptions>> VOLUMES = ConfigKeys.newConfigKey(
@@ -66,8 +68,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
     /**
      * Used only for checking results from customization
      */
-    // TODO test using that customizer after rebind. Good example is on cluster resize.
-    protected transient List<MountedBlockDevice> mountedBlockDeviceList;
+    protected List<MountedBlockDevice> mountedBlockDeviceList;
 
     public NewVolumeCustomizer() {
         mountedBlockDeviceList = MutableList.of();
