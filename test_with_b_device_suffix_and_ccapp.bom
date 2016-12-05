@@ -4,7 +4,7 @@ brooklyn.catalog:
     - catalog.tests.bom
 
   items:
-    - id: test-new-volume-customizer-openstack-vdc-priv
+    - id: test-new-volume-customizer-vcd
       name: "New Volume Customizer OpenStack and vCD Tests"
       description: |
         Tests attaching additional disks in provisioning time and after provisioning via effector
@@ -16,4 +16,4 @@ brooklyn.catalog:
           timeout.runtimeAssertion: 1h
 
         services:
-          - type: new-volume-customizer-openstack-vdc-priv-tests
+          - type: new-volume-customizer-vcd-tests

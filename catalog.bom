@@ -17,15 +17,59 @@
 brooklyn.catalog:
   items:
 
-  - id: new-volume-customizer-openstack-vcd
+  - id: new-volume-customizer-vcd
+    version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    name: New Volume Customizer vCD
+    description: Attaches additional disks in provisioning time
+    itemType: template
+    item:
+      services:
+      - type: io.cloudsoft.amp.canopy.compose.apps.v1.CanopyComposeApp
+        brooklyn.config:
+          childSpec:
+            $brooklyn:entitySpec:
+              type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
+              id: espentity
+              brooklyn.initializers:
+                - type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+              brooklyn.config:
+                provisioning.properties:
+                  customizers:
+                  - $brooklyn:object:
+                      type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.NewVolumeCustomizer
+                      brooklyn.config:
+                        volumes:
+                        - blockDevice:
+                            sizeInGb: 3
+                            deviceSuffix: 'b'
+                            deleteOnTermination: true
+                            tags:
+                              brooklyn: br-example-test-1
+                          filesystem:
+                            mountPoint: /mount/brooklyn/b
+                            filesystemType: ext3
+                        - blockDevice:
+                            sizeInGb: 3
+                            deviceSuffix: 'c'
+                            deleteOnTermination: true
+                            tags:
+                              brooklyn: br-example-test-1
+                          filesystem:
+                            mountPoint: /mount/brooklyn/c
+                            filesystemType: ext3
+                subnet.publiclyForwardedPorts:
+                - $brooklyn:sensor("org.apache.brooklyn.core.entity.Attributes", "ssh.port")
+              brooklyn.policies:
+              - type: brooklyn.policy.os.CreateUserPolicy
+                brooklyn.config:
+                  grantSudo: true
+                  user: canopy
+
+  - id: new-volume-customizer-openstack-vdc-priv
     version: "0.5.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
     name: New Volume Customizer OpenStack and vCD
     description: Attaches additional disks in provisioning time
     itemType: template
-    license: Apache-2.0
-    publish:
-      license_code: Apache-2.0
-      reference: reference.json
     item:
       services:
       - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
@@ -64,10 +108,6 @@ brooklyn.catalog:
     name: New Volume Customizer AWS
     description: Attaches additional disks in provisioning time
     itemType: template
-    license: Apache-2.0
-    publish:
-      license_code: Apache-2.0
-      reference: reference.json
     item:
       services:
       - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
