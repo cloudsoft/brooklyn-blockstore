@@ -47,7 +47,7 @@ public class VolumeManagers {
      * See {@link #isVolumeManagerSupportedForLocation(Location)} to check before hand if a
      * given location is supported.
      * 
-     * @param location A {@link brooklyn.location.MachineLocation location} where volumes are to be created.
+     * @param location A {@link org.apache.brooklyn.api.location.MachineLocation location} where volumes are to be created.
      * @return A {@link VolumeManager} suitable for creating volumes in the given location.
      * @throws IllegalArgumentException If {@link #isVolumeManagerSupportedForLocation}
      *         returns false for the location argument.

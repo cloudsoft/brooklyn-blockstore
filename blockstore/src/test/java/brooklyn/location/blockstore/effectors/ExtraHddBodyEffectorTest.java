@@ -68,7 +68,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
                 "}";
 
         try {
-            entity.invoke(effector, ImmutableMap.<String, Object>of(ExtraHddBodyEffector.LOCATION_CUSTOMIZER_FIELDS.getName(), parameterInput)).get();
+            entity.invoke(effector, ImmutableMap.<String, Object>of(ExtraHddBodyEffector.VOLUME.getName(), parameterInput)).get();
             Asserts.shouldHaveFailedPreviously();
         } catch (Exception e) {
             Asserts.expectedFailureOfType(e, IllegalStateException.class);
@@ -209,6 +209,6 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
         assertEquals("An effector to add extra hdd to provisioned vm", effector.getDescription());
         assertEquals(MountedBlockDevice.class, effector.getReturnType());
         assertEquals(1, effector.getParameters().size());
-        assertEquals(ExtraHddBodyEffector.LOCATION_CUSTOMIZER_FIELDS.getType(), effector.getParameters().iterator().next().getParameterClass());
+        assertEquals(ExtraHddBodyEffector.VOLUME.getType(), effector.getParameters().iterator().next().getParameterClass());
     }
 }
