@@ -8,7 +8,7 @@
     <parent>
         <groupId>io.brooklyn.blockstore</groupId>
         <artifactId>brooklyn-blockstore-parent</artifactId>
-        <version>0.5.0-SNAPSHOT</version>  <!-- BROOKLYN_BLOCKSTORE_VERSION -->
+        <version>0.5.0-20161205.1210</version>  <!-- BROOKLYN_BLOCKSTORE_VERSION -->
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -59,7 +59,7 @@
         <dependency>
             <groupId>io.cloudsoft.amp.jumphost</groupId>
             <artifactId>jumphost-ssh-client</artifactId>
-            <version>1.0.0-SNAPSHOT</version> <!-- JUMPHOST_VERSION -->
+            <version>1.0.0-20161205.1210</version> <!-- JUMPHOST_VERSION -->
             <scope>test</scope>
         </dependency>
         <dependency>
