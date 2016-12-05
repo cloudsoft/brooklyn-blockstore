@@ -57,8 +57,8 @@ public class ExtraHddBodyEffector extends AddEffector {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtraHddBodyEffector.class);
 
-    static ConfigKey<VolumeOptions> LOCATION_CUSTOMIZER_FIELDS = ConfigKeys.newConfigKey(
-            new TypeToken<VolumeOptions>() {}, "location.customizer.fields",
+    static ConfigKey<VolumeOptions> VOLUME = ConfigKeys.newConfigKey(
+            new TypeToken<VolumeOptions>() {}, "volume",
             "Map of location customizer fields.");
 
     public static final String EXTRA_HDD_EFFECTOR_NAME = "addExtraHdd";
@@ -72,7 +72,7 @@ public class ExtraHddBodyEffector extends AddEffector {
         bag.put(EFFECTOR_NAME, EXTRA_HDD_EFFECTOR_NAME);
 
         Effectors.EffectorBuilder eff = AddEffector.newEffectorBuilder(MountedBlockDevice.class, bag)
-                .parameter(LOCATION_CUSTOMIZER_FIELDS)
+                .parameter(VOLUME)
                 .description("An effector to add extra hdd to provisioned vm")
                 .impl(new Body());
 
@@ -88,21 +88,15 @@ public class ExtraHddBodyEffector extends AddEffector {
 
         @Override
         public MountedBlockDevice call(ConfigBag parameters) {
-            Preconditions.checkNotNull(parameters.get(LOCATION_CUSTOMIZER_FIELDS), LOCATION_CUSTOMIZER_FIELDS.getName() + " is required");
-            VolumeOptions volumeOptions = parameters.get(LOCATION_CUSTOMIZER_FIELDS);
+            Preconditions.checkNotNull(parameters.get(VOLUME), VOLUME.getName() + " is required");
+            VolumeOptions volumeOptions = parameters.get(VOLUME);
 
             JcloudsMachineLocation machine = EffectorTasks.getMachine(entity(), JcloudsMachineLocation.class);
 
             LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + volumeOptions);
 
             NewVolumeCustomizer customizer = getCustomizerForCloud(ImmutableList.of(volumeOptions));
-            customizer.customize(machine.getParent(), machine.getParent().getComputeService(), machine);
-
-            if (customizer.getMountedBlockDeviceList().isEmpty()) {
-                throw new IllegalStateException("Returned mounted block device after invoking addExtraHdd effector is empty. Might have failed to attach disk.");
-            }
-
-            return Iterables.getLast(customizer.getMountedBlockDeviceList());
+            return customizer.createAndAttachDisk(machine, volumeOptions);
         }
 
         private NewVolumeCustomizer getCustomizerForCloud(List<VolumeOptions> locationCustomizerFields) {

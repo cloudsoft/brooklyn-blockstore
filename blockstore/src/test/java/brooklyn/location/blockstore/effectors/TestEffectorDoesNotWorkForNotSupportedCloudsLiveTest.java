@@ -43,7 +43,7 @@ public class TestEffectorDoesNotWorkForNotSupportedCloudsLiveTest extends Brookl
                 "}";
 
         try {
-            entity.invoke(effector, ImmutableMap.<String, Object>of(ExtraHddBodyEffector.LOCATION_CUSTOMIZER_FIELDS.getName(), parameterInput)).get();
+            entity.invoke(effector, ImmutableMap.<String, Object>of(ExtraHddBodyEffector.VOLUME.getName(), parameterInput)).get();
             Asserts.shouldHaveFailedPreviously("Tried to invoke addExtraHdd effector on entity");
         } catch (Exception e) {
             Asserts.expectedFailureOfType(e, UnsupportedOperationException.class);

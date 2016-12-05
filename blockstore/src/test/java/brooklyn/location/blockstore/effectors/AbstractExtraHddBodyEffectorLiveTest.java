@@ -59,7 +59,7 @@ public abstract class AbstractExtraHddBodyEffectorLiveTest extends BrooklynAppLi
                 "  }\n" +
                 "}";
         MountedBlockDevice result = (MountedBlockDevice) entity.invoke(effector, ImmutableMap.<String, Object>of(
-                ExtraHddBodyEffector.LOCATION_CUSTOMIZER_FIELDS.getName(), parameterInput)).get();
+                ExtraHddBodyEffector.VOLUME.getName(), parameterInput)).get();
         assertNotNull(result);
         assertEquals(result.getMountPoint(), getMountPointBaseDir() + "/" + getFirstDeviceSuffix());
         assertEquals(result.getDeviceName(), getDeviceNamePrefix() + getFirstDeviceSuffix());
@@ -81,7 +81,7 @@ public abstract class AbstractExtraHddBodyEffectorLiveTest extends BrooklynAppLi
                 "  }\n" +
                 "}";
         MountedBlockDevice resultFromSecondInvoke = (MountedBlockDevice) entity.invoke(effector, ImmutableMap.<String, Object>of(
-                ExtraHddBodyEffector.LOCATION_CUSTOMIZER_FIELDS.getName(), parameterInputForSecondInvoke)).get();
+                ExtraHddBodyEffector.VOLUME.getName(), parameterInputForSecondInvoke)).get();
         assertNotNull(resultFromSecondInvoke);
         assertEquals(resultFromSecondInvoke.getMountPoint(), getMountPointBaseDir());
         assertEquals(resultFromSecondInvoke.getDeviceName(), getDeviceNamePrefix() + (char)(getFirstDeviceSuffix() + 1));

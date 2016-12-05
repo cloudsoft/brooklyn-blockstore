@@ -14,7 +14,6 @@ import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
-import org.apache.brooklyn.util.collections.MutableList;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
@@ -65,26 +64,15 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
             new TypeToken<List<VolumeOptions>>() {},
             "volumes", "List of volumes to be attached");
 
-    /**
-     * Used only for checking results from customization
-     */
-    protected List<MountedBlockDevice> mountedBlockDeviceList;
-
     public NewVolumeCustomizer() {
-        mountedBlockDeviceList = MutableList.of();
     }
 
     public NewVolumeCustomizer(List<VolumeOptions> volumesOptions) {
         this.config().set(VOLUMES, volumesOptions);
-        mountedBlockDeviceList = MutableList.of();
     }
 
     public List<VolumeOptions> getVolumes() {
         return this.getConfig(VOLUMES);
-    }
-
-    public List<MountedBlockDevice> getMountedBlockDeviceList() {
-        return mountedBlockDeviceList;
     }
 
     protected VolumeManager getVolumeManager(JcloudsMachineLocation machine) {
@@ -102,10 +90,9 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
             case VCLOUD_DIRECTOR:
                 return new VcloudVolumeManager();
             default:
-                throw new UnsupportedOperationException("Tried to invoke addExtraHdd effector on entity " + getCallerContext(machine) + " for cloud "
-                        + provider + " which does not support adding disks from an effector.");
+                throw new UnsupportedOperationException("Tried to attach volume for a cloud "
+                        + provider + " which is not supported for adding disks. Caller entity " + getCallerContext(machine));
         }
-
     }
 
     public void setVolumes(List<VolumeOptions> volumes) {
@@ -126,7 +113,8 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         }
     }
 
-    protected void createAndAttachDisk(JcloudsMachineLocation machine, VolumeOptions volumeOptions) {
+    // TODO move that to the VolumeManager?
+    public MountedBlockDevice createAndAttachDisk(JcloudsMachineLocation machine, VolumeOptions volumeOptions) {
         if (volumeOptions.getFilesystemOptions() != null) {
             BlockDeviceOptions blockOptionsCopy = BlockDeviceOptions.copy(volumeOptions.getBlockDeviceOptions());
             Optional<NodeMetadata> node = machine.getOptionalNode();
@@ -135,7 +123,9 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
             } else {
                 LOG.warn("JcloudsNodeMetadata is not available for the MachineLocation. Using zone specified from a parameter.");
             }
-            mountedBlockDeviceList.add(getVolumeManager(machine).createAttachAndMountVolume(machine, blockOptionsCopy, volumeOptions.getFilesystemOptions()));
+            return getVolumeManager(machine).createAttachAndMountVolume(machine, blockOptionsCopy, volumeOptions.getFilesystemOptions());
+        } else {
+            throw new IllegalArgumentException("volume to be provisioned has null FileSystemOptions " + volumeOptions);
         }
     }
 }
