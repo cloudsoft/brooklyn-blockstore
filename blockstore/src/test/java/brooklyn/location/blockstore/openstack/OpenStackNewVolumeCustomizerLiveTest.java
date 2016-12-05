@@ -20,24 +20,42 @@ import java.util.Map;
 
 import static org.testng.Assert.assertTrue;
 
-// Run with -da (disable assertions) die to bug in jclouds openstack-nova for not properly cloning template options
+/**
+ * Requires {@code -da} (i.e. disable assertions) due to bug in jclouds openstack-nova, 
+ * for not properly cloning template options.
+ * 
+ * One also needs to supply cloud credentials:
+ * <pre>
+ * {@code
+ * -Dbrooklyn.location.jclouds.openstack-nova.endpoint="https://openstack.example.com:5000/v2.0"
+ * -Dbrooklyn.location.jclouds.openstack-nova.identity="your-tenant:your-username"
+ * -Dbrooklyn.location.jclouds.openstack-nova.credential="your-password"
+ * -Dbrooklyn.location.jclouds.openstack-nova.auto-generate-keypairs=false
+ * -Dbrooklyn.location.jclouds.openstack-nova.keyPair=your-keypair
+ * -Dbrooklyn.location.jclouds.openstack-nova.loginUser.privateKeyFile=~/.ssh/your-keypair.pem
+ * -Dbrooklyn.location.jclouds.openstack-nova.jclouds.keystone.credential-type=passwordCredentials
+ * -Dbrooklyn.location.jclouds.openstack-cinder.identity="your-tenant:your-username"
+ * -Dbrooklyn.location.jclouds.openstack-cinder.credential="your-password"
+ * }
+ * </pre>
+ * 
+ * Or alternatively these can be hard-coded in ~/.brooklyn/brooklyn.properties (i.e. without the 
+ * {@code -D} in the lines above).
+ */
 public class OpenStackNewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSupport {
 
     protected Location jcloudsLocation;
-    protected BrooklynProperties brooklynProperties;
-    protected OpenStackLocationConfig locationConfig;
 
     @Test(groups = "Live")
     public void testCustomizerCreatesAndAttachesNewVolumeOnProvisioningTime() {
-        locationConfig = new OpenStackLocationConfig();
-        brooklynProperties = mgmt.getBrooklynProperties();
-        locationConfig.addBrooklynProperties(brooklynProperties);
+        OpenStackLocationConfig.addBrooklynProperties(mgmt.getBrooklynProperties());
+        Map<?, ?> locationConfig = new OpenStackLocationConfig().getConfigMap();
 
-        jcloudsLocation = mgmt.getLocationRegistry().getLocationManaged(locationConfig.NAMED_LOCATION, locationConfig.getConfigMap());
+        jcloudsLocation = mgmt.getLocationRegistry().getLocationManaged(OpenStackLocationConfig.NAMED_LOCATION, locationConfig);
 
         NewVolumeCustomizer customizer = new NewVolumeCustomizer();
         customizer.setVolumes(MutableList.of(
-                VolumeOptions.<Map<String, Map<String, ?>>>fromMap(
+                VolumeOptions.fromMap(
                         MutableMap.<String, Map<String,?>>of(
                                 "blockDevice", MutableMap.of(
                                         "sizeInGb", 3,
@@ -46,7 +64,7 @@ public class OpenStackNewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSup
                                 "filesystem", MutableMap.<String, Object>of(
                                         "mountPoint", "/mount/brooklyn/b",
                                         "filesystemType", "ext3"))),
-                VolumeOptions.<String, Map<String,?>>fromMap(
+                VolumeOptions.fromMap(
                         MutableMap.<String, Map<String, ?>>of(
                                 "blockDevice", MutableMap.<String, Object>of(
                                     "sizeInGb", 3,

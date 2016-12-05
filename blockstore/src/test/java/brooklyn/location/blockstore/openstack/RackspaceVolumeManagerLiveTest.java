@@ -11,9 +11,16 @@ import org.testng.annotations.Test;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
 
+/**
+ * TODO Tests disabled - need to properly implement {@link #getDefaultDeviceSuffix()}.
+ * 
+ * TODO How to inject credentials? The credentials in {@code .brooklyn/brooklyn.properties}
+ * are stripped out by {@link AbstractVolumeCustomizerLiveTest#setUp()}.
+ */
 @Test(groups = "Live")
 public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
@@ -66,5 +73,24 @@ public class RackspaceVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
         return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
                 .build());
+    }
+    
+    // TODO See getDefaultDeviceSuffix() - it just throws an exception
+    @Test(groups={"Live", "WIP"})
+    @Override
+    public void testCreateVolume() throws Exception {
+        super.testCreateVolume();
+    }
+    
+    @Test(groups={"Live", "WIP"}, dependsOnMethods = "testCreateVolume")
+    @Override
+    public void testCreateAndAttachVolume() throws Exception {
+        super.testCreateAndAttachVolume();
+    }
+
+    @Test(groups={"Live", "WIP"}, dependsOnMethods = {"testCreateAndAttachVolume"})
+    @Override
+    public void testMoveMountedVolumeToAnotherMachine() throws Throwable {
+        super.testMoveMountedVolumeToAnotherMachine();
     }
 }

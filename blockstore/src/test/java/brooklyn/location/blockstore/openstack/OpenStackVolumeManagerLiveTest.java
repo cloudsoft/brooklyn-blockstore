@@ -1,8 +1,10 @@
 package brooklyn.location.blockstore.openstack;
 
-import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
-import brooklyn.location.blockstore.api.BlockDevice;
-import com.google.common.base.Optional;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
+import java.util.Map;
+
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
@@ -10,33 +12,37 @@ import org.jclouds.openstack.cinder.v1.domain.Volume;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import com.google.common.base.Optional;
 
+import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
+import brooklyn.location.blockstore.api.BlockDevice;
+
+/**
+ * Requires disable assertions, and credentials to be injected - 
+ * see {@link OpenStackNewVolumeCustomizerLiveTest}.
+ */
 @Test(groups = "Live")
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
-    private OpenStackLocationConfig locationConfig;
-
     @BeforeMethod(alwaysRun=true)
+    @Override
     public void setUp() throws Exception {
         super.setUp();
-        locationConfig = new OpenStackLocationConfig();
     }
 
     @Override
     protected String getProvider() {
-        return locationConfig.PROVIDER;
+        return OpenStackLocationConfig.PROVIDER;
     }
 
     @Override
     protected void addBrooklynProperties(BrooklynProperties props) {
-        locationConfig.addBrooklynProperties(props);
+        OpenStackLocationConfig.addBrooklynProperties(props);
     }
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged("named:"+locationConfig.NAMED_LOCATION);
+        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged("named:"+OpenStackLocationConfig.NAMED_LOCATION);
     }
     
     @Override
@@ -68,6 +74,8 @@ public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTes
     
     @Override
     protected JcloudsSshMachineLocation createJcloudsMachine() throws Exception {
-        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(locationConfig.getConfigMap());
+        Map<?, ?> locationConfig = new OpenStackLocationConfig().getConfigMap();
+
+        return (JcloudsSshMachineLocation) jcloudsLocation.obtain(locationConfig);
     }
 }

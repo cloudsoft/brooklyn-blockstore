@@ -19,7 +19,7 @@ import com.google.common.collect.Iterables;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 
-public class YamlTest extends AbstractYamlTest {
+public class NewVolumeCustomizerYamlTest extends AbstractYamlTest {
 
     @Test
     public void testInstantiateCustomizer() throws Exception {

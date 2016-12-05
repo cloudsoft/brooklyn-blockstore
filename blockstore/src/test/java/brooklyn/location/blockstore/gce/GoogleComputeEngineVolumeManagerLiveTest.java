@@ -10,10 +10,15 @@ import org.jclouds.googlecomputeengine.domain.Disk;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
+import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
 import org.testng.annotations.Test;
 
+/**
+ * TODO How to inject credentials? The credentials in {@code .brooklyn/brooklyn.properties}
+ * are stripped out by {@link AbstractVolumeCustomizerLiveTest#setUp()}.
+ */
 @Test(groups = "Live")
 public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
@@ -64,5 +69,23 @@ public class GoogleComputeEngineVolumeManagerLiveTest extends AbstractVolumeMana
         return (JcloudsSshMachineLocation) jcloudsLocation.obtain(ImmutableMap.builder()
                 .put(JcloudsLocation.IMAGE_NAME_REGEX, IMAGE_NAME_REGEX)
                 .build());
+    }
+    
+    @Test(groups={"Live", "WIP"})
+    @Override
+    public void testCreateVolume() throws Exception {
+        super.testCreateVolume();
+    }
+    
+    @Test(groups={"Live", "WIP"}, dependsOnMethods = "testCreateVolume")
+    @Override
+    public void testCreateAndAttachVolume() throws Exception {
+        super.testCreateAndAttachVolume();
+    }
+
+    @Test(groups={"Live", "WIP"}, dependsOnMethods = {"testCreateAndAttachVolume"})
+    @Override
+    public void testMoveMountedVolumeToAnotherMachine() throws Throwable {
+        super.testMoveMountedVolumeToAnotherMachine();
     }
 }

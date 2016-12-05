@@ -60,6 +60,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
 
     private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<List<VolumeOptions>> VOLUMES = ConfigKeys.newConfigKey(
             new TypeToken<List<VolumeOptions>>() {},
             "volumes", "List of volumes to be attached");
@@ -99,6 +100,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         this.config().set(VOLUMES,volumes);
     }
 
+    @Override
     public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
         if (!getVolumes().isEmpty()) {
             createAndAttachDisks(machine);

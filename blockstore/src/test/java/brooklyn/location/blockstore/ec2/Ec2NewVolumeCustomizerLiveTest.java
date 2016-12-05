@@ -20,6 +20,10 @@ import java.util.Map;
 
 import static org.testng.Assert.assertTrue;
 
+/**
+ * Assumes that {@code ~/.brooklyn/brooklyn.properties} has aws-ec2 credentials under
+ * {@code brooklyn.location.jclouds.aws-ec2.*}.
+ */
 public class Ec2NewVolumeCustomizerLiveTest extends BrooklynAppLiveTestSupport {
 
     protected Location jcloudsLocation;

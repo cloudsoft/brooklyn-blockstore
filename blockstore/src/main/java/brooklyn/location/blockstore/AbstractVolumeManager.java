@@ -13,7 +13,6 @@ import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.ssh.BashCommands;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
