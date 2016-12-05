@@ -26,7 +26,7 @@ import java.util.List;
  * To attach the effector you should apply the following initializer with different type reference than the one for the non-karaf version - notice that Bundle-SymbolicName is added as a prefix:
  * <pre>
  *    brooklyn.initializers:
- *     - type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+ *     - type: brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
  * </pre>
  *
  * The expected effector argument value is json map applicable to Ec2NewVolumeCustomizer's fileds.<br>
