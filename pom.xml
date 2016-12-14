@@ -23,7 +23,6 @@
     </modules>
 
     <properties>
-        <amp-jumphost.version>1.0.0-SNAPSHOT</amp-jumphost.version><!-- JUMPHOST_VERSION -->
         <vcloud-director.version>2.0.0-20161213.1259</vcloud-director.version>
     </properties>
 
