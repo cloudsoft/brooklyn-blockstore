@@ -47,12 +47,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.cloudsoft.amp.jumphost</groupId>
-            <artifactId>jumphost-ssh-client</artifactId>
-            <version>${amp-jumphost.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <version>${brooklyn.version}</version>
