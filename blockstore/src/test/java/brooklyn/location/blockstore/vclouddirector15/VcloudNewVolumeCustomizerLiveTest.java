@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * Use named location.
+ *
  * TODO How to inject cloud credentials?
  * 
  * TODO Test fails because {@link #additionalObtainArgs()} returns null, causing a NullPointerException.

@@ -60,8 +60,8 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
 
     @Override
     protected JcloudsLocation createJcloudsLocation() {
-        if (namedLocation().isPresent()) {
-            return (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("named:" + namedLocation().get());
+        if (namedJcloudsLocation().isPresent()) {
+            return (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("named:" + namedJcloudsLocation().get());
         } else {
             return (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("vcloud-director");
         }
@@ -98,8 +98,8 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     @Override
-    protected Optional<String> namedLocation() {
-        return Optional.of(System.getProperty("vcloud-director.named-location"));
+    protected Optional<String> namedJcloudsLocation() {
+        return Optional.fromNullable(System.getProperty("test.vcloud-director.named-jclouds-location"));
     }
 
     @Override
