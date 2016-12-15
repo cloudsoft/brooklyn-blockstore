@@ -45,7 +45,11 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
 
     @Override
     protected String getOSDeviceName(char deviceSuffix) {
-        return OS_DEVICE_PREFIX + deviceSuffix;
+    	String osDeviceName = OS_DEVICE_PREFIX + deviceSuffix;
+    	// FIXME root device of awsec2 for example are with /dev/xvda1. Needs to be automated over the tag api
+    	if(deviceSuffix=='a')
+    		osDeviceName += "1"; 
+        return osDeviceName;
     }
 
     @Override

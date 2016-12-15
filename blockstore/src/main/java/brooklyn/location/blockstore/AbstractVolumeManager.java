@@ -2,13 +2,16 @@ package brooklyn.location.blockstore;
 
 import static java.lang.String.format;
 import static org.apache.brooklyn.util.ssh.BashCommands.dontRequireTtyForSudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.ifFileExistsElse0;
 import static org.apache.brooklyn.util.ssh.BashCommands.installPackage;
 import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
@@ -30,12 +33,44 @@ import brooklyn.location.blockstore.api.VolumeOptions;
 public abstract class AbstractVolumeManager implements VolumeManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractVolumeManager.class);
+    private static final String TMP_MOUNT_POINT = "/mnt";
 
     protected AbstractVolumeManager() {
     }
 
     protected abstract String getVolumeDeviceName(char deviceSuffix);
     protected abstract String getOSDeviceName(char deviceSuffix);
+
+    @Override
+    public void cleanOldMountPoints(JcloudsMachineLocation machine,
+                                    List<VolumeOptions> volumes) {
+
+        if (!(machine instanceof SshMachineLocation)) {
+            throw new IllegalStateException("Cannot clean root device machine "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
+        }
+
+        // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
+        Map<String, ?> flags = MutableMap.of("allocatePTY", true);
+
+        for(VolumeOptions volume: volumes){
+
+            String mountPoint = volume.getFilesystemOptions().getMountPoint();
+            String osRootDeviceName = getOSDeviceName('a');
+
+            int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
+                    dontRequireTtyForSudo(),
+                    sudo(format("mount %s %s", osRootDeviceName, TMP_MOUNT_POINT)),
+                    sudo(format("rm -rf %s/*", TMP_MOUNT_POINT+mountPoint)),
+                    sudo(format("umount %s", TMP_MOUNT_POINT))));
+
+            if (exitCode != 0) {
+                throw new RuntimeException(format("Failed to clean old mount point on root device. machine=%s; rootDevice=%s; mountPoint=%s",
+                        machine, osRootDeviceName, mountPoint));
+            }
+
+        }
+
+    }
 
     @Override
     public MountedBlockDevice createAndAttachDisk(JcloudsMachineLocation machine, VolumeOptions volumeOptions) {
@@ -112,6 +147,20 @@ public abstract class AbstractVolumeManager implements VolumeManager {
         Map<String, ?> flags = MutableMap.of("allocatePTY", true);
         int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Mounting EBS volume", ImmutableList.of(
                 dontRequireTtyForSudo(),
+                ifFileExistsElse0(
+						mountPoint,"echo mount point still exists"),
+                ifFileExistsElse0(mountPoint,
+                		sudo(format("mount -t %1$s %2$s %3$s", filesystemType, osDeviceName,TMP_MOUNT_POINT))),
+        		ifFileExistsElse0(
+						mountPoint,"echo save existing files to temporary mount point"),
+                ifFileExistsElse0(
+						mountPoint,
+						sudo(format("cp -a %1$s %2$s", mountPoint + "/*", TMP_MOUNT_POINT))),
+				ifFileExistsElse0(
+						mountPoint,"echo umount temporary point"),
+				ifFileExistsElse0(
+						mountPoint,
+						sudo(format("umount %s",TMP_MOUNT_POINT))),
                 "echo making dir",
                 sudo("mkdir -p -m 755 " + mountPoint),
                 "echo updating fstab",
