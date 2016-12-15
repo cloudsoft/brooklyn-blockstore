@@ -44,8 +44,12 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
     }
 
     @Override
-    protected String getOSDeviceName(char deviceSuffix) {
-        return OS_DEVICE_PREFIX + deviceSuffix;
+    protected String getOSDeviceName(char deviceSuffix) {    	
+        String osDeviceName = OS_DEVICE_PREFIX + deviceSuffix; 
+        // for root device 1 is needed
+        if(deviceSuffix=='a')
+            osDeviceName += 1;    	
+            return osDeviceName;
     }
 
     @Override

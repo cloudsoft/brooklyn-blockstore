@@ -1,5 +1,7 @@
 package brooklyn.location.blockstore.api;
 
+import java.util.List;
+
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
@@ -39,6 +41,15 @@ public interface VolumeManager {
      */
     public MountedBlockDevice attachAndMountVolume(JcloudsMachineLocation machine, BlockDevice blockDevice,
         BlockDeviceOptions blockDeviceOptions, FilesystemOptions filesystemOptions);
+
+    /**
+     * Clean the old mount points of the volumes on the root device
+     * 
+     * @param machine The VM where the root device should be cleaned
+     * @param volumes The Volumes with the mounts which need to be cleaned
+     */
+    public void cleanOldMountPoints(JcloudsMachineLocation machine,
+        List<VolumeOptions> volumes);
 
     /**
      * Detaches the given volume from the given VM. The filesystem should first be cleanly unmounted.
@@ -83,6 +94,11 @@ public interface VolumeManager {
      */
     public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine,
             BlockDeviceOptions blockDeviceOptions, FilesystemOptions filesystemOptions);
+
+    /**
+     * Restart the given VM and wait to this restarted.
+     */
+    public void restartMachine(JcloudsMachineLocation machine);
 
     /**
      * Unmounts the given device and detaches the volume from the given VM.
