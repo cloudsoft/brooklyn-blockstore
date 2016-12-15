@@ -1,12 +1,7 @@
 package brooklyn.location.blockstore.effectors;
 
-import brooklyn.location.blockstore.NewVolumeCustomizer;
-import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.api.VolumeOptions;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.reflect.TypeToken;
+import java.util.List;
+
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -19,14 +14,19 @@ import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
+import brooklyn.location.blockstore.NewVolumeCustomizer;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
+import brooklyn.location.blockstore.api.VolumeOptions;
 
 /**
  * Effector for attaching disks during runtime.
  * To attach the effector you should apply the following initializer with different type reference than the one for the non-karaf version - notice that Bundle-SymbolicName is added as a prefix:
  * <pre>
  *    brooklyn.initializers:
- *     - type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+ *     - type: brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
  * </pre>
  *
  * The expected effector argument value is json map applicable to Ec2NewVolumeCustomizer's fileds.<br>
@@ -58,7 +58,7 @@ public class ExtraHddBodyEffector extends AddEffector {
     private static final Logger LOG = LoggerFactory.getLogger(ExtraHddBodyEffector.class);
 
     static ConfigKey<VolumeOptions> VOLUME = ConfigKeys.newConfigKey(
-            new TypeToken<VolumeOptions>() {}, "volume",
+            VolumeOptions.class, "volume",
             "Map of location customizer fields.");
 
     public static final String EXTRA_HDD_EFFECTOR_NAME = "addExtraHdd";
@@ -67,11 +67,11 @@ public class ExtraHddBodyEffector extends AddEffector {
         super(newEffectorBuilder().build());
     }
 
-    public static Effectors.EffectorBuilder newEffectorBuilder() {
+    public static Effectors.EffectorBuilder<MountedBlockDevice> newEffectorBuilder() {
         ConfigBag bag = ConfigBag.newInstance();
         bag.put(EFFECTOR_NAME, EXTRA_HDD_EFFECTOR_NAME);
 
-        Effectors.EffectorBuilder eff = AddEffector.newEffectorBuilder(MountedBlockDevice.class, bag)
+        Effectors.EffectorBuilder<MountedBlockDevice> eff = AddEffector.newEffectorBuilder(MountedBlockDevice.class, bag)
                 .parameter(VOLUME)
                 .description("An effector to add extra hdd to provisioned vm")
                 .impl(new Body());
@@ -84,7 +84,7 @@ public class ExtraHddBodyEffector extends AddEffector {
         super.apply(entity);
     }
 
-    public static class Body extends EffectorBody {
+    public static class Body extends EffectorBody<MountedBlockDevice> {
 
         @Override
         public MountedBlockDevice call(ConfigBag parameters) {
@@ -99,7 +99,7 @@ public class ExtraHddBodyEffector extends AddEffector {
             return customizer.createAndAttachDisk(machine, volumeOptions);
         }
 
-        private NewVolumeCustomizer getCustomizerForCloud(List<VolumeOptions> locationCustomizerFields) {
+        protected NewVolumeCustomizer getCustomizerForCloud(List<VolumeOptions> locationCustomizerFields) {
             return new NewVolumeCustomizer(locationCustomizerFields);
         }
     }

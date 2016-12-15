@@ -7,7 +7,12 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.Map;
 
-@Test(groups = "WIP")
+/**
+ * TODO How to inject cloud credentials?
+ * 
+ * TODO Test fails because {@link #additionalObtainArgs()} returns null, causing a NullPointerException.
+ */
+@Test(groups = {"Live", "WIP"})
 public class VcloudNewVolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
 
     @Override

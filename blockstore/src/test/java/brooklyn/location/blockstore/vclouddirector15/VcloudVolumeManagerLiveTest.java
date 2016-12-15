@@ -14,6 +14,13 @@ import org.testng.annotations.Test;
 
 import java.util.Map;
 
+/**
+ * TODO Assumes that {@code ~/.brooklyn/brooklyn.properties} contains a named location
+ * {@code vcloud-director.named-location}.
+ * 
+ * TODO Unify the way that the live tests expect to get their credentials (e.g. via system 
+ * properties, or hard-coded in brooklyn.properties as named locations, etc).
+ */
 @Test(groups = "Live")
 public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     public static final String PROVIDER = "vcloud-director";
@@ -24,12 +31,12 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     @Test(groups="Live")
+    @Override
     public void testCreateVolume() throws Exception {
         Map<String, String> tags = ImmutableMap.of(
                 "user", System.getProperty("user.name"),
                 "purpose", "brooklyn-blockstore-VolumeManagerLiveTest");
         BlockDeviceOptions options = new BlockDeviceOptions()
-                .zone(getDefaultAvailabilityZone())
                 .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .tags(tags);
@@ -39,12 +46,14 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
         assertVolumeAvailable(volume);
     }
 
-    @Test(groups="Live")
+    @Test(groups="Live", dependsOnMethods = "testCreateVolume")
+    @Override
     public void testCreateAndAttachVolume() throws Exception {
         super.testCreateAndAttachVolume();
     }
 
-    @Test(groups="Disabled")
+    @Test(groups="WIP")
+    @Override
     public void testMoveMountedVolumeToAnotherMachine() throws Throwable {
         throw new UnsupportedOperationException("This is not possible in Vcloud Director. A volume is bound to the VM and cannot be transferred.");
     }
@@ -88,6 +97,7 @@ public class VcloudVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
         return (JcloudsSshMachineLocation)jcloudsLocation.obtain();
     }
 
+    @Override
     protected Optional<String> namedLocation() {
         return Optional.of(System.getProperty("vcloud-director.named-location"));
     }

@@ -11,7 +11,11 @@ import com.google.common.collect.ImmutableMap;
 
 import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 
-@Test
+/**
+ * TODO How to inject credentials? The credentials in {@code .brooklyn/brooklyn.properties}
+ * are stripped out by {@link AbstractVolumeCustomizerLiveTest#setUp()}.
+ */
+@Test(groups = "Live")
 public class SoftlayerVolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
 
     public static final String PROVIDER = "softlayer";

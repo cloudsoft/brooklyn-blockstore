@@ -38,7 +38,7 @@ import static brooklyn.location.blockstore.VolumeManagers.*;
  *   provisioning.properties:
  *     customizers:
  *     - $brooklyn:object:
- *         type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.NewVolumeCustomizer
+ *         type: brooklyn.location.blockstore.NewVolumeCustomizer
  *         brooklyn.config:
  *           volumes:
  *           - blockDevice:
@@ -47,9 +47,9 @@ import static brooklyn.location.blockstore.VolumeManagers.*;
  *               deleteOnTermination: true
  *               tags:
  *                 brooklyn: br-example-test-1
- *            filesystem:
- *              mountPoint: /mount/brooklyn/h
- *              filesystemType: ext3
+ *             filesystem:
+ *               mountPoint: /mount/brooklyn/h
+ *               filesystemType: ext3
  * </pre>
  *
  * Important notice is that KVM is configured as the default hypervisor for OpenStack which means that the defined device name will be of type /dev/vd*.
@@ -60,6 +60,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
 
     private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<List<VolumeOptions>> VOLUMES = ConfigKeys.newConfigKey(
             new TypeToken<List<VolumeOptions>>() {},
             "volumes", "List of volumes to be attached");
@@ -99,6 +100,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         this.config().set(VOLUMES,volumes);
     }
 
+    @Override
     public void customize(JcloudsLocation location, ComputeService computeService, JcloudsMachineLocation machine) {
         if (!getVolumes().isEmpty()) {
             createAndAttachDisks(machine);

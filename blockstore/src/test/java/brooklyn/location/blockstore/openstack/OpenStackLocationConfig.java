@@ -18,7 +18,7 @@ public class OpenStackLocationConfig {
 
     public static final String BROOKLYN_PROPERTIES_JCLOUDS_PREFIX = "brooklyn.location.jclouds.";
 
-    private Map configMap;
+    private Map<?,?> configMap;
 
     public OpenStackLocationConfig() {
         setConfigMap();
@@ -41,7 +41,6 @@ public class OpenStackLocationConfig {
         properties.put("brooklyn.location.named."+NAMED_LOCATION+".keyPair", keyPair);
         properties.put("brooklyn.location.named."+NAMED_LOCATION+".loginUser.privateKeyFile", privateKeyFile);
         properties.put("brooklyn.location.named."+NAMED_LOCATION+".credential-type", keystoneCredentialType);
-
     }
 
     private void setConfigMap() {
@@ -62,7 +61,7 @@ public class OpenStackLocationConfig {
                 .build();
     }
 
-    public Map getConfigMap() {
+    public Map<?,?> getConfigMap() {
         return configMap;
     }
 }

@@ -78,7 +78,31 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-         <dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.jclouds.api</groupId>
+                    <artifactId>openstack-nova</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.jclouds</groupId>
+                    <artifactId>jclouds-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-software-winrm</artifactId>
+            <version>${brooklyn.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
             <version>${jax-rs-api.version}</version>

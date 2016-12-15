@@ -1,11 +1,15 @@
 package brooklyn.location.blockstore.effectors;
 
-import brooklyn.location.blockstore.openstack.OpenStackLocationConfig;
-import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
+import brooklyn.location.blockstore.openstack.OpenStackLocationConfig;
+import brooklyn.location.blockstore.openstack.OpenStackNewVolumeCustomizerLiveTest;
+
 /**
- * NB!! Disable asserts when launching this test.
+ * Requires disable assertions, and credentials to be injected - 
+ * see {@link OpenStackNewVolumeCustomizerLiveTest}.
  */
 public class OpenstackV2ExtraHddBodyEffectorLiveTest extends AbstractExtraHddBodyEffectorLiveTest {
     @Override
@@ -25,9 +29,9 @@ public class OpenstackV2ExtraHddBodyEffectorLiveTest extends AbstractExtraHddBod
 
     @Override
     protected JcloudsLocation obtainJcloudsLocation() {
-        locationConfig = new OpenStackLocationConfig();
-        brooklynProperties = mgmt.getBrooklynProperties();
-        locationConfig.addBrooklynProperties(brooklynProperties);
-        return (JcloudsLocation)mgmt.getLocationRegistry().getLocationManaged(locationConfig.NAMED_LOCATION, locationConfig.getConfigMap());
+        OpenStackLocationConfig.addBrooklynProperties(mgmt.getBrooklynProperties());
+        Map<?, ?> locationConfig = new OpenStackLocationConfig().getConfigMap();
+
+        return (JcloudsLocation)mgmt.getLocationRegistry().getLocationManaged(OpenStackLocationConfig.NAMED_LOCATION, locationConfig);
     }
 }
