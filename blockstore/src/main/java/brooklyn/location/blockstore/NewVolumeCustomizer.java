@@ -114,10 +114,10 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
         createAndAttachDisk(machine, volume);
       }	
       
-      // restart machines
+      // restart machine
       volumeManager.restartMachine(machine);
       
-      // clean old directories on root device
+      // clean old mount points on root device
       volumeManager.cleanOldMountPoints(machine, getVolumes());
     }
 
