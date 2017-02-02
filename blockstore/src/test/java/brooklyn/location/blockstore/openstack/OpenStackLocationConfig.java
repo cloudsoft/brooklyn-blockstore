@@ -25,13 +25,13 @@ public class OpenStackLocationConfig {
     }
 
     public static void addBrooklynProperties(BrooklynProperties properties) {
-        Object endpoint = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.endpoint");
-        Object identity = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.identity");
-        Object credential = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.credential");
-        Object autoGenerateKeypairs = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.auto-generate-keypairs");
-        Object keyPair = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.keyPair");
-        Object privateKeyFile = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.loginUser.privateKeyFile");
-        Object keystoneCredentialType = properties.get(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.jclouds.keystone.credential-type");
+        Object endpoint = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.endpoint");
+        Object identity = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.identity");
+        Object credential = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-cinder.credential");
+        Object autoGenerateKeypairs = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.auto-generate-keypairs");
+        Object keyPair = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.keyPair");
+        Object privateKeyFile = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.loginUser.privateKeyFile");
+        Object keystoneCredentialType = properties.getConfig(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX+"openstack-nova.jclouds.keystone.credential-type");
 
         properties.put("brooklyn.location.named."+NAMED_LOCATION, PROVIDER+":"+endpoint);
         properties.put("brooklyn.location.named."+NAMED_LOCATION+".identity", identity);
