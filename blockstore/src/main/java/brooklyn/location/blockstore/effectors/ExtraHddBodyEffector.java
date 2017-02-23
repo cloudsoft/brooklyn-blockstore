@@ -1,7 +1,7 @@
 package brooklyn.location.blockstore.effectors;
 
-import java.util.List;
-
+import brooklyn.location.blockstore.VolumeManagerFactory;
+import brooklyn.location.blockstore.api.VolumeManager;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -15,9 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
-import brooklyn.location.blockstore.NewVolumeCustomizer;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeOptions;
 
@@ -29,7 +27,7 @@ import brooklyn.location.blockstore.api.VolumeOptions;
  *     - type: brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
  * </pre>
  *
- * The expected effector argument value is json map applicable to Ec2NewVolumeCustomizer's fileds.<br>
+ * The expected effector argument value is json map applicable to brooklyn.location.blockstore.NewVolumeCustomizer's fileds.<br>
  * For example:
  * <pre>
  *    {
@@ -95,12 +93,8 @@ public class ExtraHddBodyEffector extends AddEffector {
 
             LOG.info("Invoking effector " + EXTRA_HDD_EFFECTOR_NAME + " with location customizer fields " + volumeOptions);
 
-            NewVolumeCustomizer customizer = getCustomizerForCloud(ImmutableList.of(volumeOptions));
-            return customizer.createAndAttachDisk(machine, volumeOptions);
-        }
-
-        protected NewVolumeCustomizer getCustomizerForCloud(List<VolumeOptions> locationCustomizerFields) {
-            return new NewVolumeCustomizer(locationCustomizerFields);
+            VolumeManager volumeManager = VolumeManagerFactory.getVolumeManager(machine);
+            return volumeManager.createAndAttachDisk(machine, volumeOptions);
         }
     }
 }
