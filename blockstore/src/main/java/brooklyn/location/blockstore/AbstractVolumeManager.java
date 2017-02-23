@@ -7,12 +7,14 @@ import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.util.Map;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +25,7 @@ import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.blockstore.api.VolumeOptions;
 
 public abstract class AbstractVolumeManager implements VolumeManager {
 
@@ -33,6 +36,22 @@ public abstract class AbstractVolumeManager implements VolumeManager {
 
     protected abstract String getVolumeDeviceName(char deviceSuffix);
     protected abstract String getOSDeviceName(char deviceSuffix);
+
+    @Override
+    public MountedBlockDevice createAndAttachDisk(JcloudsMachineLocation machine, VolumeOptions volumeOptions) {
+        if (volumeOptions.getFilesystemOptions() != null) {
+            BlockDeviceOptions blockOptionsCopy = BlockDeviceOptions.copy(volumeOptions.getBlockDeviceOptions());
+            Optional<NodeMetadata> node = machine.getOptionalNode();
+            if (node.isPresent()) {
+                blockOptionsCopy.zone(node.get().getLocation().getId());
+            } else {
+                LOG.warn("JcloudsNodeMetadata is not available for the MachineLocation. Using zone specified from a parameter.");
+            }
+            return createAttachAndMountVolume(machine, blockOptionsCopy, volumeOptions.getFilesystemOptions());
+        } else {
+            throw new IllegalArgumentException("volume to be provisioned has null FileSystemOptions " + volumeOptions);
+        }
+    }
 
     @Override
     public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine, BlockDeviceOptions deviceOptions,
