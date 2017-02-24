@@ -110,9 +110,17 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
     }
 
     protected void createAndAttachDisks(JcloudsMachineLocation machine) {
-        for (VolumeOptions volume : getVolumes()) {
-            createAndAttachDisk(machine, volume);
-        }
+      VolumeManager volumeManager = getVolumeManager(machine);
+      
+      for (VolumeOptions volume : getVolumes()) {
+        createAndAttachDisk(machine, volume);
+      }	
+      
+      // restart machine
+      volumeManager.restartMachine(machine);
+      
+      // clean old mount points on root device
+      volumeManager.cleanOldMountPoints(machine, getVolumes());
     }
 
     // TODO move that to the VolumeManager?
