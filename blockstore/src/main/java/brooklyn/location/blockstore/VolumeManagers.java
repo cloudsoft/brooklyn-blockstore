@@ -6,6 +6,7 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.blockstore.azure.arm.AzureArmVolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeManager;
 import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
@@ -17,6 +18,7 @@ public class VolumeManagers {
     public static final String VCLOUD_DIRECTOR = "vcloud-director";
     public static final String GOOGLE_COMPUTE_ENGINE = "google-compute-engine";
     public static final String SOFTLAYER = "softlayer";
+    public static final String AZURE_ARM = "azurecompute-arm";
 
     private VolumeManagers() {}
 
@@ -38,7 +40,8 @@ public class VolumeManagers {
                 provider.startsWith("rackspace-") ||
                 provider.startsWith("cloudservers-") ||
                 provider.equals(GOOGLE_COMPUTE_ENGINE) ||
-                provider.equals(VCLOUD_DIRECTOR);
+                provider.equals(VCLOUD_DIRECTOR) ||
+                provider.equals(AZURE_ARM);
     }
 
     /**
@@ -77,6 +80,8 @@ public class VolumeManagers {
             return new OpenstackVolumeManager();
         } else if (provider.equals(VCLOUD_DIRECTOR)) {
             return new VcloudVolumeManager();
+        } else if (provider.equals(AZURE_ARM)) {
+            return new AzureArmVolumeManager();
         } else {
             throw new IllegalArgumentException("Cannot handle volumes in location: " + location +
                     " (mismatch between isVolumeManagerSupportedForLocation and newVolumeManager)");
