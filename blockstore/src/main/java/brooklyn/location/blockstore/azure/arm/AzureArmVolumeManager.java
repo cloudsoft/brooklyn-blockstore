@@ -2,6 +2,7 @@ package brooklyn.location.blockstore.azure.arm;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,20 +13,19 @@ import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
-import org.jclouds.azurecompute.arm.domain.StorageProfile;
-import org.jclouds.azurecompute.arm.domain.StorageService;
 import org.jclouds.azurecompute.arm.domain.VHD;
-import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
+import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
+import org.jclouds.util.Predicates2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
@@ -57,12 +57,18 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
     public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options) {
         LOG.info("Creating device: location={}; options={}", location, options);
 
-        //String blob = storageService.storageServiceProperties().primaryEndpoints().get("blob");
-        AzureTemplateOptions templateOptions = location.
-                getTemplate().getOptions().as(AzureTemplateOptions.class);
-        VHD vhd = VHD.create(templateOptions.getBlob() + "vhds/" + location.getId() + "data.vhd");
-        DataDisk dataDisk = DataDisk.create(location.getId() + "data", options.getSizeInGb(), 0, vhd, "Empty");
+        final AzureComputeApi azureArmComputeApi = getAzureArmApi(location);
 
+        AzureTemplateOptions templateOptions = location.getComputeService().templateOptions().as(AzureTemplateOptions.class);
+        VHD vhd = VHD.create(templateOptions.getBlob() + "vhds/" + location.getId() + "data.vhd");
+
+        DataDisk dataDisk = DataDisk.create(location.getId() + "data", Integer.toString(options.getSizeInGb()), 0, vhd, "Empty");
+        
+        boolean vhdDone = Predicates2.retry(new Predicate<URI>() {
+            @Override public boolean apply(URI uri) {
+               return ParseJobStatus.JobStatus.DONE == azureArmComputeApi.getJobApi().jobStatus(uri);
+            }
+         }, 60 * 1 * 1000 /* 1 min */).apply(URI.create(vhd.uri()));
         LOG.info("Created device: location={}, device={}", location, dataDisk);
         return new AzureArmBlockDevice(location, dataDisk);
     }
@@ -72,7 +78,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
             BlockDeviceOptions options) {
         LOG.info("Attaching device: machine={}; device={}; options={}", new Object[]{machine, blockDevice, options});
         
-        AzureComputeApi azureArmComputeApi = getAzureArmApi(location);
+        AzureComputeApi azureArmComputeApi = getAzureArmApi(machine.getParent());
         ResourceGroupApi rgApi = azureArmComputeApi.getResourceGroupApi();
         VirtualMachineApi vmApi = azureArmComputeApi.getVirtualMachineApi(rgApi.get("jcloudsarm").name());
 
