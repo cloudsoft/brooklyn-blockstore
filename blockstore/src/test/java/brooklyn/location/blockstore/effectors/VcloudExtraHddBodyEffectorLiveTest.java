@@ -5,9 +5,9 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 public class VcloudExtraHddBodyEffectorLiveTest extends AbstractExtraHddBodyEffectorLiveTest {
     @Override
     protected JcloudsLocation obtainJcloudsLocation() {
-        String namedLocation = System.getProperty("vcloud-director.named-location");
-        if (namedLocation != null) {
-            return (JcloudsLocation)mgmt.getLocationRegistry().getLocationManaged("named:" + namedLocation);
+        String namedJcloudsLocation = System.getProperty("test.vcloud-director.named-jclouds-location");
+        if (namedJcloudsLocation != null) {
+            return (JcloudsLocation)mgmt.getLocationRegistry().getLocationManaged("named:" + namedJcloudsLocation);
         } else {
             return (JcloudsLocation)mgmt.getLocationRegistry().getLocationManaged("vcloud-director");
         }

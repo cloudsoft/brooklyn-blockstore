@@ -69,7 +69,7 @@ public abstract class AbstractVolumeManagerLiveTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         brooklynProperties = BrooklynProperties.Factory.newDefault();
-        stripBrooklynProperties(brooklynProperties, namedLocation());
+        stripBrooklynProperties(brooklynProperties, namedJcloudsLocation());
         addBrooklynProperties(brooklynProperties);
         ctx = new LocalManagementContextForTests(brooklynProperties);
 
@@ -94,7 +94,7 @@ public abstract class AbstractVolumeManagerLiveTest {
         }
     }
 
-    protected Optional<String> namedLocation() {
+    protected Optional<String> namedJcloudsLocation() {
         return Optional.absent();
     }
 

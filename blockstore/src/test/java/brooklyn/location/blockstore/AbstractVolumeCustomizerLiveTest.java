@@ -17,6 +17,7 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -43,6 +44,10 @@ public abstract class AbstractVolumeCustomizerLiveTest {
     protected abstract List<String> getMountPoints();
     protected abstract Map<?,?> additionalObtainArgs() throws Exception;
 
+    protected Optional<String> namedJcloudsLocation() {
+        return Optional.absent();
+    }
+
     protected JcloudsSshMachineLocation createJcloudsMachine(JcloudsLocationCustomizer customizer) throws Exception {
         Map<String, String> tags = ImmutableMap.of(
                 "user", truncate(System.getProperty("user.name"), maxTagLength()),
@@ -66,7 +71,12 @@ public abstract class AbstractVolumeCustomizerLiveTest {
         brooklynProperties = (BrooklynProperties) ctx.getConfig();
         AbstractVolumeManagerLiveTest.stripBrooklynProperties(brooklynProperties, Optional.<String>absent());
 
-        jcloudsLocation = createJcloudsLocation();
+        if (namedJcloudsLocation().isPresent()) {
+            jcloudsLocation = (JcloudsLocation)ctx.getLocationRegistry().getLocationManaged("named:" + namedJcloudsLocation().get());
+        } else {
+            jcloudsLocation = createJcloudsLocation();
+        }
+        Assert.assertNotNull(jcloudsLocation, "You should pass proper configuration either by passing a named location System property or by implementing createJcloudsLocation");
     }
 
     @AfterMethod(alwaysRun=true)
