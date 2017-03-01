@@ -42,37 +42,6 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     protected abstract String getOSDeviceName(char deviceSuffix);
 
     @Override
-    public void cleanOldMountPoints(JcloudsMachineLocation machine,
-                                    List<VolumeOptions> volumes) {
-
-        if (!(machine instanceof SshMachineLocation)) {
-            throw new IllegalStateException("Cannot clean root device machine "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
-        }
-
-        // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
-        Map<String, ?> flags = MutableMap.of("allocatePTY", true);
-
-        for(VolumeOptions volume: volumes){
-
-            String mountPoint = volume.getFilesystemOptions().getMountPoint();
-            String osRootDeviceName = getOSDeviceName('a');
-
-            int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
-                    dontRequireTtyForSudo(),
-                    sudo(format("mount %s %s", osRootDeviceName, TMP_MOUNT_POINT)),
-                    sudo(format("rm -rf %s/*", TMP_MOUNT_POINT+mountPoint)),
-                    sudo(format("umount %s", TMP_MOUNT_POINT))));
-
-            if (exitCode != 0) {
-                throw new RuntimeException(format("Failed to clean old mount point on root device. machine=%s; rootDevice=%s; mountPoint=%s",
-                        machine, osRootDeviceName, mountPoint));
-            }
-
-        }
-
-    }
-
-    @Override
     public MountedBlockDevice createAndAttachDisk(JcloudsMachineLocation machine, VolumeOptions volumeOptions) {
         if (volumeOptions.getFilesystemOptions() != null) {
             BlockDeviceOptions blockOptionsCopy = BlockDeviceOptions.copy(volumeOptions.getBlockDeviceOptions());
