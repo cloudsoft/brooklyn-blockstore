@@ -47,7 +47,7 @@ public class VolumeManagersTest {
 
     @Test
     public void testAzureArmVolumeManager() {
-        JcloudsLocation azureArmLocation = locationFor("azure-arm:westeurope");
+        JcloudsLocation azureArmLocation = locationFor("azurecompute-arm:westeurope");
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(azureArmLocation));
         assertEquals(VolumeManagers.newVolumeManager(azureArmLocation).getClass(), AzureArmVolumeManager.class);
     }
