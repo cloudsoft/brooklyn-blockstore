@@ -25,7 +25,7 @@ of OSGi):
 
     BROOKLYN_HOME=~/repos/apache/brooklyn/brooklyn-dist/dist/target/brooklyn-dist/brooklyn/
     BROOKLYN_BLOCKSTORE_REPO=~/repos/cloudsoft/brooklyn-blockstore
-    BROOKLYN_BLOCKSTORE_VERSION=0.6.0-SNAPSHOT
+    BROOKLYN_BLOCKSTORE_VERSION=0.6.0-20170301.1147
     
     cp ${BROOKLYN_BLOCKSTORE_REPO}/blockstore/target/brooklyn-blockstore-${BROOKLYN_BLOCKSTORE_VERSION}.jar ${BROOKLYN_HOME}/lib/dropins/
 
