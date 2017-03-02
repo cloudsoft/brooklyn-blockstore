@@ -2,6 +2,7 @@ package brooklyn.location.blockstore;
 
 import brooklyn.location.blockstore.api.VolumeOptions;
 import com.google.common.reflect.TypeToken;
+
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
@@ -13,8 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-
-import static brooklyn.location.blockstore.VolumeManagers.*;
 
 /**
  *
@@ -53,6 +52,7 @@ import static brooklyn.location.blockstore.VolumeManagers.*;
 public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
     // TODO write a rebind test
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(NewVolumeCustomizer.class);
 
     @SuppressWarnings("serial")

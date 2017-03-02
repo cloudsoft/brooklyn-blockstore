@@ -4,9 +4,7 @@ import brooklyn.location.blockstore.api.VolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
 import brooklyn.location.blockstore.vclouddirector15.VcloudVolumeManager;
-import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.location.LocationConfigKeys;
-import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 import static brooklyn.location.blockstore.VolumeManagers.AWS_EC2;
