@@ -1,10 +1,8 @@
 package brooklyn.location.blockstore.azure.arm;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -28,7 +26,6 @@ import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus.JobStatus;
 import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
-import org.jclouds.googlecomputeengine.domain.Disk;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
@@ -40,17 +37,59 @@ import com.google.inject.Module;
 
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
+import brooklyn.location.blockstore.FilesystemOptions;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 
 public class AzureArmVolumeManager extends AbstractVolumeManager {
+    
+    // Azure "unmanaged disks" don't support separate creation and attachment phases.
+    // Therefore we override methods like createAttachAndMountVolume. If/when we switch
+    // to using azure's DiskApi then we can refactor this code again. However, that is
+    // not yet supported in jclouds (v2.0.1).
+    
     private static final Logger LOG = LoggerFactory.getLogger(AzureArmVolumeManager.class);
 
     private static final String PROVIDER = "azurecompute-arm";
     
     private static final String DEVICE_PREFIX = "/dev/sd";
     private static final String OS_DEVICE_PREFIX = "/dev/xvd";
+
+    @Override
+    public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine, BlockDeviceOptions deviceOptions,
+            FilesystemOptions filesystemOptions) {
+        AttachedBlockDevice attached = createAndAttachBlockDevice(machine, deviceOptions);
+        createFilesystem(attached, filesystemOptions);
+        return mountFilesystem(attached, filesystemOptions);
+    }
+
+    @Override
+    public MountedBlockDevice attachAndMountVolume(JcloudsMachineLocation machine, BlockDevice device,
+            BlockDeviceOptions options, FilesystemOptions filesystemOptions) {
+        throw new UnsupportedOperationException("Cannot attach pre-existing block-device using 'unmanaged disk' api: machine="+machine+"; device="+device);
+    }
+
+    @Override
+    public BlockDevice unmountFilesystemAndDetachVolume(MountedBlockDevice device) {
+        throw new UnsupportedOperationException("Cannot detach block-device using 'unmanaged disk' api: device="+device);
+    }
+
+    @Override
+    public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options) {
+        throw new UnsupportedOperationException("Cannot create block-device using 'unmanaged disk' api, without attaching to VM: location="+location+"; options="+options);
+    }
+
+    @Override
+    public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice device,
+            BlockDeviceOptions options) {
+        throw new UnsupportedOperationException("Cannot attach pre-existing block-device using 'unmanaged disk' api: machine="+machine+"; device="+device);
+    }
+    
+    @Override
+    public BlockDevice detachBlockDevice(AttachedBlockDevice device) {
+        throw new UnsupportedOperationException("Cannot deattach pre-existing block-device using 'unmanaged disk' api: device="+device);
+    }
 
     @Override
     protected String getVolumeDeviceName(char deviceSuffix) {
@@ -62,29 +101,21 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         return OS_DEVICE_PREFIX + deviceSuffix;
     }
 
-    @Override
-    public BlockDevice createBlockDevice(JcloudsLocation location, BlockDeviceOptions options) {
-        LOG.info("Creating device: location={}; options={}", location, options);
-
+    protected AttachedBlockDevice createAndAttachBlockDevice(JcloudsMachineLocation machine, BlockDeviceOptions options) {
+        JcloudsLocation location = machine.getParent();
         final AzureComputeApi azureArmComputeApi = getAzureArmApi(location);
 
+        LOG.info("Creating device: location={}; machine={}; options={}", new Object[] {location, machine, options});
         AzureTemplateOptions templateOptions = location.getComputeService().templateOptions().as(AzureTemplateOptions.class);
         VHD vhd = VHD.create(templateOptions.getBlob() + "vhds/" + location.getId() + "data.vhd");
         DataDisk dataDisk = DataDisk.create(location.getId() + "data", Integer.toString(options.getSizeInGb()), 0, vhd, "Empty");
         waitForJobToComplete(azureArmComputeApi, 2 * 60,  URI.create(vhd.uri()));
-
-        LOG.info("Created device: location={}, device={}", location, dataDisk);
-        return new AzureArmBlockDevice(location, dataDisk);
-    }
-
-    @Override
-    public AttachedBlockDevice attachBlockDevice(JcloudsMachineLocation machine, BlockDevice blockDevice,
-            BlockDeviceOptions options) {
-        checkArgument(blockDevice instanceof AzureArmBlockDevice, "AzureArm volume manager cannot handle device: %s", blockDevice);
-        DataDisk disk = AzureArmBlockDevice.class.cast(blockDevice).getDisk();
-        LOG.info("Attaching device: machine={}; device={}; options={}", new Object[]{machine, blockDevice, options});
         
-        AzureComputeApi azureArmComputeApi = getAzureArmApi(machine.getParent());
+        BlockDevice blockDevice= new AzureArmBlockDevice(location, dataDisk);
+
+        LOG.info("Attaching device: machine={}; device={}; options={}", new Object[] {machine, blockDevice, options});
+        DataDisk disk = AzureArmBlockDevice.class.cast(blockDevice).getDisk();
+        
         ResourceGroupApi rgApi = azureArmComputeApi.getResourceGroupApi();
         ResourceGroup resourceGroup = rgApi.get(machine.getId());
         VirtualMachineApi vmApi = azureArmComputeApi.getVirtualMachineApi(resourceGroup.name());
@@ -98,12 +129,6 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         dataDisks.add(disk);
         StorageProfile.create(storageProfile.imageReference(), storageProfile.osDisk(), dataDisks);
         return blockDevice.attachedTo(machine, getVolumeDeviceName(options.getDeviceSuffix()));
-    }
-
-    @Override
-    public BlockDevice detachBlockDevice(AttachedBlockDevice attachedBlockDevice) {
-        // TODO Auto-generated method stub
-        return null;
     }
 
     @Override
