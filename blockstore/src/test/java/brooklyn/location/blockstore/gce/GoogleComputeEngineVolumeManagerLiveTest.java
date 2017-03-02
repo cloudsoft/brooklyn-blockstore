@@ -10,7 +10,6 @@ import org.jclouds.googlecomputeengine.domain.Disk;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 
-import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 import brooklyn.location.blockstore.AbstractVolumeManagerLiveTest;
 import brooklyn.location.blockstore.api.BlockDevice;
 import org.testng.annotations.Test;

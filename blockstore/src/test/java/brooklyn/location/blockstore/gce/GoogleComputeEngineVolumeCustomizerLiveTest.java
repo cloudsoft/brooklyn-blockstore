@@ -1,12 +1,10 @@
 package brooklyn.location.blockstore.gce;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
@@ -18,23 +16,12 @@ import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
 @Test(groups = "Live")
 public class GoogleComputeEngineVolumeCustomizerLiveTest extends AbstractVolumeCustomizerLiveTest {
 
-    public static final String PROVIDER = GoogleComputeEngineVolumeManagerLiveTest.PROVIDER;
     public static final String LOCATION_SPEC = GoogleComputeEngineVolumeManagerLiveTest.LOCATION_SPEC;
     public static final String IMAGE_NAME_REGEX = GoogleComputeEngineVolumeManagerLiveTest.IMAGE_NAME_REGEX;
     
     @Override
-    protected String getProvider() {
-        return PROVIDER;
-    }
-
-    @Override
-    protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged(LOCATION_SPEC);
-    }
-    
-    @Override
-    protected int getVolumeSize() {
-        return 1;
+    protected String locationSpec() {
+        return LOCATION_SPEC;
     }
 
     @Override
@@ -45,7 +32,12 @@ public class GoogleComputeEngineVolumeCustomizerLiveTest extends AbstractVolumeC
     }
 
     @Override
-    protected List<String> getMountPoints() {
-        return ImmutableList.of("/mnt/somewhere", "/mnt/somewhere2");
+    protected int getVolumeSize() {
+        return 1;
+    }
+
+    @Override
+    protected char getDefaultDeviceSuffix() {
+        throw new IllegalStateException("Not implemented. Figure out the correct device suffix.");
     }
 }

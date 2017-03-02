@@ -5,11 +5,11 @@ import java.util.Map;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
 import brooklyn.location.blockstore.openstack.OpenStackLocationConfig;
-import brooklyn.location.blockstore.openstack.OpenStackNewVolumeCustomizerLiveTest;
+import brooklyn.location.blockstore.openstack.OpenStackVolumeCustomizerLiveTest;
 
 /**
  * Requires disable assertions, and credentials to be injected - 
- * see {@link OpenStackNewVolumeCustomizerLiveTest}.
+ * see {@link OpenStackVolumeCustomizerLiveTest}.
  */
 public class OpenstackV2ExtraHddBodyEffectorLiveTest extends AbstractExtraHddBodyEffectorLiveTest {
     @Override
