@@ -1,14 +1,14 @@
 package brooklyn.location.blockstore;
 
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.blockstore.api.MountedBlockDevice;
-import brooklyn.location.blockstore.api.VolumeManager;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.io.Files;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
@@ -24,14 +24,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.io.Files;
 
-import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
+import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
+import brooklyn.location.blockstore.api.VolumeManager;
 
 // TODO separate testing for creating BlockDevice -> AttachedBlockDevice -> MountedBlockDevice
 // TODO separate testing for destroying(or what ever operations there are at the time) MountedBlock -> AttachedBlockDevice -> BlockDevice
@@ -103,8 +105,9 @@ public abstract class AbstractVolumeManagerLiveTest {
             if (!key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-cinder")
                     && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova")
                     && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "aws-ec2")
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "azurecompute-arm")
                     && !(namedLocation.isPresent() && key.contains(namedLocation.get()))) {
-                    props.remove(key);
+                props.remove(key);
             }
             if (key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_LEGACY_PREFIX) && !(key.endsWith("identity") || key.endsWith("credential"))) {
                 props.remove(key);
@@ -142,6 +145,15 @@ public abstract class AbstractVolumeManagerLiveTest {
     // Does the attach+mount twice to ensure that cleanup worked
     @Test(groups="Live", dependsOnMethods = "testCreateVolume")
     public void testCreateAndAttachVolume() throws Exception {
+        runCreateAndAttachVolume(ReattachMode.RE_ATTACH);
+    }
+    
+    // Does the attach+mount twice to ensure that cleanup worked
+    protected enum ReattachMode {
+        RE_ATTACH, // unmount/detach, and then re-attach (to ensure that cleanup worked)
+        NO_OP,
+    }
+    protected void runCreateAndAttachVolume(ReattachMode mode) throws Exception {
 
         String mountPoint = "/var/opt2/test1";
 
@@ -176,17 +188,26 @@ public abstract class AbstractVolumeManagerLiveTest {
             assertMountPointExists(machine, mountPoint);
             assertWritable(machine, destFile, "abc".getBytes());
             
-            // Unmount and detach the volume
-            BlockDevice detachedDevice = volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
-
-            assertMountPointAbsent(machine, mountPoint);
-            assertFileAbsent(machine, destFile);
-            
-            // Reattach and mount the volume
-            volumeManager.attachAndMountVolume(machine, detachedDevice, blockDeviceOptions, filesystemOptions);
-
-            assertMountPointExists(machine, mountPoint);
-            assertReadable(machine, destFile, "abc".getBytes());
+            switch (mode) {
+            case NO_OP:
+                break;
+            case RE_ATTACH:
+                // Unmount and detach the volume
+                BlockDevice detachedDevice = volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
+    
+                assertMountPointAbsent(machine, mountPoint);
+                assertFileAbsent(machine, destFile);
+                
+                // Reattach and mount the volume
+                volumeManager.attachAndMountVolume(machine, detachedDevice, blockDeviceOptions, filesystemOptions);
+    
+                assertMountPointExists(machine, mountPoint);
+                assertReadable(machine, destFile, "abc".getBytes());
+                
+                break;
+            default:
+                throw new UnsupportedOperationException("unexpected mode "+mode);
+            }
 
         } catch (Throwable t) {
             LOG.error("Error creating and attaching volume", t);
