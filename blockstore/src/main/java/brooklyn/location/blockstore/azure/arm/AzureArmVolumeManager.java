@@ -11,9 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
-import org.jclouds.ContextBuilder;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
-import org.jclouds.azurecompute.arm.AzureComputeProviderMetadata;
 import org.jclouds.azurecompute.arm.compute.options.AzureTemplateOptions;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
@@ -25,15 +23,10 @@ import org.jclouds.azurecompute.arm.features.StorageAccountApi;
 import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
 import org.jclouds.azurecompute.arm.functions.ParseJobStatus.JobStatus;
-import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
-import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
-import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Module;
 
 import brooklyn.location.blockstore.AbstractVolumeManager;
 import brooklyn.location.blockstore.BlockDeviceOptions;
@@ -103,7 +96,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
 
     protected AttachedBlockDevice createAndAttachBlockDevice(JcloudsMachineLocation machine, BlockDeviceOptions options) {
         JcloudsLocation location = machine.getParent();
-        final AzureComputeApi azureArmComputeApi = getAzureArmApi(location);
+        final AzureComputeApi azureArmComputeApi = getApi(location);
 
         LOG.info("Creating device: location={}; machine={}; options={}", new Object[] {location, machine, options});
         AzureTemplateOptions templateOptions = location.getComputeService().templateOptions().as(AzureTemplateOptions.class);
@@ -137,21 +130,10 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         
     }
     
-    private AzureComputeApi getAzureArmApi(JcloudsLocation location) {
-        String identity = location.getIdentity();
-        String credential = location.getCredential();
-        Iterable<Module> modules = ImmutableSet.<Module> of(
-                new SshjSshClientModule(),
-                new SLF4JLoggingModule(),
-                new BouncyCastleCryptoModule());
-
-        AzureComputeProviderMetadata pm = AzureComputeProviderMetadata.builder().build();
-        return ContextBuilder.newBuilder(pm)
-              .credentials(identity, credential)
-              .modules(modules)
-              .build();
+    protected AzureComputeApi getApi(JcloudsLocation location) {
+        return location.getComputeService().getContext().unwrapApi(AzureComputeApi.class);
     }
-
+    
     private JobStatus waitForJobToComplete(final AzureComputeApi api, final int waitTimeInSecs, final URI uri) {
 
         checkNotNull(uri, "uri must not be null");
