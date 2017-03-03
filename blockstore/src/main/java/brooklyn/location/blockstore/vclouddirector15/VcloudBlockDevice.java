@@ -1,6 +1,5 @@
 package brooklyn.location.blockstore.vclouddirector15;
 
-import brooklyn.location.blockstore.Devices;
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.MountedBlockDevice;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;

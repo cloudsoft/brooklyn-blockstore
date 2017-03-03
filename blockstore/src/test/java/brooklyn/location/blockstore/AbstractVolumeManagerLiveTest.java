@@ -255,11 +255,17 @@ public abstract class AbstractVolumeManagerLiveTest {
         assertNotEquals(success, 0);
     }
     
-    // Confirm it's is listed as a mount point, and dir exists
+    // Confirm it is listed as a mount point, and dir exists
     public static void assertMountPointExists(JcloudsSshMachineLocation machine, String mountPoint) {
         assertExecSucceeds(machine, "show mount points", ImmutableList.of(
                 "mount -l", "mount -l | grep \""+mountPoint+"\""));
         assertExecSucceeds(machine, "list mount contents", ImmutableList.of("ls -la "+mountPoint));
+    }
+
+    // Confirm it is listed with `df` (i.e. display free disk space)
+    public static void assertDfIncludesMountPoint(JcloudsSshMachineLocation machine, String mountPoint) {
+        assertExecSucceeds(machine, "show free disk space", ImmutableList.of(
+                "df", "df | grep \""+mountPoint+"\""));
     }
 
     public static void assertMountPointAbsent(JcloudsSshMachineLocation machine, String mountPoint) {

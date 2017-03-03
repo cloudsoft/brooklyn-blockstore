@@ -1,12 +1,10 @@
 package brooklyn.location.blockstore.softlayer;
 
-import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import brooklyn.location.blockstore.AbstractVolumeCustomizerLiveTest;
@@ -24,23 +22,13 @@ public class SoftlayerVolumeCustomizerLiveTest extends AbstractVolumeCustomizerL
     public static final String IMAGE_ID = "CENTOS_6_64";
     
     @Override
-    protected String getProvider() {
-        return PROVIDER;
-    }
-
-    @Override
-    protected JcloudsLocation createJcloudsLocation() {
-        return (JcloudsLocation) ctx.getLocationRegistry().getLocationManaged(LOCATION_SPEC);
+    protected String locationSpec() {
+        return LOCATION_SPEC;
     }
     
     @Override
     protected int getVolumeSize() {
         return 25;
-    }
-
-    @Override
-    protected int maxTagLength() {
-        return 20;
     }
 
     @Override
@@ -51,7 +39,7 @@ public class SoftlayerVolumeCustomizerLiveTest extends AbstractVolumeCustomizerL
     }
 
     @Override
-    protected List<String> getMountPoints() {
-        return ImmutableList.of("/mnt/somewhere", "/mnt/somewhere2");
+    protected char getDefaultDeviceSuffix() {
+        throw new IllegalStateException("Not implemented. Figure out the correct device suffix.");
     }
 }

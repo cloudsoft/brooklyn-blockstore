@@ -1,4 +1,4 @@
-package brooklyn.location.blockstore.ec2;
+package brooklyn.location.blockstore;
 
 import static org.testng.Assert.assertEquals;
 
@@ -19,8 +19,12 @@ import com.google.common.collect.Iterables;
 import brooklyn.location.blockstore.BlockDeviceOptions;
 import brooklyn.location.blockstore.FilesystemOptions;
 
-public class NewVolumeCustomizerYamlTest extends AbstractYamlTest {
+public class VolumeCustomizerYamlTest extends AbstractYamlTest {
 
+    // These tests do not provision VMs; they are *not* live tests.
+    // The mention of "aws-ec2" is just because we need to name a location. It shouldn't matter
+    // whether we use that name or another, for the code-paths being tested here.
+    
     @Test
     public void testInstantiateCustomizer() throws Exception {
         String yaml = Joiner.on("\n").join(

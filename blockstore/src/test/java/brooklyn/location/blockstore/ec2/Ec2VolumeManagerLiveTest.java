@@ -22,7 +22,7 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     public static final String PROVIDER = "aws-ec2";
     public static final String REGION_NAME = "eu-west-1";
     public static final String AVAILABILITY_ZONE_NAME = REGION_NAME + "a";
-    public static final String LOCATION_SPEC = "jclouds:" + PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME);
+    public static final String LOCATION_SPEC = "jclouds:" + PROVIDER + ":" + AVAILABILITY_ZONE_NAME;
     public static final String TINY_HARDWARE_ID = "t1.micro";
     public static final String SMALL_HARDWARE_ID = "m1.small";
 

@@ -19,7 +19,7 @@ import brooklyn.location.blockstore.api.BlockDevice;
 
 /**
  * Requires disable assertions, and credentials to be injected - 
- * see {@link OpenStackNewVolumeCustomizerLiveTest}.
+ * see {@link OpenStackVolumeCustomizerLiveTest}.
  */
 @Test(groups = "Live")
 public class OpenStackVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
