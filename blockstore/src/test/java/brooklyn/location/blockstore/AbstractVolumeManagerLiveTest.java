@@ -82,12 +82,20 @@ public abstract class AbstractVolumeManagerLiveTest {
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         for (JcloudsMachineLocation machine : machines) {
-            jcloudsLocation.release(machine);
+            try {
+                jcloudsLocation.release(machine);
+            } catch (Exception e) {
+                LOG.warn("Problem releasing machine " + machine + " (continuing)", e);
+            }
         }
         machines.clear();
         
         if (volume != null) {
-            volumeManager.deleteBlockDevice(volume);
+            try {
+                volumeManager.deleteBlockDevice(volume);
+            } catch (Exception e) {
+                LOG.warn("Problem deleting block device " + volume + " (continuing)", e);
+            }
             volume = null;
         }
         if (ctx != null) {
