@@ -105,5 +105,16 @@ public class AzureArmVolumeManagerLiveTest extends AbstractVolumeManagerLiveTest
     @Override
     protected Optional<JcloudsSshMachineLocation> rebindJcloudsMachine() {
         return Optional.absent();
+        
+        /*
+         * e.g.
+         *   Map<String, ?> machineFlags = MutableMap.of(
+         *           "id", "northeurope/brooklynom8fdsaledsage-a21",
+         *           "hostname", "13.74.14.150",
+         *           "user", "aledsage");
+         *   ConfigBag config = ConfigBag.newInstanceCopying(jcloudsLocation.getRawLocalConfigBag()).putAll(machineFlags);
+         *   JcloudsMachineLocation machine = jcloudsLocation.registerMachine(config);
+         *   return Optional.of((JcloudsSshMachineLocation)machine);
+         */
     }
 }
