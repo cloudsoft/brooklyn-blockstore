@@ -13,6 +13,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import brooklyn.location.blockstore.azure.arm.AzureArmVolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.gce.GoogleComputeEngineVolumeManager;
 import brooklyn.location.blockstore.openstack.OpenStackLocationConfig;
@@ -42,6 +43,13 @@ public class VolumeManagersTest {
         JcloudsLocation ec2Location = locationFor("aws-ec2:us-east-1c");
         assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(ec2Location));
         assertEquals(VolumeManagers.newVolumeManager(ec2Location).getClass(), Ec2VolumeManager.class);
+    }
+
+    @Test
+    public void testAzureArmVolumeManager() {
+        JcloudsLocation azureArmLocation = locationFor("azurecompute-arm:westeurope");
+        assertTrue(VolumeManagers.isVolumeManagerSupportedForLocation(azureArmLocation));
+        assertEquals(VolumeManagers.newVolumeManager(azureArmLocation).getClass(), AzureArmVolumeManager.class);
     }
 
     @Test

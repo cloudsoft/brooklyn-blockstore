@@ -1,6 +1,7 @@
 package brooklyn.location.blockstore;
 
 import brooklyn.location.blockstore.api.VolumeManager;
+import brooklyn.location.blockstore.azure.arm.AzureArmVolumeManager;
 import brooklyn.location.blockstore.ec2.Ec2VolumeManager;
 import brooklyn.location.blockstore.openstack.OpenstackVolumeManager;
 import brooklyn.location.blockstore.vclouddirector15.VcloudVolumeManager;
@@ -8,6 +9,7 @@ import org.apache.brooklyn.core.location.LocationConfigKeys;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
 import static brooklyn.location.blockstore.VolumeManagers.AWS_EC2;
+import static brooklyn.location.blockstore.VolumeManagers.AZURE_ARM;
 import static brooklyn.location.blockstore.VolumeManagers.OPENSTACK_NOVA;
 import static brooklyn.location.blockstore.VolumeManagers.VCLOUD_DIRECTOR;
 
@@ -30,6 +32,8 @@ public class VolumeManagerFactory {
                 return new OpenstackVolumeManager();
             case VCLOUD_DIRECTOR:
                 return new VcloudVolumeManager();
+            case AZURE_ARM:
+                return new AzureArmVolumeManager();
             default:
                 throw new UnsupportedOperationException("Tried to attach volume for a cloud "
                         + provider + " which is not supported for adding disks. Caller entity " + machine.config().get(LocationConfigKeys.CALLER_CONTEXT));
