@@ -82,11 +82,10 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         
         AzureArmBlockDevice azureBlockDevice = (AzureArmBlockDevice) blockDevice;
 
-        String region = getRegionName(blockDevice.getLocation());
         String resourceGroupName = azureBlockDevice.getResourceGroupName();
         String storageAccountName = azureBlockDevice.getStorageAccountName();
         AzureComputeApi api = getApi(blockDevice.getLocation());
-        deleteStorageAccount(api, resourceGroupName, storageAccountName, region);
+        deleteStorageAccount(api, resourceGroupName, storageAccountName);
     }
     
     @Override
@@ -133,11 +132,11 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
     
     private AttachedBlockDevice createAndAttachBlockDevice(JcloudsMachineLocation machine, BlockDeviceOptions options) {
         JcloudsLocation location = machine.getParent();
-        String region = location.getRegion();
+        String region = getRegionName(location);
         
         String machineId = machine.getJcloudsId();
         String unqualifiedMachineId = machineId.contains("/") ? machineId.substring(machineId.indexOf("/")) : machineId;
-        String storageAccountName = newStorageAccountName(machine, unqualifiedMachineId);
+        String storageAccountName = newStorageAccountName(unqualifiedMachineId);
 
         final AzureComputeApi api = getApi(location);
         Optional<String> resourceGroupName = tryFindResourceGroupName(api, unqualifiedMachineId, region);
@@ -145,8 +144,6 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
             throw new IllegalStateException("Cannot create disk; VM "+unqualifiedMachineId+" not found in any resource group, machine "+machine+" in "+location);
         }
         
-        int lun = 1;
-
         LOG.info("Creating and attaching device: location={}; machine={}; options={}; machineId={}; resourceGroupName={}", 
                 new Object[] {location, machine, options, machineId, resourceGroupName.get()});
 
@@ -156,6 +153,9 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
             throw new IllegalStateException("Cannot create disk; VM "+unqualifiedMachineId+" not found in "+location+", resource group "+resourceGroupName+", for "+machine);
         }
         
+        int numExistingDisks = coundDataDisks(vm);
+        int lun = numExistingDisks; // starts from 0, so if have one disk already then next will be "1"  
+
         StorageService storageService = createStorageAccount(api, resourceGroupName.get(), storageAccountName, region);
         DataDisk dataDisk = addDisk(vmApi, vm, storageService, options.getSizeInGb(), lun);
         
@@ -163,7 +163,14 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         return blockDevice.attachedTo(machine, getVolumeDeviceName(options.getDeviceSuffix()));
     }
 
-    private String newStorageAccountName(JcloudsMachineLocation machine, String unqualifiedMachineId) {
+    private int coundDataDisks(VirtualMachine vm) {
+        VirtualMachineProperties properties = vm.properties();
+        StorageProfile storageProfile = properties.storageProfile();
+        List<DataDisk> dataDisks = (storageProfile != null) ? storageProfile.dataDisks() : null;
+        return (dataDisks != null) ? dataDisks.size() : 0;
+    }
+    
+    private String newStorageAccountName(String unqualifiedMachineId) {
         // e.g. error message from azure:
         //      "... is not a valid storage account name. Storage account name must be between 3 and 24 characters in length and use numbers and lower-case letters only."
         StringShortener shortener = Strings.shortener()
@@ -194,7 +201,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         return storageAccountApi.get(storageAccountName);
     }
 
-    private void deleteStorageAccount(AzureComputeApi api, String resourceGroupName, String storageAccountName, String location) {
+    private void deleteStorageAccount(AzureComputeApi api, String resourceGroupName, String storageAccountName) {
         StorageAccountApi storageAccountApi = api.getStorageAccountApi(resourceGroupName);
         boolean deleted = storageAccountApi.delete(storageAccountName);
         if (!deleted) {
