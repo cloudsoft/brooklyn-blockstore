@@ -23,7 +23,7 @@ public class VolumeOptionsTest {
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 
@@ -34,7 +34,7 @@ public class VolumeOptionsTest {
         assertEquals(transformed.getBlockDeviceOptions().deleteOnTermination(), true);
         assertEquals(transformed.getBlockDeviceOptions().getTags().get("brooklyn"), "br-test-1");
 
-        assertEquals(transformed.getFilesystemOptions().getFilesystemType(), "ext3");
+        assertEquals(transformed.getFilesystemOptions().getFilesystemType(), "ext4");
         assertEquals(transformed.getFilesystemOptions().getMountPoint(), "/mount/brooklyn/h");
 
         // Expect 4.0 to be treated like 4
@@ -50,7 +50,7 @@ public class VolumeOptionsTest {
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 
@@ -72,7 +72,7 @@ public class VolumeOptionsTest {
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 
@@ -99,7 +99,7 @@ public class VolumeOptionsTest {
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 
@@ -126,7 +126,7 @@ public class VolumeOptionsTest {
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 

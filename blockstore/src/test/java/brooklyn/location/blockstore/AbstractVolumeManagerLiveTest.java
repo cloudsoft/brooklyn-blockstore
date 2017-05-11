@@ -172,7 +172,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                 .tags(ImmutableMap.of(
                         "user", System.getProperty("user.name"),
                         "purpose", "brooklyn-blockstore-VolumeManagerLiveTest"));
-        final FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint, "ext3");
+        final FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint, "ext4");
         MountedBlockDevice mountedDevice = null;
 
         // For speed, try to use an existing VM; but if that doesn't exist then fallback to creating a temporary one
@@ -248,7 +248,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                 .tags(ImmutableMap.of(
                     "user", user,
                     "purpose", "brooklyn-blockstore-test-move-between-machines"));
-        FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint, "ext3");
+        FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint, "ext4");
 
         LOG.info("Creating and mounting device on machine1: {}", machine1);
         MountedBlockDevice mountedOnM1 = volumeManager.createAttachAndMountVolume(machine1, deviceOptions, filesystemOptions);

@@ -41,7 +41,7 @@ import brooklyn.location.blockstore.api.VolumeOptions;
  *      },
  *      "filesystem": {
  *        "mountPoint": "/mount/brooklyn/h",
- *        "filesystemType": "ext3"
+ *        "filesystemType": "ext4"
  *      }
  *    }
  * </pre>

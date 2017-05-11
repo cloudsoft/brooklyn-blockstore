@@ -1,0 +1,45 @@
+brooklyn.catalog:
+  items:
+  - id: new-volume-provisioning-and-runtime-effector-tests-h-g-f-d-c
+    version: "0.6.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Location Provisioning Customizer and New Volumes from effector Tests
+    item:
+      services:
+      - type: org.apache.brooklyn.entity.stock.BasicApplication
+        brooklyn.config:
+          firstAdditionalVolumeSuffix: h
+          secondAdditionalVolumeSuffix: g
+        brooklyn.children:
+        - type: entity-with-new-volume-customizer
+          brooklyn.initializers:
+            - type: io.brooklyn.blockstore.brooklyn-blockstore:brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+        - type: test-case
+          name: 1. Verify Provisioned volumes
+          brooklyn.config:
+            targetResolutionTimeout: 10s
+            timeout: 20m
+
+          brooklyn.children:
+          - type: assert-up-and-running-initial
+            target: $brooklyn:component("entity-with-disks")
+            name: "1. Node up and running"
+          - type: test-ssh
+            target: $brooklyn:component("entity-with-disks")
+            name: "2. Additional mount devices successfully added"
+            brooklyn.config:
+              command: |
+                $brooklyn:formatString(
+                "df -h | grep /mount/brooklyn/%1$s &&
+                df -h | grep /mount/brooklyn/%2$s &&
+                egrep /mount/brooklyn/%1$s /proc/mounts &&
+                egrep /mount/brooklyn/%2$s /proc/mounts", $brooklyn:config("firstAdditionalVolumeSuffix"),$brooklyn:config("secondAdditionalVolumeSuffix"))
+              assert.out:
+              - contains: 25G
+              - contains: /mount/brooklyn/
+              - contains: rw
+      - type: new-volume-runtime-effector-tests
+        brooklyn.config:
+          firstAdditionalVolumeSuffix: f
+          secondAdditionalVolumeSuffix: d
+          thirdAdditionalVolumeSuffix: c

@@ -47,7 +47,7 @@ public class UnsupportedCloudExtraHddBodyEffectorLiveTest extends BrooklynAppLiv
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 

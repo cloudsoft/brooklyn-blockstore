@@ -1,0 +1,13 @@
+brooklyn.catalog:
+  items:
+  - id: new-volume-runtime-effector-tests-b-c-d
+    version: "0.6.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Location Provisioning Customizer Tests B, C, D
+    item:
+      services:
+      - type: new-volume-runtime-effector-tests-unset-suffixes
+        brooklyn.config:
+          firstAdditionalVolumeSuffix: b
+          secondAdditionalVolumeSuffix: c
+          thirdAdditionalVolumeSuffix: d
