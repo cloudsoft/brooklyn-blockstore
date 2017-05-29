@@ -1,13 +1,16 @@
 package brooklyn.location.blockstore.azure.arm;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.net.URI;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
+import brooklyn.location.blockstore.AbstractVolumeManager;
+import brooklyn.location.blockstore.BlockDeviceOptions;
+import brooklyn.location.blockstore.FilesystemOptions;
+import brooklyn.location.blockstore.api.AttachedBlockDevice;
+import brooklyn.location.blockstore.api.BlockDevice;
+import brooklyn.location.blockstore.api.MountedBlockDevice;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.util.repeat.Repeater;
@@ -17,33 +20,26 @@ import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
+import org.jclouds.azurecompute.arm.domain.Disk;
+import org.jclouds.azurecompute.arm.domain.ManagedDiskParameters;
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
+import org.jclouds.azurecompute.arm.domain.StorageAccountType;
 import org.jclouds.azurecompute.arm.domain.StorageProfile;
-import org.jclouds.azurecompute.arm.domain.StorageService;
-import org.jclouds.azurecompute.arm.domain.VHD;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
-import org.jclouds.azurecompute.arm.features.JobApi;
+import org.jclouds.azurecompute.arm.features.DiskApi;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.azurecompute.arm.features.StorageAccountApi;
 import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
-import org.jclouds.azurecompute.arm.functions.ParseJobStatus;
-import org.jclouds.azurecompute.arm.functions.ParseJobStatus.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
-import brooklyn.location.blockstore.AbstractVolumeManager;
-import brooklyn.location.blockstore.BlockDeviceOptions;
-import brooklyn.location.blockstore.FilesystemOptions;
-import brooklyn.location.blockstore.api.AttachedBlockDevice;
-import brooklyn.location.blockstore.api.BlockDevice;
-import brooklyn.location.blockstore.api.MountedBlockDevice;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AzureArmVolumeManager extends AbstractVolumeManager {
     
@@ -54,7 +50,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
     
     // TODO:
     //  - What should the "lun" number be? Make this configurable?
-    //  - waitForJobToComplete: make timeouts configurable?
+    //  - waitDiskToAppear: make timeouts configurable?
     //  - OSDeviceName: was "/dev/sdc" during testing; in contrast AWS has "/dev/xvdc".
     //    Is this dependent on the image? Do we need to make the prefix configurable?
 
@@ -67,7 +63,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
     private static final String OS_DEVICE_PREFIX = "/dev/sd";
 
     private static final Duration TIMEOUT = Duration.minutes(2);
-    
+
     @Override
     public MountedBlockDevice createAttachAndMountVolume(JcloudsMachineLocation machine, BlockDeviceOptions deviceOptions,
             FilesystemOptions filesystemOptions) {
@@ -152,14 +148,17 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         if (vm == null) {
             throw new IllegalStateException("Cannot create disk; VM "+unqualifiedMachineId+" not found in "+location+", resource group "+resourceGroupName+", for "+machine);
         }
+        DiskApi diskApi = api.getDiskApi(resourceGroupName.get());
+        if (diskApi == null) {
+            throw new IllegalStateException("Cannot create disk; Disk "+unqualifiedMachineId+" not found in "+location+", resource group "+resourceGroupName+", for "+machine);
+        }
         
         int numExistingDisks = coundDataDisks(vm);
         int lun = numExistingDisks; // starts from 0, so if have one disk already then next will be "1"  
 
-        StorageService storageService = createStorageAccount(api, resourceGroupName.get(), storageAccountName, region);
-        DataDisk dataDisk = addDisk(vmApi, vm, storageService, options.getSizeInGb(), lun);
+        Disk disk = addDisk(vmApi, diskApi, vm, options.getSizeInGb(), lun);
         
-        BlockDevice blockDevice = new AzureArmBlockDevice(location, dataDisk, resourceGroupName.get(), storageAccountName);
+        BlockDevice blockDevice = new AzureArmBlockDevice(location, disk, resourceGroupName.get(), storageAccountName);
         return blockDevice.attachedTo(machine, getVolumeDeviceName(options.getDeviceSuffix()));
     }
 
@@ -183,24 +182,6 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         return shortener.getStringOfMaxLength(24);
     }
 
-    private StorageService createStorageAccount(AzureComputeApi api, String resourceGroupName, String storageAccountName, String location) {
-        StorageAccountApi storageAccountApi = api.getStorageAccountApi(resourceGroupName);
-        URI uri = storageAccountApi.create(
-                storageAccountName, 
-                location, 
-                ImmutableMap.of("property_name", "property_value"), 
-                ImmutableMap.of("accountType", StorageService.AccountType.Standard_LRS.toString()));
-        if (uri != null) {
-           boolean success = waitForJobToComplete(api, uri, TIMEOUT);
-           if (!success) {
-               throw new IllegalStateException("Timeout after " + TIMEOUT + " creating Storage Account '" + storageAccountName + "' (" + uri + ") in resource group '" + resourceGroupName + "'");
-           }
-        } else {
-            throw new IllegalStateException("Failed to create Storage Account '" + storageAccountName + "' in resource group '" + resourceGroupName + "'");
-        }
-        return storageAccountApi.get(storageAccountName);
-    }
-
     private void deleteStorageAccount(AzureComputeApi api, String resourceGroupName, String storageAccountName) {
         StorageAccountApi storageAccountApi = api.getStorageAccountApi(resourceGroupName);
         boolean deleted = storageAccountApi.delete(storageAccountName);
@@ -209,15 +190,19 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         }
     }
 
-    private DataDisk addDisk(VirtualMachineApi vmApi, VirtualMachine vm, StorageService storageService, int diskSizeGB, int lun) {
+    private Disk addDisk(VirtualMachineApi vmApi, DiskApi diskApi, VirtualMachine vm, int diskSizeGB, int lun) {
         String vmName = vm.name();
         VirtualMachineProperties oldProperties = vm.properties();
         StorageProfile oldStorageProfile = oldProperties.storageProfile();
         List<DataDisk> oldDataDisks = oldStorageProfile.dataDisks();
 
-        String blobEndpoint = storageService.storageServiceProperties().primaryEndpoints().get("blob");
-        VHD vhd = VHD.create(blobEndpoint + "vhds/" + vmName + "new-data-disk.vhd");
-        DataDisk newDataDisk = DataDisk.create(vmName + "new-data-disk", Integer.toString(diskSizeGB), lun, vhd, "Empty");
+        final String diskName = vmName + '-' + lun + "-disk";
+        DataDisk newDataDisk = DataDisk.builder().name(diskName)
+                .diskSizeGB(Integer.toString(diskSizeGB))
+                .lun(lun)
+                .createOption(DataDisk.DiskCreateOptionTypes.EMPTY)
+                .managedDiskParameters(ManagedDiskParameters.create(null, StorageAccountType.STANDARD_LRS.toString()))
+                .build();
 
         ImmutableList<DataDisk> newDataDisks = ImmutableList.<DataDisk> builder().addAll(oldDataDisks).add(newDataDisk).build();
         StorageProfile newStorageProfile = oldStorageProfile.toBuilder().dataDisks(newDataDisks).build();
@@ -225,22 +210,10 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
 
         VirtualMachine newVm = vm.toBuilder().properties(newProperties).build();
         
-        // FIXME Might we need to wait for a job? Or does the PUT call block?
-        vm = vmApi.create(vmName, newVm.location(), newVm.properties(), newVm.tags(), newVm.plan());
-        
-        // Check the VM definitely contains the new data-disk
-        return checkHasDataDisk(vm, newDataDisk.name());
+        vmApi.createOrUpdate(vmName, newVm.location(), newVm.properties(), newVm.tags(), newVm.plan());
+        return waitDiskToAppear(diskApi, diskName, TIMEOUT);
     }
-    
-    private DataDisk checkHasDataDisk(VirtualMachine vm, String diskName) {
-        for (DataDisk dataDisk : vm.properties().storageProfile().dataDisks()) {
-            if (diskName.equals(dataDisk.name())) {
-                return dataDisk;
-            }
-        }
-        throw new IllegalStateException("VM "+vm+" does not include disk "+diskName);
-    }
-    
+
     private String getRegionName(JcloudsLocation location) {
         return location.getRegion();
     }
@@ -269,24 +242,29 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         return vmApi.get(vmName) != null;
     }
 
-    private boolean waitForJobToComplete(final AzureComputeApi api, final URI uri, Duration waitTime) {
-        checkNotNull(uri, "uri must not be null");
-        final JobApi jobApi = api.getJobApi();
-        final AtomicReference<JobStatus> latest = new AtomicReference<JobStatus>();
-        
-        boolean done = Repeater.create("Waiting job for URI to completee: " + uri)
+    private Disk waitDiskToAppear(final DiskApi diskApi, final String diskName, Duration waitTime) {
+        checkNotNull(diskName, "diskName must not be null");
+        final AtomicReference<Disk> latest = new AtomicReference<>();
+
+        Repeater.create("Waiting Disk to complete: " + diskName)
                 .every(1, TimeUnit.SECONDS)
                 .limitTimeTo(waitTime)
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-                        JobStatus currentJobStatus = jobApi.jobStatus(uri);
-                        latest.set(currentJobStatus);
-                        return currentJobStatus == ParseJobStatus.JobStatus.DONE;
+                        Disk disk = diskApi.get(diskName);
+                        latest.set(disk);
+                        return disk != null && ImmutableSet.of("Succeeded", "Failed", "Canceled").contains(disk.properties().provisioningState());
                     }
                 })
                 .run();
-        return done;
+        if (latest.get() == null || !"Succeeded".equals(latest.get().properties().provisioningState())) {
+            throw new IllegalStateException("Disk not created successfully "+latest.get());
+        }
+        if (!"Attached".equals(latest.get().properties().diskState())) {
+            throw new IllegalStateException("Disk has not been attached "+latest.get());
+        }
+        return latest.get();
     }
 
     private static class AzureArmBlockDevice implements BlockDevice {
@@ -294,11 +272,11 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         private static final Logger LOG = LoggerFactory.getLogger(AzureArmBlockDevice.class);
 
         private final JcloudsLocation location;
-        private final DataDisk disk;
+        private final Disk disk;
         private final String resourceGroupName;
         private final String storageAccountName;
         
-        private AzureArmBlockDevice(JcloudsLocation location, DataDisk disk, String resourceGroupName, String storageAccountName) {
+        private AzureArmBlockDevice(JcloudsLocation location, Disk disk, String resourceGroupName, String storageAccountName) {
             this.location = checkNotNull(location, "location");
             this.disk = checkNotNull(disk, "disk");
             this.resourceGroupName = checkNotNull(resourceGroupName, "resourceGroupName");
@@ -315,7 +293,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
             return location;
         }
 
-        public DataDisk getDisk() {
+        public Disk getDisk() {
             return disk;
         }
 
@@ -352,7 +330,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         private final JcloudsMachineLocation machine;
         private final String deviceName;
 
-        private AzureArmAttachedBlockDevice(JcloudsMachineLocation machine, DataDisk disk, 
+        private AzureArmAttachedBlockDevice(JcloudsMachineLocation machine, Disk disk,
                 String resourceGroupName, String storageAccountName, String deviceName) {
             super(machine.getParent(), disk, resourceGroupName, storageAccountName);
             this.machine = machine;

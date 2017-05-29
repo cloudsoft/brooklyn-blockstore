@@ -55,7 +55,7 @@ public class ExtraHddBodyEffector extends AddEffector {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExtraHddBodyEffector.class);
 
-    static ConfigKey<VolumeOptions> VOLUME = ConfigKeys.newConfigKey(
+    public static final ConfigKey<VolumeOptions> VOLUME = ConfigKeys.newConfigKey(
             VolumeOptions.class, "volume",
             "Map of location customizer fields.");
 
