@@ -1,0 +1,12 @@
+brooklyn.catalog:
+  items:
+  - id: new-volume-provisioning-customizer-tests-b-c
+    version: "0.6.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Location Provisioning Customizer Tests b, c suffixes
+    item:
+      services:
+      - type: new-volume-provisioning-customizer-tests
+        brooklyn.config:
+          firstAdditionalVolumeSuffix: b
+          secondAdditionalVolumeSuffix: c

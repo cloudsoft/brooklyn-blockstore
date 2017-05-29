@@ -80,7 +80,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
                 "  },",
                 "  \"filesystem\": {",
                 "    \"mountPoint\": \"/mount/brooklyn/h\",",
-                "    \"filesystemType\": \"ext3\"",
+                "    \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 
@@ -113,7 +113,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
                 "  },",
                 "  \"filesystem\": {",
                 "      \"mountPoint\": \"/my/mount/point\",",
-                "      \"filesystemType\": \"ext3\"",
+                "      \"filesystemType\": \"ext4\"",
                 "  }",
                 "}");
 
@@ -132,7 +132,7 @@ public class ExtraHddBodyEffectorTest extends AbstractYamlTest {
         assertEquals(blockDevice.getDeviceSuffix(), 'z');
         assertEquals(blockDevice.getTags(), ImmutableMap.of("tag1", "val1"));
         assertEquals(filesystemOptions.getMountPoint(), "/my/mount/point");
-        assertEquals(filesystemOptions.getFilesystemType(), "ext3");
+        assertEquals(filesystemOptions.getFilesystemType(), "ext4");
     }
 
     // Very similar to ExtraHddBodyEffector, but replaces the effector "body" with a stub.

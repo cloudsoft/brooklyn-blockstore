@@ -1,0 +1,149 @@
+brooklyn.catalog:
+  items:
+  - https://raw.githubusercontent.com/brooklyncentral/common-catalog-utils/master/common-tests/src/main/resources/commontests/common.tests.bom
+  - id: new-volume-provisioning-customizer-tests
+    version: "0.6.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Location Provisioning Customizer Tests
+    item:
+      services:
+      - type: entity-with-new-volume-customizer
+      - type: test-case
+        brooklyn.config:
+          targetResolutionTimeout: 10s
+          timeout: 20m
+        brooklyn.children:
+        - type: assert-up-and-running-initial
+          target: $brooklyn:component("entity-with-disks")
+          name: "1. Node up and running"
+        - type: test-ssh
+          target: $brooklyn:component("entity-with-disks")
+          name: "2. Additional mount devices successfully added"
+          brooklyn.config:
+            command: |
+              $brooklyn:formatString(
+              "df -h | grep /mount/brooklyn/%1$s | grep '3.9G\\|4.0G' &&
+              df -h | grep /mount/brooklyn/%2$s &&
+              egrep /mount/brooklyn/%1$s /proc/mounts &&
+              egrep /mount/brooklyn/%2$s /proc/mounts", $brooklyn:config("firstAdditionalVolumeSuffix"),$brooklyn:config("secondAdditionalVolumeSuffix"))
+            assert.out:
+            - contains: 25G
+            - contains: /mount/brooklyn/
+            - contains: rw
+
+
+  - id: new-volume-runtime-effector-tests
+    version: "0.6.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Effector Tests
+    description: Attaching additional disks in provisioning time and after provisioning via effector is running correctly
+    item:
+      services:
+      - type: test-case
+        brooklyn.config:
+          targetResolutionTimeout: 10s
+          timeout: 20m
+        brooklyn.children:
+        - type: assert-up-and-running-initial
+          targetId: entity-with-disks
+          name: "1. Node up and running"
+        - type: invoke-effector
+          targetId: entity-with-disks
+          name: "2. First addExtraHdd effector invocation"
+          effector: addExtraHdd
+          brooklyn.config:
+            params:
+              $brooklyn:config("dslVolume")
+            dslVolume:
+              volume:
+                blockDevice:
+                  sizeInGb: 4
+                  deviceSuffix: $brooklyn:config("firstAdditionalVolumeSuffix")
+                  deleteOnTermination: true
+                  tags:
+                    brooklyn: "br-example-test-1"
+                filesystem:
+                  mountPoint: $brooklyn:formatString("/mount/brooklyn/%s", $brooklyn:config("firstAdditionalVolumeSuffix"))
+                  filesystemType: "ext4"
+        - type: test-ssh
+          targetId: entity-with-disks
+          name: "3. First addExtraHdd effector executed successfully"
+          brooklyn.config:
+            command: >
+              $brooklyn:formatString(
+              "df -h | grep /mount/brooklyn/%1$s | grep '3.9G\\|4.0G' &&
+              grep /mount/brooklyn/%1$s /proc/mounts", $brooklyn:config("firstAdditionalVolumeSuffix"))
+            assert.out:
+            - contains: /mount/brooklyn/
+            - contains: rw
+        - type: invoke-effector
+          targetId: entity-with-disks
+          name: "4. Second addExtraHdd effector invocation"
+          effector: addExtraHdd
+          brooklyn.config:
+            params:
+              $brooklyn:config("dslVolume")
+            dslVolume:
+              volume:
+                blockDevice:
+                  sizeInGb: 16
+                  deviceSuffix: $brooklyn:config("secondAdditionalVolumeSuffix")
+                  deleteOnTermination: true
+                  tags:
+                    brooklyn: "br-example-test-2"
+                filesystem:
+                  mountPoint: $brooklyn:formatString("/mount/brooklyn/%s", $brooklyn:config("secondAdditionalVolumeSuffix"))
+                  filesystemType: "ext4"
+        - type: test-ssh
+          targetId: entity-with-disks
+          name: "5. Second addExtraHdd effector executed successfully"
+          brooklyn.config:
+            command: >
+              $brooklyn:formatString(
+              "df -h | grep /mount/brooklyn/%1$s &&
+              egrep /mount/brooklyn/%1$s /proc/mounts", $brooklyn:config("secondAdditionalVolumeSuffix"))
+            assert.out:
+            - contains: 16G
+        - type: invoke-effector
+          targetId: entity-with-disks
+          name: "6. Third addExtraHdd effector invocation"
+          effector: addExtraHdd
+          brooklyn.config:
+            params:
+              $brooklyn:config("dslVolume")
+            dslVolume:
+              volume:
+                blockDevice:
+                  sizeInGb: 24
+                  deviceSuffix: $brooklyn:config("thirdAdditionalVolumeSuffix")
+                  deleteOnTermination: true
+                  tags:
+                    brooklyn: "br-example-test-3"
+                filesystem:
+                  mountPoint: $brooklyn:formatString("/mount/brooklyn/%s", $brooklyn:config("thirdAdditionalVolumeSuffix"))
+                  filesystemType: "ext4"
+        - type: test-ssh
+          targetId: entity-with-disks
+          name: "7. Third addExtraHdd effector executed successfully"
+          brooklyn.config:
+            command: >
+              $brooklyn:formatString(
+              "df -h | grep /mount/brooklyn/%1$s &&
+              egrep /mount/brooklyn/%1$s /proc/mounts", $brooklyn:config("thirdAdditionalVolumeSuffix"))
+            assert.out:
+            - contains: 24G
+
+  - id: new-volume-runtime-effector-tests-unset-suffixes
+    version: "0.6.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    itemType: template
+    name: New Volume Location Provisioning Customizer Tests (Triple)
+    item:
+      services:
+      - type: org.apache.brooklyn.entity.stock.BasicApplication
+        brooklyn.children:
+        - type: entity-with-new-volumes-effector
+        - type: new-volume-runtime-effector-tests
+
+
+
+

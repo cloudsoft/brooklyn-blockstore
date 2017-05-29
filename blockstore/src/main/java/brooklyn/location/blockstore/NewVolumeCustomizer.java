@@ -43,7 +43,7 @@ import java.util.List;
  *                 brooklyn: br-example-test-1
  *             filesystem:
  *               mountPoint: /mount/brooklyn/h
- *               filesystemType: ext3
+ *               filesystemType: ext4
  * </pre>
  *
  * Important notice is that KVM is configured as the default hypervisor for OpenStack which means that the defined device name will be of type /dev/vd*.
@@ -85,6 +85,7 @@ public class NewVolumeCustomizer extends BasicJcloudsLocationCustomizer {
     }
 
     protected void createAndAttachDisks(JcloudsMachineLocation machine) {
+
         for (VolumeOptions volume : getVolumes()) {
             VolumeManagerFactory.getVolumeManager(machine, getConfig(JcloudsLocationConfig.CLOUD_PROVIDER)).createAndAttachDisk(machine, volume);
         }

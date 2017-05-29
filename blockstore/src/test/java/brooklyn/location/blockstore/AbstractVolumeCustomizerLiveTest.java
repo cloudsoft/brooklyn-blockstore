@@ -126,7 +126,7 @@ public abstract class AbstractVolumeCustomizerLiveTest {
                         ),
                         "filesystem", MutableMap.of(
                                 "mountPoint", mountPoint,
-                                "filesystemType", "ext3"
+                                "filesystemType", "ext4"
                         )))));
 
         TestApplication app = mgmt.getEntityManager().createEntity(EntitySpec.create(TestApplication.class)

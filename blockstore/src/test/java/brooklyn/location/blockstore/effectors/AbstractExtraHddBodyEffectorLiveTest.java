@@ -55,7 +55,7 @@ public abstract class AbstractExtraHddBodyEffectorLiveTest extends BrooklynAppLi
                 "  },\n" +
                 "  \"filesystem\": {\n" +
                 "    \"mountPoint\": \"" + getMountPointBaseDir() + "/" + getFirstDeviceSuffix() + "\",\n" +
-                "    \"filesystemType\": \"ext3\"\n" +
+                "    \"filesystemType\": \"ext4\"\n" +
                 "  }\n" +
                 "}";
         MountedBlockDevice result = (MountedBlockDevice) entity.invoke(effector, ImmutableMap.<String, Object>of(
@@ -77,7 +77,7 @@ public abstract class AbstractExtraHddBodyEffectorLiveTest extends BrooklynAppLi
                 "  },\n" +
                 "  \"filesystem\": {\n" +
                 "    \"mountPoint\": \"" + getMountPointBaseDir() + "\",\n" +
-                "    \"filesystemType\": \"ext3\"\n" +
+                "    \"filesystemType\": \"ext4\"\n" +
                 "  }\n" +
                 "}";
         MountedBlockDevice resultFromSecondInvoke = (MountedBlockDevice) entity.invoke(effector, ImmutableMap.<String, Object>of(

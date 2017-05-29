@@ -58,7 +58,7 @@ Then deploy an app. The example below creates a VM with a new volume:
                       brooklyn: br-example-aled-1
                   filesystem:
                     mountPoint: /mount/brooklyn/h
-                    filesystemType: ext3
+                    filesystemType: ext4
 
 This second example creates a VM that binds to an existing volume:
 
@@ -80,7 +80,7 @@ This second example creates a VM that binds to an existing volume:
                   deleteOnTermination: false
                 filesystemOptions:
                   mountPoint: /mount/brooklyn/h
-                  filesystemType: ext3
+                  filesystemType: ext4
 
 
 ## Future Work

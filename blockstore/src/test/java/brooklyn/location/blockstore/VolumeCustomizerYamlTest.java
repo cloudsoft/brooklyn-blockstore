@@ -44,7 +44,7 @@ public class VolumeCustomizerYamlTest extends AbstractYamlTest {
                 "                tag1: val1",
                 "            filesystem:",
                 "              mountPoint: /my/mount/point",
-                "              filesystemType: ext3",
+                "              filesystemType: ext4",
                 "services:",
                 "- type: "+BasicApplication.class.getName());
 
@@ -67,6 +67,6 @@ public class VolumeCustomizerYamlTest extends AbstractYamlTest {
 
         FilesystemOptions filesystemOptions = volume.getFilesystemOptions();
         assertEquals(filesystemOptions.getMountPoint(), "/my/mount/point");
-        assertEquals(filesystemOptions.getFilesystemType(), "ext3");
+        assertEquals(filesystemOptions.getFilesystemType(), "ext4");
     }
 }
