@@ -3,6 +3,7 @@ brooklyn-blockstore
 
 This provides an abstract for cloud blockstores (i.e. volumes), providing a common API for EC2, 
 OpenStack, etc.
+See [supported clouds](#supported-clouds) bellow.
 
 It provides operations for creating, attaching, mounting, unmounting, detaching and deleting 
 volumes. It also includes the required filesystem operations for this.
@@ -107,6 +108,18 @@ Effector takes a single parameter which is a json representation of what you wou
         "filesystemType": "ext4"
       }
     }
+
+
+## Supported clouds
+
+`brooklyn.location.blockstore.NewVolumeCustomizer` and `brooklyn.location.blockstore.effectors.ExtraHddBodyEffector` support:
+
+1. AWS EC2
+2. Azure ARM
+3. Vcloud Director 1.5 - To use brooklyn-blockstore with vcloud-director
+ you should manually install [jclouds-vcloud-director](https://github.com/cloudsoft/jclouds-vcloud-director).
+4. Google Compute Engine - GoogleComputeEngineVolumeManagerLiveTest#testCreateAndAttachVolume is creating vm in wrong region.
+5. Old Openstack v2 with Cinder v1 - Untested since JAN 2017
 
 
 ## Future Work
