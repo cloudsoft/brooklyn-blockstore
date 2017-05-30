@@ -7,98 +7,122 @@ OpenStack, etc.
 It provides operations for creating, attaching, mounting, unmounting, detaching and deleting 
 volumes. It also includes the required filesystem operations for this.
 
-To build the project, run:
-
-    mvn clean install
-
-
 ## Checkout Brooklyn
 
-This project builds on the open-source project Apache Brooklyn (see 
+This project builds on the open-source project Apache Brooklyn (see
 http://brooklyn.apache.org and https://github.com/apache/brooklyn).
 
 
-## Example
+## To build the project, run:
 
-First add the required jars to your Apache Brooklyn release (see "Future Work" for discussion 
-of OSGi): 
+    git clone git@github.com:cloudsoft/brooklyn-blockstore.git
+    mvn clean install
 
-    BROOKLYN_HOME=~/repos/apache/brooklyn/brooklyn-dist/dist/target/brooklyn-dist/brooklyn/
-    BROOKLYN_BLOCKSTORE_REPO=~/repos/cloudsoft/brooklyn-blockstore
-    BROOKLYN_BLOCKSTORE_VERSION=0.6.0-SNAPSHOT
-    
-    cp ${BROOKLYN_BLOCKSTORE_REPO}/blockstore/target/brooklyn-blockstore-${BROOKLYN_BLOCKSTORE_VERSION}.jar ${BROOKLYN_HOME}/lib/dropins/
 
-And launch Brooklyn:
+## Example Usage with Apache Brooklyn
 
-    ${BROOKLYN_HOME}/bin/brooklyn launch
+Assuming you build project and you know want to use it in Apache Brooklyn blueprints.
 
-Then deploy an app. The example below creates a VM with a new volume:
+Create a catalog item and put location configuration for extending hard drives.
+The example below creates a VM with a new volume:
 
-    location: aws-ec2:us-east-1
-    services:
-    - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
-      brooklyn.config:
-        launch.command: |
-          sudo chown -R myname /mount/brooklyn/h/
-          echo abc > /mount/brooklyn/h/myfile.txt
-        checkRunning.command: echo checked
-        provisioning.properties:
-          user: myname
-          customizers:
-          - $brooklyn:object:
-              type: brooklyn.location.blockstore.ec2.Ec2NewVolumeCustomizer
-              object.fields:
-                volumes:
-                - blockDevice:
-                    sizeInGb: 1
-                    deviceSuffix: 'h'
-                    deleteOnTermination: false
-                    tags:
-                      brooklyn: br-example-aled-1
-                  filesystem:
-                    mountPoint: /mount/brooklyn/h
-                    filesystemType: ext4
+    brooklyn.catalog:
+      id: my-app.io.cloudsoft.brooklyn-blockstore.new-volume-customizer
+      version: 0.6.0-SNAPSHOT # BROOKLYN_BLOCKSTORE_VERSION
+      brooklyn.libraries:
+      - file://~/.m2/repository/io/brooklyn/blockstore/brooklyn-blockstore/0.6.0-SNAPSHOT/brooklyn-blockstore-0.6.0-SNAPSHOT.jar # BROOKLYN_BLOCKSTORE_VERSION
+      item:
+        services:
+        - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+          brooklyn.config:
+            launch.command: |
+              sudo chown -R myname /mount/brooklyn/h/
+              echo abc > /mount/brooklyn/h/myfile.txt
+            checkRunning.command: echo checked
+            provisioning.properties:
+              customizers:
+              - $brooklyn:object:
+                  type: brooklyn.location.blockstore.NewVolumeCustomizer
+                  object.fields:
+                    volumes:
+                    - blockDevice:
+                        sizeInGb: 1
+                        deviceSuffix: 'h'
+                        deleteOnTermination: false
+                        tags:
+                          brooklyn: br-example-aled-1
+                      filesystem:
+                        mountPoint: /mount/brooklyn/h
+                        filesystemType: ext4
 
 This second example creates a VM that binds to an existing volume:
 
-    location:
-      aws-ec2:us-east-1e
-    services:
-    - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
-      brooklyn.config:
-        launch.command: cat /mount/brooklyn/h/myfile.txt
-        checkRunning.command: echo checked
-        provisioning.properties:
-          customizers:
-          - $brooklyn:object:
-              type: brooklyn.location.blockstore.ec2.Ec2ExistingVolumeCustomizer
-              object.fields:
-                volumeId: vol-87450758
-                blockOptions:
-                  deviceSuffix: 'h'
-                  deleteOnTermination: false
-                filesystemOptions:
-                  mountPoint: /mount/brooklyn/h
-                  filesystemType: ext4
+    brooklyn.catalog:
+      id: my-app.io.cloudsoft.brooklyn-blockstore.ec2-existing-volume-customizer
+      version: 0.6.0-SNAPSHOT # BROOKLYN_BLOCKSTORE_VERSION
+      name: My App with Ec2ExistingVolumeCustomizer # Not tested recently.
+      brooklyn.libraries:
+      - file://~/.m2/repository/io/brooklyn/blockstore/brooklyn-blockstore/0.6.0-SNAPSHOT/brooklyn-blockstore-0.6.0-SNAPSHOT.jar # BROOKLYN_BLOCKSTORE_VERSION
+      item:
+        services:
+        - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+          brooklyn.config:
+            launch.command: |
+              sudo chown -R myname /mount/brooklyn/h/
+              echo abc > /mount/brooklyn/h/myfile.txt
+            checkRunning.command: echo checked
+            provisioning.properties:
+              customizers:
+              - $brooklyn:object:
+                  type: brooklyn.location.blockstore.ec2.Ec2ExistingVolumeCustomizer
+                  object.fields:
+                    volumeId: vol-87450758
+                    blockOptions:
+                      deviceSuffix: 'h'
+                      deleteOnTermination: false
+                    filesystemOptions:
+                      mountPoint: /mount/brooklyn/h
+                      filesystemType: ext4
+
+The third example illustrates how your app is able to add additional disk via an effector 
+and possibly a policy which triggers the effector when app space is ful.
+
+     - type: org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode
+       brooklyn.initializers:
+       - type: brooklyn.location.blockstore.effectors.ExtraHddBodyEffector
+
+Effector takes a single parameter which is a json representation of what you would write in yaml for the `NewVolumeCustomizer`.
+
+    {
+      "blockDevice": {
+        "sizeInGb": 3,
+        "deviceSuffix": 'h',
+        "deleteOnTermination": false,
+        "tags": {
+          "brooklyn": "br-example-test-1"
+        }
+      },
+      "filesystem": {
+        "mountPoint": "/mount/brooklyn/h",
+        "filesystemType": "ext4"
+      }
+    }
 
 
 ## Future Work
 
-This module should be built as an OSGi bundle, so that it can more easily be added to Brooklyn.
-
 The API is under review, particularly to make it easier to use with YAML blueprints.
 All feedback is extremely welcome!
 
-The abstraction provides a common Java interface, and a cloud-agnostic way of instantiating 
-an appropriate customizer: see `VolumeCustomizers`. However, the subtle differences between
-clouds (e.g. the appropriate deviceSuffix, etc) makes it hard to write truly cloud-agnostic
-code. This is a topic of continuing investigation and work. 
+The abstraction provides a common Java interface, and a cloud-agnostic way of adding a disk:
+see `brooklyn.location.blockstore.NewVolumeCustomizer` and `brooklyn.location.blockstore.effectors.ExtraHddBodyEffector`.
+However, the subtle differences between clouds (e.g. the appropriate deviceSuffix) makes your app non-cloud agnostic.
+This is a topic for which we would love to hear from you feedback and continue investigate and work on.
 
 
 ================
 
-&copy; 2013-2016 Cloudsoft Corporation Limited. All rights reserved.
+&copy; 2013-2017 Cloudsoft Corporation Limited. All rights reserved.
 
 Use of this software is subject to the Cloudsoft EULA, provided in LICENSE.md and at 
 
