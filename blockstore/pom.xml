@@ -13,7 +13,27 @@
     </parent>
 
     <name>Brooklyn Blockstore</name>
-
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>3.2.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <obrRepository>NONE</obrRepository>
+                    <instructions>
+                        <Import-Package>
+                            org.jclouds.googlecomputeengine.*;version=${jclouds.version};resolution:=optional,
+                            org.jclouds.openstack.cinder.*;version=${jclouds.version};resolution:=optional,
+                            org.jclouds.vcloud.director.v1_5.*;version=${vcloud-director.version};resolution:=optional,
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <dependencies>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
