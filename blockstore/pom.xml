@@ -39,13 +39,6 @@
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${brooklyn.version}</version>
-            <exclusions>
-                <!-- TODO remove when brooklyn-server is upgraded to 2.0.2 or later. -->
-                <exclusion>
-                    <groupId>org.apache.jclouds.labs</groupId>
-                    <artifactId>azurecompute-arm</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.jclouds</groupId>
@@ -71,12 +64,6 @@
             <groupId>io.cloudsoft.jclouds.labs</groupId>
             <artifactId>vcloud-director</artifactId>
             <version>${vcloud-director.version}</version>
-        </dependency>
-        <dependency>
-            <!-- TODO remove when brooklyn-server is upgraded to 2.0.2 or later. -->
-            <groupId>io.cloudsoft.jclouds.labs</groupId>
-            <artifactId>azurecompute-arm</artifactId>
-            <version>2.0.1.1-20170526.0937</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
@@ -124,11 +111,6 @@
                 <exclusion>
                     <groupId>org.apache.jclouds</groupId>
                     <artifactId>jclouds-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <!-- TODO remove when brooklyn-server is upgraded to 2.0.2 or later. -->
-                    <groupId>org.apache.jclouds.labs</groupId>
-                    <artifactId>azurecompute-arm</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
