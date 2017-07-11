@@ -73,26 +73,24 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     @Override
     public void createFilesystem(AttachedBlockDevice attachedDevice, FilesystemOptions filesystemOptions) {
         JcloudsMachineLocation machine = attachedDevice.getMachine();
-        if (!(machine instanceof SshMachineLocation)) {
-            throw new IllegalStateException("Cannot create filesystem for "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
-        }
-        
-        String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
-        String filesystemType = filesystemOptions.getFilesystemType();
-        LOG.debug("Creating filesystem: device={}; osDeviceName={}, config={}", new Object[]{attachedDevice, osDeviceName, filesystemOptions});
+        if (machine instanceof SshMachineLocation) {
+            String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
+            String filesystemType = filesystemOptions.getFilesystemType();
+            LOG.debug("Creating filesystem: device={}; osDeviceName={}, config={}", new Object[]{attachedDevice, osDeviceName, filesystemOptions});
 
-        // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
-        Map<String, ?> flags = MutableMap.of("allocatePTY", true);
+            // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
+            Map<String, ?> flags = MutableMap.of("allocatePTY", true);
 
-        int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
-                dontRequireTtyForSudo(),
-                waitForFileCmd(osDeviceName, 60),
-                installPackage(ImmutableMap.of("yum", "e4fsprogs"), null),
-                sudo("/sbin/mkfs -F -t " + filesystemType + " " + osDeviceName)));
+            int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
+                    dontRequireTtyForSudo(),
+                    waitForFileCmd(osDeviceName, 60),
+                    installPackage(ImmutableMap.of("yum", "e4fsprogs"), null),
+                    sudo("/sbin/mkfs -F -t " + filesystemType + " " + osDeviceName)));
 
-        if (exitCode != 0) {
-            throw new RuntimeException(format("Failed to create file system. machine=%s; osDeviceName=%s; filesystemType=%s",
-                    machine, osDeviceName, filesystemType));
+            if (exitCode != 0) {
+                throw new RuntimeException(format("Failed to create file system. machine=%s; osDeviceName=%s; filesystemType=%s",
+                        machine, osDeviceName, filesystemType));
+            }
         }
     }
 
