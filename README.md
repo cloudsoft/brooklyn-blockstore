@@ -29,9 +29,9 @@ The example below creates a VM with a new volume:
 
     brooklyn.catalog:
       id: my-app.io.cloudsoft.brooklyn-blockstore.new-volume-customizer
-      version: 0.6.0-SNAPSHOT # BROOKLYN_BLOCKSTORE_VERSION
+      version: 0.6.0-20170712.1858 # BROOKLYN_BLOCKSTORE_VERSION
       brooklyn.libraries:
-      - file://~/.m2/repository/io/brooklyn/blockstore/brooklyn-blockstore/0.6.0-SNAPSHOT/brooklyn-blockstore-0.6.0-SNAPSHOT.jar # BROOKLYN_BLOCKSTORE_VERSION
+      - file://~/.m2/repository/io/brooklyn/blockstore/brooklyn-blockstore/0.6.0-20170712.1858/brooklyn-blockstore-0.6.0-20170712.1858.jar # BROOKLYN_BLOCKSTORE_VERSION
       item:
         services:
         - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
@@ -60,10 +60,10 @@ This second example creates a VM that binds to an existing volume:
 
     brooklyn.catalog:
       id: my-app.io.cloudsoft.brooklyn-blockstore.ec2-existing-volume-customizer
-      version: 0.6.0-SNAPSHOT # BROOKLYN_BLOCKSTORE_VERSION
+      version: 0.6.0-20170712.1858 # BROOKLYN_BLOCKSTORE_VERSION
       name: My App with Ec2ExistingVolumeCustomizer # Not tested recently.
       brooklyn.libraries:
-      - file://~/.m2/repository/io/brooklyn/blockstore/brooklyn-blockstore/0.6.0-SNAPSHOT/brooklyn-blockstore-0.6.0-SNAPSHOT.jar # BROOKLYN_BLOCKSTORE_VERSION
+      - file://~/.m2/repository/io/brooklyn/blockstore/brooklyn-blockstore/0.6.0-20170712.1858/brooklyn-blockstore-0.6.0-20170712.1858.jar # BROOKLYN_BLOCKSTORE_VERSION
       item:
         services:
         - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
