@@ -11,10 +11,8 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.net.UrlEscapers;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
-import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.StringShortener;
@@ -22,7 +20,6 @@ import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.jclouds.azurecompute.arm.AzureComputeApi;
 import org.jclouds.azurecompute.arm.domain.DataDisk;
-import org.jclouds.azurecompute.arm.domain.Deployment;
 import org.jclouds.azurecompute.arm.domain.Disk;
 import org.jclouds.azurecompute.arm.domain.ManagedDiskParameters;
 import org.jclouds.azurecompute.arm.domain.ResourceGroup;
@@ -31,16 +28,12 @@ import org.jclouds.azurecompute.arm.domain.StorageProfile;
 import org.jclouds.azurecompute.arm.domain.VirtualMachine;
 import org.jclouds.azurecompute.arm.domain.VirtualMachineProperties;
 import org.jclouds.azurecompute.arm.features.DiskApi;
-import org.jclouds.azurecompute.arm.features.DeploymentApi;
 import org.jclouds.azurecompute.arm.features.ResourceGroupApi;
 import org.jclouds.azurecompute.arm.features.StorageAccountApi;
 import org.jclouds.azurecompute.arm.features.VirtualMachineApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -161,11 +154,9 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         }
         
         int numExistingDisks = coundDataDisks(vm);
-        int lun = numExistingDisks; // starts from 0, so if have one disk already then next will be "1"
+        int lun = numExistingDisks; // starts from 0, so if have one disk already then next will be "1"  
 
-        DeploymentApi deploymentApi = api.getDeploymentApi(resourceGroupName.get());
-
-        Disk disk = addDisk(vmApi, diskApi, vm, options.getSizeInGb(), lun, deploymentApi);
+        Disk disk = addDisk(vmApi, diskApi, vm, options.getSizeInGb(), lun);
         
         BlockDevice blockDevice = new AzureArmBlockDevice(location, disk, resourceGroupName.get(), storageAccountName);
         return blockDevice.attachedTo(machine, getVolumeDeviceName(options.getDeviceSuffix()));
@@ -199,7 +190,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         }
     }
 
-    private Disk addDisk(VirtualMachineApi vmApi, DiskApi diskApi, VirtualMachine vm, int diskSizeGB, int lun, DeploymentApi deploymentApi) {
+    private Disk addDisk(VirtualMachineApi vmApi, DiskApi diskApi, VirtualMachine vm, int diskSizeGB, int lun) {
         String vmName = vm.name();
         VirtualMachineProperties oldProperties = vm.properties();
         StorageProfile oldStorageProfile = oldProperties.storageProfile();
@@ -220,19 +211,7 @@ public class AzureArmVolumeManager extends AbstractVolumeManager {
         VirtualMachine newVm = vm.toBuilder().properties(newProperties).build();
         
         vmApi.createOrUpdate(vmName, newVm.location(), newVm.properties(), newVm.tags(), newVm.plan());
-        Disk result = waitDiskToAppear(diskApi, diskName, TIMEOUT);
-
-        if (vm.location().contains("Win")) { //TODO make better check
-            String deploymentName = "jc" + System.currentTimeMillis();
-            try {
-                String deploymentTemplate = UrlEscapers.urlFormParameterEscaper().escape(new String(Files.readAllBytes(Paths.get("customscriptextension.json"))));
-                Deployment deployment = deploymentApi.create(deploymentName, deploymentTemplate);
-            } catch (IOException e) {
-                Exceptions.propagate("Failed to read customscriptextension.json", e);
-            }
-        }
-
-        return result;
+        return waitDiskToAppear(diskApi, diskName, TIMEOUT);
     }
 
     private String getRegionName(JcloudsLocation location) {
