@@ -114,6 +114,7 @@ public abstract class AbstractVolumeManagerLiveTest {
                     && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "openstack-nova")
                     && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "aws-ec2")
                     && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "azurecompute-arm")
+                    && !key.startsWith(BROOKLYN_PROPERTIES_JCLOUDS_PREFIX + "google-compute-engine")
                     && !(namedLocation.isPresent() && key.contains(namedLocation.get()))) {
                 props.remove(key);
             }
@@ -161,77 +162,6 @@ public abstract class AbstractVolumeManagerLiveTest {
         RE_ATTACH, // unmount/detach, and then re-attach (to ensure that cleanup worked)
         NO_OP,
     }
-    protected void runCreateAndAttachVolume(ReattachMode mode) throws Exception {
-
-        String mountPoint = "/var/opt2/test1";
-
-        final BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
-                .sizeInGb(getVolumeSize())
-                .zone(getDefaultAvailabilityZone())
-                .deviceSuffix(getDefaultDeviceSuffix())
-                .tags(ImmutableMap.of(
-                        "user", System.getProperty("user.name"),
-                        "purpose", "brooklyn-blockstore-VolumeManagerLiveTest"));
-        final FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint, "ext4");
-        MountedBlockDevice mountedDevice = null;
-
-        // For speed, try to use an existing VM; but if that doesn't exist then fallback to creating a temporary one
-        Optional<JcloudsSshMachineLocation> existingMachine = rebindJcloudsMachine();
-        JcloudsSshMachineLocation machine;
-        if (!existingMachine.isPresent()) {
-            // make sure newly created machines are tidied
-            LOG.info("No machine to rebind. Falling back to creating temporary VM in " + jcloudsLocation);
-            machine = createJcloudsMachine();
-            machines.add(machine);
-        } else {
-            machine = existingMachine.get();
-        }
-        
-        try {
-            // Create and mount the initial volume
-            mountedDevice = volumeManager.createAttachAndMountVolume(machine, blockDeviceOptions, filesystemOptions);
-            volume = mountedDevice;
-            String destFile = mountPoint+"/myfile.txt";
-            
-            assertMountPointExists(machine, mountPoint);
-            assertWritable(machine, destFile, "abc".getBytes());
-            
-            switch (mode) {
-            case NO_OP:
-                break;
-            case RE_ATTACH:
-                // Unmount and detach the volume
-                BlockDevice detachedDevice = volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
-    
-                assertMountPointAbsent(machine, mountPoint);
-                assertFileAbsent(machine, destFile);
-                
-                // Reattach and mount the volume
-                volumeManager.attachAndMountVolume(machine, detachedDevice, blockDeviceOptions, filesystemOptions);
-    
-                assertMountPointExists(machine, mountPoint);
-                assertReadable(machine, destFile, "abc".getBytes());
-                
-                break;
-            default:
-                throw new UnsupportedOperationException("unexpected mode "+mode);
-            }
-
-        } catch (Throwable t) {
-            LOG.error("Error creating and attaching volume", t);
-            throw t;
-            
-        } finally {
-            if (mountedDevice != null) {
-                try {
-                    volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
-                } catch (Exception e) {
-                    LOG.error("Error umounting/detaching volume", e);
-                }
-            }
-        }
-    }
-
     @Test(groups="Live", dependsOnMethods = {"testCreateAndAttachVolume"})
     public void testMoveMountedVolumeToAnotherMachine() throws Throwable {
         JcloudsSshMachineLocation machine1 = createJcloudsMachine();
@@ -278,7 +208,78 @@ public abstract class AbstractVolumeManagerLiveTest {
         int success = machine.execCommands(description, cmds);
         assertEquals(success, 0);
     }
-    
+
+    protected void runCreateAndAttachVolume(ReattachMode mode) throws Exception {
+
+        String mountPoint = "/var/opt2/test1";
+
+        final BlockDeviceOptions blockDeviceOptions = new BlockDeviceOptions()
+                .sizeInGb(getVolumeSize())
+                .zone(getDefaultAvailabilityZone())
+                .deviceSuffix(getDefaultDeviceSuffix())
+                .tags(ImmutableMap.of(
+                        "user", System.getProperty("user.name"),
+                        "purpose", "brooklyn-blockstore-VolumeManagerLiveTest"));
+        final FilesystemOptions filesystemOptions = new FilesystemOptions(mountPoint, "ext4");
+        MountedBlockDevice mountedDevice = null;
+
+        // For speed, try to use an existing VM; but if that doesn't exist then fallback to creating a temporary one
+        Optional<JcloudsSshMachineLocation> existingMachine = rebindJcloudsMachine();
+        JcloudsSshMachineLocation machine;
+        if (!existingMachine.isPresent()) {
+            // make sure newly created machines are tidied
+            LOG.info("No machine to rebind. Falling back to creating temporary VM in " + jcloudsLocation);
+            machine = createJcloudsMachine();
+            machines.add(machine);
+        } else {
+            machine = existingMachine.get();
+        }
+
+        try {
+            // Create and mount the initial volume
+            mountedDevice = volumeManager.createAttachAndMountVolume(machine, blockDeviceOptions, filesystemOptions);
+            volume = mountedDevice;
+            String destFile = mountPoint+"/myfile.txt";
+
+            assertMountPointExists(machine, mountPoint);
+            assertWritable(machine, destFile, "abc".getBytes());
+
+            switch (mode) {
+                case NO_OP:
+                    break;
+                case RE_ATTACH:
+                    // Unmount and detach the volume
+                    BlockDevice detachedDevice = volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
+
+                    assertMountPointAbsent(machine, mountPoint);
+                    assertFileAbsent(machine, destFile);
+
+                    // Reattach and mount the volume
+                    volumeManager.attachAndMountVolume(machine, detachedDevice, blockDeviceOptions, filesystemOptions);
+
+                    assertMountPointExists(machine, mountPoint);
+                    assertReadable(machine, destFile, "abc".getBytes());
+
+                    break;
+                default:
+                    throw new UnsupportedOperationException("unexpected mode "+mode);
+            }
+
+        } catch (Throwable t) {
+            LOG.error("Error creating and attaching volume", t);
+            throw t;
+
+        } finally {
+            if (mountedDevice != null) {
+                try {
+                    volumeManager.unmountFilesystemAndDetachVolume(mountedDevice);
+                } catch (Exception e) {
+                    LOG.error("Error umounting/detaching volume", e);
+                }
+            }
+        }
+    }
+
     public static void assertExecFails(SshMachineLocation machine, String description, List<String> cmds) {
         int success = machine.execCommands(description, cmds);
         assertNotEquals(success, 0);
