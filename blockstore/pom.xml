@@ -24,9 +24,8 @@
                     <obrRepository>NONE</obrRepository>
                     <instructions>
                         <Import-Package>
-                            org.jclouds.googlecomputeengine.*;version=${jclouds.version};resolution:=optional,
-                            org.jclouds.openstack.cinder.*;version=${jclouds.version};resolution:=optional,
-                            org.jclouds.vcloud.director.v1_5.*;version=${vcloud-director.version};resolution:=optional,
+                            org.jclouds.openstack.cinder.*;resolution:=optional,
+                            org.jclouds.vcloud.director.v1_5.*;resolution:=optional,
                             *
                         </Import-Package>
                     </instructions>
