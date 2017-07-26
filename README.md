@@ -22,6 +22,9 @@ http://brooklyn.apache.org and https://github.com/apache/brooklyn).
 
 ## Example Usage with Apache Brooklyn
 
+_Note, Starting in OSGi.
+To start the blockstore bundle you have to either load github.com/cloudsoft/jclouds-vcloud-director bundle
+or make the "Import-Package" `org.jclouds.vcloud.director.v1_5.*` optional._
 Assuming you build project and you know want to use it in Apache Brooklyn blueprints.
 
 Create a catalog item and put location configuration for extending hard drives.
