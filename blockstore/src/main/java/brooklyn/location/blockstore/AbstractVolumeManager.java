@@ -163,7 +163,7 @@ public abstract class AbstractVolumeManager implements VolumeManager {
         if (!Strings.isNullOrEmpty(options.getName())) {
             return options.getName();
         } else {
-            return "volume-" + new JcloudsMachineNamer().generateNewMachineUniqueName(location.getLocalConfigBag());
+            return "volume-" + new JcloudsMachineNamer().generateNewMachineUniqueName(location.config().getLocalBag());
         }
     }
 

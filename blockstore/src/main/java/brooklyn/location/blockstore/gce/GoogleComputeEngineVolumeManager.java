@@ -24,7 +24,7 @@ import org.jclouds.sshj.config.SshjSshClientModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
 
@@ -222,7 +222,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("id", getId())
                     .add("location", location)
                     .toString();
@@ -262,7 +262,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("id", getId())
                     .add("machine", getMachine())
                     .add("deviceName", getDeviceName())
@@ -286,7 +286,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("id", getId())
                     .add("machine", getMachine())
                     .add("deviceName", getDeviceName())

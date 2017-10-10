@@ -5,9 +5,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Maps;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+
+import com.google.common.base.MoreObjects;
+import com.google.common.collect.Maps;
 
 public class BlockDeviceOptions {
 
@@ -140,7 +141,7 @@ public class BlockDeviceOptions {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("name", name)
                 .add("zone", zone)
                 .add("tags", tags)

@@ -4,7 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class FilesystemOptions {
 
@@ -45,7 +45,7 @@ public class FilesystemOptions {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mountPoint", mountPoint)
                 .add("filesystemType", filesystemType)
                 .toString();
