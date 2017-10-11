@@ -5,7 +5,7 @@ import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import brooklyn.location.blockstore.api.AttachedBlockDevice;
 import brooklyn.location.blockstore.api.BlockDevice;
@@ -52,7 +52,7 @@ public class Devices {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("id", id)
                     .add("location", location)
                     .toString();
@@ -92,7 +92,7 @@ public class Devices {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("id", getId())
                     .add("machine", getMachine())
                     .add("deviceName", getDeviceName())
@@ -116,7 +116,7 @@ public class Devices {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this)
+            return MoreObjects.toStringHelper(this)
                     .add("id", getId())
                     .add("machine", getMachine())
                     .add("deviceName", getDeviceName())
