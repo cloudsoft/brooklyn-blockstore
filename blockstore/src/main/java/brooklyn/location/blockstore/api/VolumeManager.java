@@ -1,5 +1,7 @@
 package brooklyn.location.blockstore.api;
 
+import java.util.List;
+
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 
