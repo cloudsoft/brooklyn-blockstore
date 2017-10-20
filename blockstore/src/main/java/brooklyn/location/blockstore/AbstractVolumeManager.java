@@ -13,7 +13,9 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineNamer;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,58 +75,63 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     @Override
     public void createFilesystem(AttachedBlockDevice attachedDevice, FilesystemOptions filesystemOptions) {
         JcloudsMachineLocation machine = attachedDevice.getMachine();
-        if (!(machine instanceof SshMachineLocation)) {
-            throw new IllegalStateException("Cannot create filesystem for "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
-        }
-        
-        String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
-        String filesystemType = filesystemOptions.getFilesystemType();
-        LOG.debug("Creating filesystem: device={}; osDeviceName={}, config={}", new Object[]{attachedDevice, osDeviceName, filesystemOptions});
+        if (machine instanceof SshMachineLocation) {
+            String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
+            String filesystemType = filesystemOptions.getFilesystemType();
+            LOG.debug("Creating filesystem: device={}; osDeviceName={}, config={}", new Object[]{attachedDevice, osDeviceName, filesystemOptions});
 
-        // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
-        Map<String, ?> flags = MutableMap.of("allocatePTY", true);
+            // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
+            Map<String, ?> flags = MutableMap.of("allocatePTY", true);
 
-        int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
-                dontRequireTtyForSudo(),
-                waitForFileCmd(osDeviceName, 60),
-                installPackage(ImmutableMap.of("yum", "e4fsprogs"), null),
-                sudo("/sbin/mkfs -F -t " + filesystemType + " " + osDeviceName)));
+            int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
+                    dontRequireTtyForSudo(),
+                    waitForFileCmd(osDeviceName, 60),
+                    installPackage(ImmutableMap.of("yum", "e4fsprogs"), null),
+                    sudo("/sbin/mkfs -F -t " + filesystemType + " " + osDeviceName)));
 
-        if (exitCode != 0) {
-            throw new RuntimeException(format("Failed to create file system. machine=%s; osDeviceName=%s; filesystemType=%s",
-                    machine, osDeviceName, filesystemType));
+            if (exitCode != 0) {
+                throw new RuntimeException(format("Failed to create file system. machine=%s; osDeviceName=%s; filesystemType=%s",
+                        machine, osDeviceName, filesystemType));
+            }
+        } else if (machine instanceof WinRmMachineLocation) {
+            WinRmToolResponse response = ((WinRmMachineLocation)machine).executePsScript("Get-Disk | Where partitionstyle -eq 'raw' | " +
+                    "Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | " +
+                    "Format-Volume -FileSystem NTFS -NewFileSystemLabel \"datadisk\" -Confirm:$false");
+            if (response.getStatusCode() != 0) {
+                throw new RuntimeException(format("Failed to initialize disk. machine=%s; filesystemType=%s",
+                        machine, filesystemOptions.getFilesystemType()));
+            }
         }
     }
 
     @Override
     public MountedBlockDevice mountFilesystem(AttachedBlockDevice attachedDevice, FilesystemOptions options) {
         JcloudsMachineLocation machine = attachedDevice.getMachine();
-        if (!(machine instanceof SshMachineLocation)) {
-            throw new IllegalStateException("Cannot mount filesystem for "+machine+" of type "+machine.getClass().getName()+"; expected "+SshMachineLocation.class.getSimpleName());
-        }
-        
-        LOG.debug("Mounting filesystem: device={}; options={}", attachedDevice, options);
-        String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
-        String mountPoint = options.getMountPoint();
-        String filesystemType = options.getFilesystemType();
+        if (machine instanceof SshMachineLocation) {
 
-        // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
-        Map<String, ?> flags = MutableMap.of("allocatePTY", true);
-        int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Mounting EBS volume", ImmutableList.of(
-                dontRequireTtyForSudo(),
-                "echo making dir",
-                sudo("mkdir -p -m 755 " + mountPoint),
-                "echo updating fstab",
-                waitForFileCmd(osDeviceName, 60),
-                "echo \"" + osDeviceName + " " + mountPoint + " " + filesystemType + " noatime 0 0\" | " + sudo("tee -a /etc/fstab"),
-                "echo mounting device",
-                sudo("mount " + mountPoint),
-                "echo device mounted"
-        ));
+            LOG.debug("Mounting filesystem: device={}; options={}", attachedDevice, options);
+            String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
+            String mountPoint = options.getMountPoint();
+            String filesystemType = options.getFilesystemType();
 
-        if (exitCode != 0) {
-            throw new RuntimeException(format("Failed to mount file system. machine=%s; osDeviceName=%s; mountPoint=%s; filesystemType=%s",
-                    attachedDevice.getMachine(), osDeviceName, mountPoint, filesystemType));
+            // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
+            Map<String, ?> flags = MutableMap.of("allocatePTY", true);
+            int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Mounting EBS volume", ImmutableList.of(
+                    dontRequireTtyForSudo(),
+                    "echo making dir",
+                    sudo("mkdir -p -m 755 " + mountPoint),
+                    "echo updating fstab",
+                    waitForFileCmd(osDeviceName, 60),
+                    "echo \"" + osDeviceName + " " + mountPoint + " " + filesystemType + " noatime 0 0\" | " + sudo("tee -a /etc/fstab"),
+                    "echo mounting device",
+                    sudo("mount " + mountPoint),
+                    "echo device mounted"
+            ));
+
+            if (exitCode != 0) {
+                throw new RuntimeException(format("Failed to mount file system. machine=%s; osDeviceName=%s; mountPoint=%s; filesystemType=%s",
+                        attachedDevice.getMachine(), osDeviceName, mountPoint, filesystemType));
+            }
         }
 
         return attachedDevice.mountedAt(options.getMountPoint());
