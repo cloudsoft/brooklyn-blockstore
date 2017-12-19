@@ -2,7 +2,7 @@ brooklyn.catalog:
   items:
   - https://raw.githubusercontent.com/brooklyncentral/common-catalog-utils/master/common-tests/src/main/resources/commontests/common.tests.bom
   - id: new-volume-provisioning-customizer-tests
-    version: "0.7.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    version: "0.7.0-20171219.1516" # BROOKLYN_BLOCKSTORE_VERSION
     itemType: template
     name: New Volume Location Provisioning Customizer Tests
     item:
@@ -33,7 +33,7 @@ brooklyn.catalog:
 
 
   - id: new-volume-runtime-effector-tests
-    version: "0.7.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    version: "0.7.0-20171219.1516" # BROOKLYN_BLOCKSTORE_VERSION
     itemType: template
     name: New Volume Effector Tests
     description: Attaching additional disks in provisioning time and after provisioning via effector is running correctly
@@ -134,7 +134,7 @@ brooklyn.catalog:
             - contains: 24G
 
   - id: new-volume-runtime-effector-tests-unset-suffixes
-    version: "0.7.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    version: "0.7.0-20171219.1516" # BROOKLYN_BLOCKSTORE_VERSION
     itemType: template
     name: New Volume Location Provisioning Customizer Tests (Triple)
     item:
