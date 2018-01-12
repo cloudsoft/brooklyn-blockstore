@@ -94,13 +94,24 @@ public abstract class AbstractVolumeManager implements VolumeManager {
                         machine, osDeviceName, filesystemType));
             }
         } else if (machine instanceof WinRmMachineLocation) {
+            String driveLetter = filesystemOptions.getMountPoint();
+            String driveLetterParam = Strings.isNullOrEmpty(driveLetter) ? "-AssignDriveLetter" : "-DriveLetter " + driveLetter;
+            String volumeLabel = filesystemOptions.getVolumeLabel();
+            String volumeLabelParam = Strings.isNullOrEmpty(volumeLabel) ? "datadisk" : volumeLabel;
             WinRmToolResponse response = ((WinRmMachineLocation)machine).executePsScript("Get-Disk | Where partitionstyle -eq 'raw' | " +
-                    "Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | " +
-                    "Format-Volume -FileSystem NTFS -NewFileSystemLabel \"datadisk\" -Confirm:$false");
+                    // AWS May create an instance store volume, which we need to exclude
+                    // See https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-windows-volumes.html#instance-store-volume-map
+                    "Where {$_.SerialNumber -As [int] -NotIn 78..89 -Or $_.FriendlyName -Ne \"AWS PVDISK\"} | " +
+                    "Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition " + driveLetterParam + " -UseMaximumSize | " +
+                    "Format-Volume -FileSystem " + filesystemOptions.getFilesystemType() +" -NewFileSystemLabel \"" + volumeLabelParam + "\" -Confirm:$false");
             if (response.getStatusCode() != 0) {
-                throw new RuntimeException(format("Failed to initialize disk. machine=%s; filesystemType=%s",
-                        machine, filesystemOptions.getFilesystemType()));
+                throw new RuntimeException(format("Failed to initialize disk. machine=%s; filesystemType=%s; stdErr=%s;",
+                        machine, filesystemOptions.getFilesystemType(), response.getStdErr()));
             }
+        } else {
+            throw new IllegalStateException("Cannot create filesystem for " + machine + " of type "
+                    + machine.getClass().getName() + "; expected " + SshMachineLocation.class.getSimpleName()
+                    + " or " + WinRmMachineLocation.class.getSimpleName());
         }
     }
 
@@ -108,7 +119,6 @@ public abstract class AbstractVolumeManager implements VolumeManager {
     public MountedBlockDevice mountFilesystem(AttachedBlockDevice attachedDevice, FilesystemOptions options) {
         JcloudsMachineLocation machine = attachedDevice.getMachine();
         if (machine instanceof SshMachineLocation) {
-
             LOG.debug("Mounting filesystem: device={}; options={}", attachedDevice, options);
             String osDeviceName = getOSDeviceName(attachedDevice.getDeviceSuffix());
             String mountPoint = options.getMountPoint();
@@ -132,6 +142,12 @@ public abstract class AbstractVolumeManager implements VolumeManager {
                 throw new RuntimeException(format("Failed to mount file system. machine=%s; osDeviceName=%s; mountPoint=%s; filesystemType=%s",
                         attachedDevice.getMachine(), osDeviceName, mountPoint, filesystemType));
             }
+        } else if (machine instanceof WinRmMachineLocation) {
+            LOG.debug("Ignoring mounting of filesystem on WinRmMachineLocation: device={}; options={}", attachedDevice, options);
+        } else {
+            throw new IllegalStateException("Cannot mount filesystem for " + machine + " of type "
+                    + machine.getClass().getName() + "; expected " + SshMachineLocation.class.getSimpleName()
+                    + " or " + WinRmMachineLocation.class.getSimpleName());
         }
 
         return attachedDevice.mountedAt(options.getMountPoint());
