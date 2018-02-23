@@ -23,7 +23,7 @@
     </modules>
 
     <properties>
-        <vcloud-director.version>2.0.2.1-20170711.1100</vcloud-director.version>
+        <vcloud-director.version>2.1.0</vcloud-director.version>
     </properties>
 
     <scm>
@@ -31,7 +31,6 @@
         <developerConnection>scm:git:git@github.com:cloudsoft/brooklyn-blockstore.git</developerConnection>
         <url>https://github.com/cloudsoft/brooklyn-blockstore</url>
     </scm>
-
 
     <repositories>
         <repository>
