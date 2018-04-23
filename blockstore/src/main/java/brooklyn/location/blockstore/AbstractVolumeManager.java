@@ -82,7 +82,6 @@ public abstract class AbstractVolumeManager implements VolumeManager {
 
             // NOTE: also adds an entry to fstab so the mount remains available after a reboot.
             Map<String, ?> flags = MutableMap.of("allocatePTY", true);
-
             int exitCode = ((SshMachineLocation)machine).execCommands(flags, "Creating filesystem on volume", ImmutableList.of(
                     dontRequireTtyForSudo(),
                     waitForFileCmd(osDeviceName, 60),
@@ -98,12 +97,36 @@ public abstract class AbstractVolumeManager implements VolumeManager {
             String driveLetterParam = Strings.isNullOrEmpty(driveLetter) ? "-AssignDriveLetter" : "-DriveLetter " + driveLetter;
             String volumeLabel = filesystemOptions.getVolumeLabel();
             String volumeLabelParam = Strings.isNullOrEmpty(volumeLabel) ? "datadisk" : volumeLabel;
-            WinRmToolResponse response = ((WinRmMachineLocation)machine).executePsScript("Get-Disk | Where partitionstyle -eq 'raw' | " +
+            StringBuilder builder = new StringBuilder();
+            String command =
+                    "do {" +
+                    "  $job = Get-Disk -AsJob; " +
+                    "  Wait-Job $job; " +
+                    "  $disks = Receive-Job -Job $job -Wait; " +
                     // AWS May create an instance store volume, which we need to exclude
                     // See https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/ec2-windows-volumes.html#instance-store-volume-map
-                    "Where {$_.SerialNumber -As [int] -NotIn 78..89 -Or $_.FriendlyName -Ne \"AWS PVDISK\"} | " +
-                    "Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition " + driveLetterParam + " -UseMaximumSize | " +
-                    "Format-Volume -FileSystem " + filesystemOptions.getFilesystemType() +" -NewFileSystemLabel \"" + volumeLabelParam + "\" -Confirm:$false");
+                    "  $rawDisk = $disks | Where PartitionStyle -eq 'RAW' | Where {$_.SerialNumber -As [int] -NotIn 78..89 -Or $_.FriendlyName -Ne \"AWS PVDISK\"} | Select-Object -first 1; " +
+                    "  $count = ($rawDisk | measure).Count; " +
+                    "} while ($count -lt 1); " + // Wait until the device has been attached
+                    "$job = Initialize-Disk -InputObject $rawDisk -PartitionStyle MBR -PassThru -AsJob; " +
+                    "Wait-Job $job; " +
+                    "$disk = Receive-Job -Job $job -Wait; " +
+                    "$job = New-Partition -InputObject $disk " + driveLetterParam + " -UseMaximumSize -AsJob; " +
+                    "Wait-Job $job; " +
+                    "$partition = Receive-Job -Job $job -Wait; " +
+                    "$job = Format-Volume -DriveLetter $partition.DriveLetter -FileSystem " + filesystemOptions.getFilesystemType() +" -NewFileSystemLabel \"" + volumeLabelParam + "\" -Confirm:$false -AsJob; " +
+                    "Wait-Job $job; " +
+                    "Receive-Job -Job $job -Wait";
+            builder.append("Initializing disk:\n");
+            builder.append(command);
+            WinRmToolResponse response = ((WinRmMachineLocation)machine).executePsScript(command);
+            builder.append("\nStatus Code: ");
+            builder.append(response.getStatusCode());
+            builder.append("\nstdOut: ");
+            builder.append(response.getStdOut());
+            builder.append("\nstdErr: ");
+            builder.append(response.getStdErr());
+            LOG.debug(builder.toString());
             if (response.getStatusCode() != 0) {
                 throw new RuntimeException(format("Failed to initialize disk. machine=%s; filesystemType=%s; stdErr=%s;",
                         machine, filesystemOptions.getFilesystemType(), response.getStdErr()));
