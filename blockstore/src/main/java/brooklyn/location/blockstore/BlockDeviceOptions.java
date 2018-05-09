@@ -9,6 +9,7 @@ import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Maps;
+import org.apache.brooklyn.util.guava.Maybe;
 
 public class BlockDeviceOptions {
 
@@ -18,6 +19,7 @@ public class BlockDeviceOptions {
     private int sizeInGb;
     private char deviceSuffix = 'h';
     private boolean deleteOnTermination;
+    private Maybe<String> volumeType = Maybe.absent();
 
     // For more convenient yaml input
     public static BlockDeviceOptions fromMap(Map<String, ?> map) {
@@ -62,6 +64,9 @@ public class BlockDeviceOptions {
         if (map.containsKey("deleteOnTermination")) {
             result.deleteOnTermination = (Boolean) checkNotNull(map.get("deleteOnTermination"), "deleteOnTermination");
         }
+        if (map.containsKey("volumeType")) {
+            result.volumeType = Maybe.of(checkNotNull(map.get("volumeType"), "volumeType").toString());
+        }
         return result;
     }
     
@@ -72,7 +77,8 @@ public class BlockDeviceOptions {
     			.tags(other.tags)
     			.sizeInGb(other.sizeInGb)
     			.deviceSuffix(other.deviceSuffix)
-    			.deleteOnTermination(other.deleteOnTermination);
+                .deleteOnTermination(other.deleteOnTermination)
+                .volumeType(other.volumeType);
     }
     
     public String getName() {
@@ -115,6 +121,16 @@ public class BlockDeviceOptions {
         return this;
     }
 
+    public BlockDeviceOptions volumeType(String volumeType) {
+        this.volumeType = Maybe.of(checkNotNull(volumeType, "volumeType"));
+        return this;
+    }
+
+    public BlockDeviceOptions volumeType(Maybe<String> volumeType) {
+        this.volumeType = checkNotNull(volumeType, "volumeType");
+        return this;
+    }
+
     public String getZone() {
         return zone;
     }
@@ -139,6 +155,10 @@ public class BlockDeviceOptions {
         return deleteOnTermination;
     }
 
+    public Maybe<String> getVolumeType() {
+        return volumeType;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
@@ -148,6 +168,7 @@ public class BlockDeviceOptions {
                 .add("sizeInGb", sizeInGb)
                 .add("deviceSuffix", deviceSuffix)
                 .add("deleteOnTermination", deleteOnTermination)
+                .add("volumeType", volumeType)
                 .toString();
     }
 }
