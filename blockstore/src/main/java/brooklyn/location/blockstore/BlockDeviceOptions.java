@@ -71,12 +71,12 @@ public class BlockDeviceOptions {
     }
     
     public static BlockDeviceOptions copy(BlockDeviceOptions other) {
-    	return new BlockDeviceOptions()
-    			.name(other.name)
-    			.zone(other.zone)
-    			.tags(other.tags)
-    			.sizeInGb(other.sizeInGb)
-    			.deviceSuffix(other.deviceSuffix)
+        return new BlockDeviceOptions()
+                .name(other.name)
+                .zone(other.zone)
+                .tags(other.tags)
+                .sizeInGb(other.sizeInGb)
+                .deviceSuffix(other.deviceSuffix)
                 .deleteOnTermination(other.deleteOnTermination)
                 .volumeType(other.volumeType);
     }

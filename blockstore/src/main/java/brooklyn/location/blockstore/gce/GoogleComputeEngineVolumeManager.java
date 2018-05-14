@@ -59,8 +59,8 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         String name = getOrMakeName(location, options);
 
         DiskCreationOptions diskOptions = new DiskCreationOptions.Builder()
-		        .sizeGb(options.getSizeInGb())
-		        .build();
+                .sizeGb(options.getSizeInGb())
+                .build();
         Operation operation = diskApi.create(name, diskOptions);
         waitForOperationToBeDone(computeApi, operation);
 
@@ -104,7 +104,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         String zone = getZoneFromDisk(disk);
         InstanceApi instanceApi = computeApi.instancesInZone(zone);
 
-		Operation operation = instanceApi.detachDisk(
+        Operation operation = instanceApi.detachDisk(
                 device.getMachine().getNode().getName(), 
                 String.valueOf(device.getDeviceSuffix()));
         waitForOperationToBeDone(computeApi, operation);
@@ -122,7 +122,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         String zone = getZoneFromDisk(disk);
         DiskApi diskApi = computeApi.disksInZone(zone);
 
-		Operation operation = diskApi.delete(device.getId());
+        Operation operation = diskApi.delete(device.getId());
         waitForOperationToBeDone(computeApi, operation);
     }
 
@@ -137,7 +137,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
         GoogleComputeEngineApi computeApi = getGoogleComputeEngineApi(device.getLocation());
         String zone = getZoneFromDisk(disk);
         DiskApi diskApi = computeApi.disksInZone(zone);
-		return diskApi.get(device.getId());
+        return diskApi.get(device.getId());
     }
 
     private GoogleComputeEngineApi getGoogleComputeEngineApi(JcloudsLocation location) {
@@ -170,7 +170,7 @@ public class GoogleComputeEngineVolumeManager extends AbstractVolumeManager {
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-                    	Operation current = api.operations().get(operation.selfLink());
+                        Operation current = api.operations().get(operation.selfLink());
                         latest.set(current);
                         return current.status() == Operation.Status.DONE;
                     }
