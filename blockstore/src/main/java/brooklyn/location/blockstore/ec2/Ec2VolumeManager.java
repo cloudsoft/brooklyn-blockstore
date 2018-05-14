@@ -57,9 +57,10 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         TagApi tagApi = getTagApi(location);
 
         CreateVolumeOptions cvo = CreateVolumeOptions.Builder.withSize(options.getSizeInGb());
-        if (options.getVolumeType().isPresent())
-        cvo = cvo.volumeType(options.getVolumeType().get());
-
+        if (options.getVolumeType().isPresent()) {
+            cvo = cvo.volumeType(options.getVolumeType().get());
+        }
+        
         Volume volume = ebsApi.createVolumeInAvailabilityZone(options.getZone(), cvo);
         if (options.hasTags()) {
             tagApi.applyToResources(options.getTags(), ImmutableList.of(volume.getId()));
