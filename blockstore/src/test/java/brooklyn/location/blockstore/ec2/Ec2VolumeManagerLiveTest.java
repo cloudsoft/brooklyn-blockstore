@@ -3,8 +3,6 @@ package brooklyn.location.blockstore.ec2;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
-import java.util.Map;
-
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.jclouds.ec2.domain.Volume;
@@ -60,24 +58,52 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     
     // A copy of super method, except also tests setting volumeType
     @Test(groups="Live")
-    @Override
-    public void testCreateVolume() throws Exception {
+    public void testCreateVolumeSsd() throws Exception {
         // TODO see https://issues.apache.org/jira/browse/JCLOUDS-1417: if you include tags, 
         // then `describeVolumesInRegion` fails to parse the volume correctly!
-        Map<String, String> tags = ImmutableMap.of(
-                "user", System.getProperty("user.name"),
-                "purpose", "brooklyn-blockstore-VolumeManagerLiveTest");
         BlockDeviceOptions options = new BlockDeviceOptions()
                 .zone(getDefaultAvailabilityZone())
                 .deviceSuffix(getDefaultDeviceSuffix())
                 .sizeInGb(getVolumeSize())
                 .volumeType("gp2");
-//                .tags(tags);
         volume = volumeManager.createBlockDevice(jcloudsLocation, options);
         assertVolumeAvailable(volume);
         assertVolumeType(volume, "gp2");
     }
 
+    /**
+     * TODO Fails with error:
+     * org.jclouds.aws.AWSResponseException: request POST https://ec2.eu-west-1.amazonaws.com/ HTTP/1.1 failed with code 400, error: AWSError{requestId='cf70e031-0b6a-4902-8c98-67dc264118f0', requestToken='null', code='UnknownParameter', message='The parameter Encrypted is not recognized', context='{Response=, Errors=}'}
+     * 
+     * This looks like https://issues.apache.org/jira/browse/JCLOUDS-1132
+     */
+    @Test(groups= {"Live", "WIP"})
+    public void testCreateVolumeEncrypted() throws Exception {
+        BlockDeviceOptions options = new BlockDeviceOptions()
+                .zone(getDefaultAvailabilityZone())
+                .deviceSuffix(getDefaultDeviceSuffix())
+                .sizeInGb(getVolumeSize())
+                .encrypted(true)
+                .volumeType("gp2");
+        volume = volumeManager.createBlockDevice(jcloudsLocation, options);
+        assertVolumeAvailable(volume);
+        assertEncrypted(volume, true);
+    }
+    
+    @Test(groups="Live")
+    public void testCreateVolumeWithProvisionedIops() throws Exception {
+        BlockDeviceOptions options = new BlockDeviceOptions()
+                .zone(getDefaultAvailabilityZone())
+                .deviceSuffix(getDefaultDeviceSuffix())
+                .sizeInGb(4)
+                .iops(200)
+                .volumeType("io1");
+        volume = volumeManager.createBlockDevice(jcloudsLocation, options);
+        assertVolumeAvailable(volume);
+        assertIops(volume, 200);
+        assertVolumeType(volume, "io1");
+    }
+    
     @Override
     protected String getProvider() {
         return PROVIDER;
@@ -111,6 +137,16 @@ public class Ec2VolumeManagerLiveTest extends AbstractVolumeManagerLiveTest {
     }
 
     
+    protected void assertIops(BlockDevice device, Integer expectedIops) {
+        Volume volume = ((Ec2VolumeManager)volumeManager).describeVolume(device);
+        assertEquals(volume.getIops(), expectedIops, "volume="+volume);
+    }
+
+    protected void assertEncrypted(BlockDevice device, boolean expectedEncrypted) {
+        Volume volume = ((Ec2VolumeManager)volumeManager).describeVolume(device);
+        assertEquals(volume.getEncrypted(), expectedEncrypted, "volume="+volume);
+    }
+
     protected void assertVolumeType(BlockDevice device, String expectedType) {
         Volume volume = ((Ec2VolumeManager)volumeManager).describeVolume(device);
         assertEquals(volume.getVolumeType(), expectedType, "volume="+volume);
