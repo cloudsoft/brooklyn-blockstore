@@ -14,6 +14,7 @@ import org.jclouds.ec2.domain.Attachment;
 import org.jclouds.ec2.domain.Volume;
 import org.jclouds.ec2.features.ElasticBlockStoreApi;
 import org.jclouds.ec2.features.TagApi;
+import org.jclouds.ec2.options.CreateVolumeOptions;
 import org.jclouds.ec2.options.DetachVolumeOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,11 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         ElasticBlockStoreApi ebsApi = getEbsApi(location);
         TagApi tagApi = getTagApi(location);
 
-        Volume volume = ebsApi.createVolumeInAvailabilityZone(options.getZone(), options.getSizeInGb());
+        CreateVolumeOptions cvo = CreateVolumeOptions.Builder.withSize(options.getSizeInGb());
+        if (options.getVolumeType().isPresent())
+        cvo = cvo.volumeType(options.getVolumeType().get());
+
+        Volume volume = ebsApi.createVolumeInAvailabilityZone(options.getZone(), cvo);
         if (options.hasTags()) {
             tagApi.applyToResources(options.getTags(), ImmutableList.of(volume.getId()));
         }
