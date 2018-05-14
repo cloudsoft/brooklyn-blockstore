@@ -19,6 +19,8 @@ public class BlockDeviceOptions {
     private int sizeInGb;
     private char deviceSuffix = 'h';
     private boolean deleteOnTermination;
+    private Maybe<Integer> iops = Maybe.absent();
+    private Maybe<Boolean> encrypted = Maybe.absent();
     private Maybe<String> volumeType = Maybe.absent();
 
     // For more convenient yaml input
@@ -64,6 +66,12 @@ public class BlockDeviceOptions {
         if (map.containsKey("deleteOnTermination")) {
             result.deleteOnTermination = (Boolean) checkNotNull(map.get("deleteOnTermination"), "deleteOnTermination");
         }
+        if (map.containsKey("iops")) {
+            result.iops = Maybe.of(TypeCoercions.coerce(checkNotNull(map.get("iops"), "iops"), Integer.class));
+        }
+        if (map.containsKey("encrypted")) {
+            result.encrypted = Maybe.of(TypeCoercions.coerce(checkNotNull(map.get("encrypted"), "encrypted"), Boolean.class));
+        }
         if (map.containsKey("volumeType")) {
             result.volumeType = Maybe.of(checkNotNull(map.get("volumeType"), "volumeType").toString());
         }
@@ -78,6 +86,8 @@ public class BlockDeviceOptions {
                 .sizeInGb(other.sizeInGb)
                 .deviceSuffix(other.deviceSuffix)
                 .deleteOnTermination(other.deleteOnTermination)
+                .iops(other.iops)
+                .encrypted(other.encrypted)
                 .volumeType(other.volumeType);
     }
     
@@ -121,6 +131,26 @@ public class BlockDeviceOptions {
         return this;
     }
 
+    public BlockDeviceOptions iops(Integer iops) {
+        this.iops = Maybe.of(checkNotNull(iops, "iops"));
+        return this;
+    }
+
+    public BlockDeviceOptions iops(Maybe<Integer> iops) {
+        this.iops = checkNotNull(iops, "iops");
+        return this;
+    }
+
+    public BlockDeviceOptions encrypted(Boolean encrypted) {
+        this.encrypted = Maybe.of(checkNotNull(encrypted, "encrypted"));
+        return this;
+    }
+
+    public BlockDeviceOptions encrypted(Maybe<Boolean> encrypted) {
+        this.encrypted = checkNotNull(encrypted);
+        return this;
+    }
+
     public BlockDeviceOptions volumeType(String volumeType) {
         this.volumeType = Maybe.of(checkNotNull(volumeType, "volumeType"));
         return this;
@@ -155,6 +185,14 @@ public class BlockDeviceOptions {
         return deleteOnTermination;
     }
 
+    public Maybe<Integer> getIops() {
+        return iops;
+    }
+
+    public Maybe<Boolean> getEncrypted() {
+        return encrypted;
+    }
+
     public Maybe<String> getVolumeType() {
         return volumeType;
     }
@@ -168,6 +206,8 @@ public class BlockDeviceOptions {
                 .add("sizeInGb", sizeInGb)
                 .add("deviceSuffix", deviceSuffix)
                 .add("deleteOnTermination", deleteOnTermination)
+                .add("iops", iops)
+                .add("encrypted", encrypted)
                 .add("volumeType", volumeType)
                 .toString();
     }

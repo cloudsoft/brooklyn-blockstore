@@ -57,6 +57,12 @@ public class Ec2VolumeManager extends AbstractVolumeManager {
         TagApi tagApi = getTagApi(location);
 
         CreateVolumeOptions cvo = CreateVolumeOptions.Builder.withSize(options.getSizeInGb());
+        if (options.getIops().isPresent()) {
+            cvo = cvo.withIops(options.getIops().get());
+        }
+        if (options.getEncrypted().isPresent()) {
+            cvo = cvo.isEncrypted(options.getEncrypted().get());
+        }
         if (options.getVolumeType().isPresent()) {
             cvo = cvo.volumeType(options.getVolumeType().get());
         }
