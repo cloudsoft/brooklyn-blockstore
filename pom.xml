@@ -23,7 +23,7 @@
     </modules>
 
     <properties>
-        <vcloud-director.version>2.1.0</vcloud-director.version>
+        <vcloud-director.version>2.4.0</vcloud-director.version>
     </properties>
 
     <scm>
