@@ -2,7 +2,7 @@ brooklyn.catalog:
   items:
   - id: new-volume-runtime-effector-tests-c-d-e
    # TODO exceeds allowed disks https://azure-sdk-for-python.readthedocs.io/en/v1.0.3/ref/azure.mgmt.compute.computemanagement.html#azure.mgmt.compute.computemanagement.VirtualMachineSize
-    version: "0.7.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    version: "0.7.0-20221222.1058" # BROOKLYN_BLOCKSTORE_VERSION
     itemType: template
     name: New Volume Location Provisioning Customizer Tests C, D, E
     item:
