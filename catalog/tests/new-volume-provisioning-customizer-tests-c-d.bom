@@ -1,7 +1,7 @@
 brooklyn.catalog:
   items:
   - id: new-volume-provisioning-customizer-tests-c-d
-    version: "0.7.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    version: "0.7.0-20230525.1026" # BROOKLYN_BLOCKSTORE_VERSION
     itemType: template
     name: New Volume Location Provisioning Customizer Tests c, d suffixes
     item:
