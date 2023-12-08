@@ -1,7 +1,7 @@
 brooklyn.catalog:
   items:
   - id: new-volume-runtime-effector-tests-h-g-f
-    version: "0.7.0-SNAPSHOT" # BROOKLYN_BLOCKSTORE_VERSION
+    version: "0.7.0-rc2" # BROOKLYN_BLOCKSTORE_VERSION
     itemType: template
     name: New Volume Location Provisioning Customizer Tests H, G, F
     item:
