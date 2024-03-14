@@ -1,0 +1,36 @@
+version: 2.1
+
+orbs:
+  maven: circleci/maven@1.4.1
+
+executors:
+  openjdk8:
+    docker:
+      - image: cimg/openjdk:8.0
+
+workflows:
+  build-and-deploy:
+    jobs:
+      - maven/test:
+          name: build
+          executor: openjdk8
+          filters:
+            branches:
+              only:
+                - master
+          settings_file: .circleci/m2-settings.xml
+          verify_dependencies: false
+      - maven/test:
+          name: deploy
+          executor: openjdk8
+          requires:
+            - build
+          context:
+            - cloudsoft-artifactory
+          filters:
+            branches:
+              only:
+                - master
+          settings_file: .circleci/m2-settings.xml
+          command: deploy -DskipTests -P cloudsoft-release
+          verify_dependencies: false
